@@ -3,6 +3,14 @@ import { Input } from "@/components/ui/input";
 import { ClipboardIcon } from "lucide-react";
 
 function App() {
+  const handleXIydheko = () => {
+    window.open("https://x.com/iydheko", "_blank");
+  };
+
+  const handleGitHubClick = () => {
+    window.open("https://github.com/ferdinankurnian/cuzbangs", "_blank");
+  };
+
   return (
     <>
       <div className="flex flex-col gap-3 items-center justify-center h-screen">
@@ -24,8 +32,12 @@ function App() {
           </Button>
         </div>
         <div className="flex flex-row">
-          <Button variant="link">Ferdinan Iydheko</Button>
-          <Button variant="link">GitHub</Button>
+          <Button variant="link" onClick={handleXIydheko}>
+            Ferdinan Iydheko
+          </Button>
+          <Button variant="link" onClick={handleGitHubClick}>
+            GitHub
+          </Button>
           <Button variant="link">Settings</Button>
         </div>
       </div>

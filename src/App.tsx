@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClipboardIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function App() {
   const handleXIydheko = () => {
@@ -13,13 +14,16 @@ function App() {
 
   return (
     <>
-      <div className="flex flex-col gap-3 items-center justify-center h-screen">
+      <div className="flex flex-col gap-3 items-center justify-center h-svh">
         <h1 className="text-4xl font-bold">cuzbangs. cuz it bangs.</h1>
-        <p className="max-w-xl text-center">
-          Tired with forced? Search for anything you want with your choosen
-          search engine. Don't like "!" mark? turn it off. Don't forget,
-          cuzbangs, cuz it bangs.
-        </p>
+        <div className="max-w-xl text-center opacity-75">
+          <p>
+            Tired with being forced? Search for anything you want with your
+            choosen search engine. Don't like "!" mark? turn it off. Add this to
+            your browser as default search engine. Don't forget, cuzbangs, cuz
+            it bangs.
+          </p>
+        </div>
         <div className="flex w-full max-w-sm items-center space-x-2">
           <Input
             type="text"
@@ -32,13 +36,15 @@ function App() {
           </Button>
         </div>
         <div className="flex flex-row">
-          <Button variant="link" onClick={handleXIydheko}>
-            Ferdinan Iydheko
-          </Button>
           <Button variant="link" onClick={handleGitHubClick}>
             GitHub
           </Button>
-          <Button variant="link">Settings</Button>
+          <Button variant="link" onClick={handleXIydheko}>
+            Ferdinan Iydheko
+          </Button>
+          <Link to="/settings">
+            <Button variant="link">Settings</Button>
+          </Link>
         </div>
       </div>
     </>

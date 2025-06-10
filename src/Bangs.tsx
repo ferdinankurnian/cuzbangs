@@ -1,6 +1,6 @@
 // src/Bangs.tsx
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+// import { Navigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
 const DEFAULT_SEARCH_ENGINE = "https://www.bing.com/search?&q=";
@@ -22,7 +22,7 @@ const BangsHandler = () => {
   // Defaultnya false, artinya bisa deteksi di mana saja
   const [forceBangOnFirstPlace, setForceBangOnFirstPlace] = useState(false);
   // Kamu bisa pakai ini di komponen settings nanti
-  // setForceBangOnFirstPlace(true); // contoh kalau mau di-set ke true secara default
+  setForceBangOnFirstPlace(true); // contoh kalau mau di-set ke true secara default
 
   useEffect(() => {
     let rawQuery = "";

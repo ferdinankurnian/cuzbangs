@@ -20,9 +20,9 @@ const BangsHandler = () => {
 
   // State untuk opsi 'force bangs call on first place'
   // Defaultnya false, artinya bisa deteksi di mana saja
-  const [forceBangOnFirstPlace, setForceBangOnFirstPlace] = useState(false);
+  const [forceBangOnFirstPlace] = useState(false);
   // Kamu bisa pakai ini di komponen settings nanti
-  setForceBangOnFirstPlace(true); // contoh kalau mau di-set ke true secara default
+  // contoh kalau mau di-set ke true secara default
 
   useEffect(() => {
     let rawQuery = "";

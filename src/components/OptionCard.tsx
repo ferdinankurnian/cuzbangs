@@ -68,9 +68,8 @@ interface OptionCardDescriptionProps {
 
 export function OptionCardDescription({
   children,
-  className = "",
 }: OptionCardDescriptionProps) {
-  return <p className={`text-sm opacity-75 ${className}`}>{children}</p>;
+  return children;
 }
 
 // Action area component

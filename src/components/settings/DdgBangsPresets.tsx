@@ -25,7 +25,9 @@ export default function DdgBangsPresets({
         <OptionCardTitleArea>
           <OptionCardTitle>Use DuckDuckGo bangs presets</OptionCardTitle>
           <OptionCardDescription>
-            Use DuckDuckGo bangs preset lists to bangs
+            <p className="text-sm opacity-75">
+              Use DuckDuckGo bangs preset lists to bangs
+            </p>
           </OptionCardDescription>
         </OptionCardTitleArea>
         <OptionCardAction>

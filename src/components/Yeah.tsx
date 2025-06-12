@@ -11,13 +11,13 @@ import { Button } from "./ui/button";
 export default function Yeah() {
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button variant="outline">Yeah!</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Heck yeah!</DialogTitle>
-          <DialogDescription>
+          <DialogDescription asChild>
             <div className="space-y-3">
               <p>
                 You found thiss! This section will be used for accepting

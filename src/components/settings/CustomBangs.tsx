@@ -9,59 +9,68 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash } from "lucide-react";
+import { Globe, Plus, Trash } from "lucide-react";
 import { useState } from "react";
+import { type Bangs } from "@/db";
 
-interface BangsTab {
-  id: string;
-  name: string;
-  call: string;
-  url: string;
+interface CustomBangsProps {
+  bangsTabs: Bangs[];
+  setBangsTabs: React.Dispatch<React.SetStateAction<Bangs[]>>;
 }
 
-// Helper function buat dapetin URL favicon
 const getFaviconUrl = (url: string): string => {
-  if (!url) return ""; // Kalo URL kosong, balikin string kosong
+  if (!url) return "";
   try {
     const parsedUrl = new URL(url);
-    // Kita pake Google Favicon API karena ini paling reliable dan gratis.
-    // Ukuran favicon bisa diatur pake &size=XX, tapi default-nya udah cukup
     return `https://www.google.com/s2/favicons?sz=32&domain_url=${parsedUrl.hostname}`;
-  } catch (error) {
-    console.error("Error parsing URL for favicon:", error);
-    return ""; // Kalo URL-nya ga valid, balikin string kosong
+  } catch {
+    return "";
   }
 };
 
-export default function CustomBangs() {
-  const [bangsTabs, setBangsTabs] = useState<BangsTab[]>([
-    { id: "tab1", name: "Google", call: "g", url: "https://google.com" },
-    { id: "tab2", name: "YouTube", call: "yt", url: "https://youtube.com" },
-    {
-      id: "tab3",
-      name: "Stack Overflow",
-      call: "so",
-      url: "https://stackoverflow.com",
-    },
-  ]);
-
+export default function CustomBangs({
+  bangsTabs,
+  setBangsTabs,
+}: CustomBangsProps) {
   const [activeTabId, setActiveTabId] = useState<string>(
-    bangsTabs[0]?.id || "",
+    String(bangsTabs[0]?.id || ""),
   );
 
-  const activeTab = bangsTabs.find((tab) => tab.id === activeTabId);
+  const activeTab = bangsTabs.find((tab) => tab.id === Number(activeTabId));
 
   const handleAddBangs = () => {
-    const newId = `tab${bangsTabs.length + 1}`;
-    const newBangs: BangsTab = { id: newId, name: "", call: "", url: "" };
+    const newBangs: Bangs = {
+      id: bangsTabs.length + 1,
+      d: "",
+      s: "",
+      t: "",
+      u: "",
+    };
     setBangsTabs([...bangsTabs, newBangs]);
-    setActiveTabId(newId);
+    setActiveTabId(String(newBangs.id));
   };
 
   const handleDeleteBangs = () => {
-    const updatedTabs = bangsTabs.filter((tab) => tab.id !== activeTabId);
+    const currentTabIndex = bangsTabs.findIndex(
+      (tab) => tab.id === Number(activeTabId),
+    );
+    const updatedTabs = bangsTabs.filter(
+      (tab) => tab.id !== Number(activeTabId),
+    );
     setBangsTabs(updatedTabs);
-    setActiveTabId(updatedTabs[0]?.id || ""); // Set to first tab if exists, else empty
+
+    if (updatedTabs.length > 0) {
+      let newActiveTabId: string;
+      if (currentTabIndex >= 0 && currentTabIndex < updatedTabs.length) {
+        newActiveTabId = String(updatedTabs[currentTabIndex].id);
+      } else {
+        newActiveTabId = String(updatedTabs[updatedTabs.length - 1].id);
+      }
+      setActiveTabId(newActiveTabId);
+    } else {
+      setActiveTabId("");
+    }
+
     console.log("Deleting Bangs:", activeTabId);
   };
 
@@ -71,10 +80,12 @@ export default function CustomBangs() {
         <OptionCardTitleArea>
           <OptionCardTitle>Custom bangs</OptionCardTitle>
           <OptionCardDescription>
-            Add your own custom bangs to extend more webpages. These custom
-            bangs will take priority over DuckDuckGo bangs when bangs call are
-            same. Remember not adding exclamation mark "!" to bangs call,
-            because it can be enabled or disabled.
+            <p className="text-sm opacity-75">
+              Add your own custom bangs to extend more webpages. These custom
+              bangs will take priority over DuckDuckGo bangs when bangs call are
+              same. Remember not adding exclamation mark "!" to bangs call,
+              because it can be enabled or disabled.
+            </p>
           </OptionCardDescription>
         </OptionCardTitleArea>
       </OptionCardHeader>
@@ -83,24 +94,28 @@ export default function CustomBangs() {
           {bangsTabs.map((tab) => (
             <Button
               key={tab.id}
-              variant={activeTabId === tab.id ? "default" : "secondary"}
+              variant={Number(activeTabId) === tab.id ? "default" : "secondary"}
               className="justify-start flex items-center gap-2" // Tambahin flex items-center gap-2
-              onClick={() => setActiveTabId(tab.id)}
+              onClick={() => setActiveTabId(String(tab.id))}
             >
               {/* Favicon Image */}
-              {tab.url && ( // Render hanya jika ada URL
-                <img
-                  src={getFaviconUrl(tab.url)}
-                  alt={`${tab.name} favicon`}
-                  className="w-4 h-4 rounded-full" // Atur ukuran dan bentuk
-                  onError={(e) => {
-                    // Kalo favicon gagal load (misal, URL ga valid atau server ga response),
-                    // bisa ganti ke icon default atau sembunyiin
-                    e.currentTarget.style.display = "none"; // Sembunyiin gambar yang error
-                  }}
-                />
+              {tab.u ? (
+                getFaviconUrl(tab.u) ? (
+                  <img
+                    src={getFaviconUrl(tab.u)}
+                    alt={`${tab.s} favicon`}
+                    className="w-4 h-4"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <Globe />
+                )
+              ) : (
+                <Globe />
               )}
-              <span className="truncate">{tab.name || "Untitled Bang"}</span>{" "}
+              <span className="truncate">{tab.s || "Untitled Bang"}</span>{" "}
               {/* Tambah truncate biar gak kepanjangan */}
             </Button>
           ))}
@@ -122,12 +137,12 @@ export default function CustomBangs() {
                   type="text"
                   id="bangsname"
                   placeholder="Bangs name"
-                  value={activeTab.name}
+                  value={activeTab.s}
                   onChange={(e) => {
                     setBangsTabs(
                       bangsTabs.map((tab) =>
-                        tab.id === activeTabId
-                          ? { ...tab, name: e.target.value }
+                        String(tab.id) === activeTabId
+                          ? { ...tab, s: e.target.value }
                           : tab,
                       ),
                     );
@@ -140,12 +155,12 @@ export default function CustomBangs() {
                   type="text"
                   id="bangscall"
                   placeholder="Bangs call"
-                  value={activeTab.call}
+                  value={activeTab.t}
                   onChange={(e) => {
                     setBangsTabs(
                       bangsTabs.map((tab) =>
-                        tab.id === activeTabId
-                          ? { ...tab, call: e.target.value }
+                        String(tab.id) === activeTabId
+                          ? { ...tab, t: e.target.value }
                           : tab,
                       ),
                     );
@@ -158,19 +173,19 @@ export default function CustomBangs() {
                   type="text"
                   id="url"
                   placeholder="URL"
-                  value={activeTab.url}
+                  value={activeTab.u}
                   onChange={(e) => {
                     setBangsTabs(
                       bangsTabs.map((tab) =>
-                        tab.id === activeTabId
-                          ? { ...tab, url: e.target.value }
+                        String(tab.id) === activeTabId
+                          ? { ...tab, u: e.target.value }
                           : tab,
                       ),
                     );
                   }}
                 />
               </div>
-              <div className="flex flex-row justify-between">
+              <div className="flex flex-row justify-end">
                 <Button
                   variant={"destructive"}
                   className="w-fit"
@@ -183,7 +198,7 @@ export default function CustomBangs() {
             </>
           ) : (
             <p className="text-center text-gray-500">
-              Click Add Bangs to create your own bangs
+              You didn't have bangs yet
             </p>
           )}
         </div>

@@ -54,8 +54,10 @@ export default function DefaultSearchEngine({
         <OptionCardTitleArea>
           <OptionCardTitle>Default Search Engine</OptionCardTitle>
           <OptionCardDescription>
-            Choose your default search engine for searching without calling
-            bangs
+            <p className="text-sm opacity-75">
+              Choose your default search engine for searching without calling
+              bangs
+            </p>
           </OptionCardDescription>
         </OptionCardTitleArea>
         <OptionCardAction>

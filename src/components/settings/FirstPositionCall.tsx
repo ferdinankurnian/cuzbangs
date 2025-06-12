@@ -23,8 +23,10 @@ export default function FirstPositionCall({
         <OptionCardTitleArea>
           <OptionCardTitle>Force bangs call on first place</OptionCardTitle>
           <OptionCardDescription>
-            Force bangs calling to be on first place like "!g what is cat?".
-            Automatically forced when exclamation mark turned off
+            <p className="text-sm opacity-75">
+              Force bangs calling to be on first place like "!g what is cat?".
+              Automatically forced when exclamation mark turned off
+            </p>
           </OptionCardDescription>
         </OptionCardTitleArea>
         <OptionCardAction>

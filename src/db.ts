@@ -19,6 +19,7 @@ export interface DuckDuckGoBangs {
 
 export interface Bangs {
   id?: number;
+  d: string;
   s: string; // bangs name
   t: string; // Shortcut/Trigger keyword, contoh "t3" (ini yang kita cari: !t3)
   u: string; // URL template, contoh "https://www.t3.chat/new?q={{{s}}}"

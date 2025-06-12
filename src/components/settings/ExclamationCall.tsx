@@ -23,7 +23,9 @@ export default function ExclamationCall({
         <OptionCardTitleArea>
           <OptionCardTitle>Use Exclamation Mark to call</OptionCardTitle>
           <OptionCardDescription>
-            Use exclamation mark "!" to call bangs like !g for google
+            <p className="text-sm opacity-75">
+              Use exclamation mark "!" to call bangs like !g for google
+            </p>
           </OptionCardDescription>
         </OptionCardTitleArea>
         <OptionCardAction>

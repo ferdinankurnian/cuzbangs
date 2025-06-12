@@ -8,7 +8,7 @@ import FirstPositionCall from "./components/settings/FirstPositionCall";
 import DdgBangsPresets from "./components/settings/DdgBangsPresets";
 import CustomBangs from "./components/settings/CustomBangs";
 // import { useLiveQuery } from "dexie-react-hooks";
-// import { db, type Setting } from "./db";
+import { type Bangs } from "./db";
 import { useState } from "react";
 
 export default function Settings() {
@@ -18,6 +18,7 @@ export default function Settings() {
   const [callExclamation, setcallExclamation] = useState("false");
   const [forceFirstBang, setforceFirstBang] = useState("false");
   const [ddgPresets, setddgPresets] = useState("false");
+  const [bangsTabs, setBangsTabs] = useState<Bangs[]>([]);
 
   return (
     <div className="flex flex-col items-center min-h-screen py-8">
@@ -48,7 +49,7 @@ export default function Settings() {
           useddgPresets={ddgPresets}
           setuseddgPresets={setddgPresets}
         />
-        <CustomBangs />
+        <CustomBangs bangsTabs={bangsTabs} setBangsTabs={setBangsTabs} />
         <h1 className="text-sm text-center opacity-75 mb-4">
           Copyright &copy; 2025 Ferdinan Iydheko
         </h1>

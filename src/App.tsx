@@ -27,7 +27,7 @@ function App() {
       <div className="flex w-full max-w-sm items-center space-x-2">
         <Input
           type="text"
-          value="ferdinankurnian.github.io/cuzbangs?q=%s"
+          value="https://cuzbangs.vercel.app/go?q=%s"
           onClick={(e) => e.currentTarget.select()}
           spellCheck="false"
         />
@@ -36,7 +36,7 @@ function App() {
           size="icon"
           onClick={() => {
             navigator.clipboard.writeText(
-              "ferdinankurnian.github.io/cuzbangs?q=%s",
+              "https://cuzbangs.vercel.app/go?q=%s",
             );
             toast("Copied to clipboard.");
           }}

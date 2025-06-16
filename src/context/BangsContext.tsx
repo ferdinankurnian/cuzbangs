@@ -88,14 +88,7 @@ export const BangsProvider: React.FC<{ children: ReactNode }> = ({
 
   if (isLoadingBangs) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: 120,
-        }}
-      >
+      <div className="fixed inset-0 flex justify-center items-center bg-background z-50">
         <Loader2 className="animate-spin" size={32} />
       </div>
     );

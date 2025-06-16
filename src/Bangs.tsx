@@ -13,10 +13,15 @@ const BangsHandler = () => {
 
   // --- Prioritaskan bangsTabs dari context ---
   const activeBangs = useMemo(() => {
-    if (ddgPresets === "true" || bangsTabs.length === 0) {
-      return bangsTabs;
+    if (bangsTabs.length > 0) {
+      return bangsTabs; // custom user punya? gaskeun
     }
-    return ddgBangs;
+
+    if (ddgPresets === "true") {
+      return ddgBangs; // preset aktif dan custom kosong → pake bawaan
+    }
+
+    return []; // fallback kosong → berarti pake default search engine aja
   }, [ddgPresets, bangsTabs]);
 
   const bangMap = useMemo(
@@ -103,9 +108,15 @@ const BangsHandler = () => {
   ]);
 
   return (
-    <div>
-      <h1>Processing your search...</h1>
-      <p>If you are not redirected automatically, please check your query.</p>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: 120,
+      }}
+    >
+      <Loader2 className="animate-spin" size={32} />
     </div>
   );
 };

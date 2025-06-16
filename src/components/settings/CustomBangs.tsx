@@ -24,6 +24,15 @@ const getFaviconUrl = (url: string): string => {
   }
 };
 
+const extractDomain = (url: string): string => {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.hostname;
+  } catch {
+    return "";
+  }
+};
+
 export default function CustomBangs() {
   const { bangsTabs, addBangs, updateBangs, deleteBangs, isLoadingBangs } =
     useBangsContext();
@@ -31,6 +40,11 @@ export default function CustomBangs() {
   const [activeTabId, setActiveTabId] = useState<string>("");
   // --- INI STATE BARU UNTUK INPUT YANG SEDANG DIEDIT ---
   const [editingBang, setEditingBang] = useState<Bangs | null>(null);
+
+  // Local state for input fields
+  const [bangsName, setBangsName] = useState("");
+  const [bangsCall, setBangsCall] = useState("");
+  const [bangsURL, setBangsURL] = useState("");
 
   // Ref untuk timer debounce
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,9 +61,17 @@ export default function CustomBangs() {
       const firstTab = bangsTabs[0];
       setActiveTabId(String(firstTab.id));
       setEditingBang(firstTab); // Inisialisasi editingBang
+      // Initialize local state with values from the selected tab
+      setBangsName(firstTab.s || "");
+      setBangsCall(firstTab.t || "");
+      setBangsURL(firstTab.u || "");
     } else if (bangsTabs.length === 0 && activeTabId) {
       setActiveTabId("");
       setEditingBang(null);
+      // Clear local state
+      setBangsName("");
+      setBangsCall("");
+      setBangsURL("");
     } else {
       // Jika activeTabId sudah ada dan valid di bangsTabs, update editingBang
       const currentActiveTab = bangsTabs.find(
@@ -61,6 +83,10 @@ export default function CustomBangs() {
       ) {
         // Hanya update editingBang jika ada perubahan signifikan
         setEditingBang(currentActiveTab);
+        // Update local state with values from the selected tab
+        setBangsName(currentActiveTab.s || "");
+        setBangsCall(currentActiveTab.t || "");
+        setBangsURL(currentActiveTab.u || "");
       }
     }
   }, [bangsTabs, activeTabId, isLoadingBangs, editingBang]);
@@ -78,7 +104,15 @@ export default function CustomBangs() {
     // Set timer baru. Fungsi update akan dijalankan setelah 500ms tanpa ketikan
     debounceTimerRef.current = setTimeout(() => {
       console.log("Debounced: Updating bang in Dexie", editingBang);
-      updateBangs(editingBang);
+      // Update the editingBang state with the local state values
+      const updatedBang = {
+        ...editingBang,
+        s: bangsName,
+        t: bangsCall,
+        u: bangsURL,
+        d: extractDomain(bangsURL), // Extract domain here
+      };
+      updateBangs(updatedBang);
     }, 500); // <-- Debounce delay 500ms
 
     // Cleanup function: ini akan jalan saat komponen unmount atau dependencies berubah
@@ -87,7 +121,14 @@ export default function CustomBangs() {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [editingBang, updateBangs, isLoadingBangs]); // Trigger effect saat editingBang berubah
+  }, [
+    editingBang,
+    updateBangs,
+    isLoadingBangs,
+    bangsName,
+    bangsCall,
+    bangsURL,
+  ]); // Trigger effect saat editingBang berubah
 
   // --- HANDLER UNTUK MENGGANTI TAB AKTIF ---
   const handleTabChange = (tabId: string) => {
@@ -95,11 +136,21 @@ export default function CustomBangs() {
     // Saat tab diganti, langsung set editingBang ke versi terbaru dari tab tersebut
     const selectedTab = bangsTabs.find((tab) => String(tab.id) === tabId);
     setEditingBang(selectedTab || null);
+    // Update local state with values from the selected tab
+    if (selectedTab) {
+      setBangsName(selectedTab.s || "");
+      setBangsCall(selectedTab.t || "");
+      setBangsURL(selectedTab.u || "");
+    } else {
+      setBangsName("");
+      setBangsCall("");
+      setBangsURL("");
+    }
   };
 
   const handleAddBangs = async () => {
     const newBangTemplate = {
-      d: "",
+      d: "", // ini bisa kosong, nanti diisi saat user input URL
       s: "",
       t: "",
       u: "",
@@ -107,7 +158,10 @@ export default function CustomBangs() {
     try {
       const addedBang = await addBangs(newBangTemplate);
       setActiveTabId(String(addedBang.id));
-      setEditingBang(addedBang); // Set the newly added bang as editing
+      setEditingBang(addedBang);
+      setBangsName(addedBang.s || "");
+      setBangsCall(addedBang.t || "");
+      setBangsURL(addedBang.u || "");
     } catch (error) {
       console.error("Error adding new bang:", error);
     }
@@ -126,11 +180,11 @@ export default function CustomBangs() {
   };
 
   // --- HANDLER UNTUK UPDATE FIELD DI LOCAL STATE ---
-  const handleFieldChange = (field: keyof Bangs, value: string) => {
-    if (editingBang) {
-      setEditingBang((prev) => (prev ? { ...prev, [field]: value } : null));
-    }
-  };
+  // const handleFieldChange = (field: keyof Bangs, value: string) => {
+  //   if (editingBang) {
+  //     setEditingBang((prev) => (prev ? { ...prev, [field]: value } : null));
+  //   }
+  // };
 
   if (isLoadingBangs) {
     return <p className="text-center">Loading your custom bangs...</p>;
@@ -198,19 +252,17 @@ export default function CustomBangs() {
               className="justify-start flex items-center gap-2"
               onClick={() => handleTabChange(String(tab.id))} // <--- Pakai handleTabChange
             >
-              {tab.u ? (
-                getFaviconUrl(tab.u) ? (
-                  <img
-                    src={getFaviconUrl(tab.u)}
-                    alt={`${tab.s} favicon`}
-                    className="w-4 h-4"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <Globe />
-                )
+              {tab.u && getFaviconUrl(tab.u) ? (
+                <img
+                  src={getFaviconUrl(tab.u)}
+                  alt={`${tab.s} favicon`}
+                  className="w-4 h-4"
+                  onError={(
+                    e: React.SyntheticEvent<HTMLImageElement, Event>,
+                  ) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               ) : (
                 <Globe />
               )}
@@ -235,8 +287,8 @@ export default function CustomBangs() {
                   type="text"
                   id="bangsname"
                   placeholder="Bangs name"
-                  value={editingBang.s} // <--- Value dari editingBang
-                  onChange={(e) => handleFieldChange("s", e.target.value)} // <--- Pakai handleFieldChange
+                  value={bangsName} // <--- Value dari local state
+                  onChange={(e) => setBangsName(e.target.value)} // <--- Update local state
                 />
               </div>
               <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -245,8 +297,8 @@ export default function CustomBangs() {
                   type="text"
                   id="bangscall"
                   placeholder="Bangs call"
-                  value={editingBang.t} // <--- Value dari editingBang
-                  onChange={(e) => handleFieldChange("t", e.target.value)} // <--- Pakai handleFieldChange
+                  value={bangsCall} // <--- Value dari local state
+                  onChange={(e) => setBangsCall(e.target.value)} // <--- Update local state
                 />
               </div>
               <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -255,8 +307,8 @@ export default function CustomBangs() {
                   type="text"
                   id="url"
                   placeholder="URL"
-                  value={editingBang.u} // <--- Value dari editingBang
-                  onChange={(e) => handleFieldChange("u", e.target.value)} // <--- Pakai handleFieldChange
+                  value={bangsURL} // <--- Value dari local state
+                  onChange={(e) => setBangsURL(e.target.value)} // <--- Update local state
                 />
               </div>
               <div className="flex flex-row justify-end">

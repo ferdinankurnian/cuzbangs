@@ -18,8 +18,6 @@ export default function Settings() {
     setcallExclamation,
     forceFirstBang,
     setforceFirstBang,
-    ddgPresets,
-    setddgPresets,
   } = useSettings();
 
   return (
@@ -48,10 +46,7 @@ export default function Settings() {
           setuseFirstPosition={setforceFirstBang}
           callExclamation={callExclamation}
         />
-        <DdgBangsPresets
-          useddgPresets={ddgPresets}
-          setuseddgPresets={setddgPresets}
-        />
+        <DdgBangsPresets />
         <CustomBangs />
         <h1 className="text-sm text-center opacity-75 mb-4">
           Copyright &copy; 2025 Ferdinan Iydheko

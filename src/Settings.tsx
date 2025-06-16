@@ -8,17 +8,19 @@ import FirstPositionCall from "./components/settings/FirstPositionCall";
 import DdgBangsPresets from "./components/settings/DdgBangsPresets";
 import CustomBangs from "./components/settings/CustomBangs";
 // import { useLiveQuery } from "dexie-react-hooks";
-import { type Bangs } from "./db";
-import { useState } from "react";
+import { useSettings } from "./context/SettingsContext";
 
 export default function Settings() {
-  const [defaultEngine, setdefaultEngine] = useState(
-    "https://www.bing.com/search?q=%s",
-  );
-  const [callExclamation, setcallExclamation] = useState("false");
-  const [forceFirstBang, setforceFirstBang] = useState("false");
-  const [ddgPresets, setddgPresets] = useState("false");
-  const [bangsTabs, setBangsTabs] = useState<Bangs[]>([]);
+  const {
+    defaultEngine,
+    setdefaultEngine,
+    callExclamation,
+    setcallExclamation,
+    forceFirstBang,
+    setforceFirstBang,
+    ddgPresets,
+    setddgPresets,
+  } = useSettings();
 
   return (
     <div className="flex flex-col items-center min-h-screen py-8">
@@ -44,12 +46,13 @@ export default function Settings() {
         <FirstPositionCall
           useFirstPosition={forceFirstBang}
           setuseFirstPosition={setforceFirstBang}
+          callExclamation={callExclamation}
         />
         <DdgBangsPresets
           useddgPresets={ddgPresets}
           setuseddgPresets={setddgPresets}
         />
-        <CustomBangs bangsTabs={bangsTabs} setBangsTabs={setBangsTabs} />
+        <CustomBangs />
         <h1 className="text-sm text-center opacity-75 mb-4">
           Copyright &copy; 2025 Ferdinan Iydheko
         </h1>

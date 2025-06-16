@@ -11,11 +11,13 @@ import { Switch } from "@/components/ui/switch";
 interface FirstPositionCallProps {
   useFirstPosition: string;
   setuseFirstPosition: (value: string) => void;
+  callExclamation: string;
 }
 
 export default function FirstPositionCall({
   useFirstPosition,
   setuseFirstPosition,
+  callExclamation,
 }: FirstPositionCallProps) {
   return (
     <OptionCard>
@@ -35,6 +37,7 @@ export default function FirstPositionCall({
             onCheckedChange={(checked: boolean) => {
               setuseFirstPosition(checked ? "true" : "false");
             }}
+            disabled={callExclamation === "false"}
           />
         </OptionCardAction>
       </OptionCardHeader>

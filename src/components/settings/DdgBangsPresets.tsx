@@ -7,18 +7,11 @@ import {
   OptionCardAction,
 } from "@/components/OptionCard";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "../ui/button";
-import { Loader2Icon } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
 
-interface DdgBangsPresetsProps {
-  useddgPresets: string;
-  setuseddgPresets: (value: string) => void;
-}
+export default function DdgBangsPresets() {
+  const { ddgPresets, setddgPresets } = useSettings();
 
-export default function DdgBangsPresets({
-  useddgPresets,
-  setuseddgPresets,
-}: DdgBangsPresetsProps) {
   return (
     <OptionCard>
       <OptionCardHeader>
@@ -32,27 +25,13 @@ export default function DdgBangsPresets({
         </OptionCardTitleArea>
         <OptionCardAction>
           <Switch
-            checked={useddgPresets === "true"}
-            onCheckedChange={(checked: boolean) => {
-              setuseddgPresets(checked ? "true" : "false");
-            }}
+            checked={ddgPresets === "true"}
+            onCheckedChange={(checked: boolean) =>
+              setddgPresets(checked ? "true" : "false")
+            }
           />
         </OptionCardAction>
       </OptionCardHeader>
-      <OptionCardDescription
-        className={useddgPresets === "true" ? "" : "hidden"}
-      >
-        <div className="flex flex-row items-center gap-3">
-          <Button size="sm" variant={"secondary"}>
-            Sync
-          </Button>
-          <Button size="sm" variant={"secondary"} disabled>
-            <Loader2Icon className="animate-spin" />
-            Syncing
-          </Button>
-          <p className="text-sm opacity-75">Synced on 31 May 2025 15:42</p>
-        </div>
-      </OptionCardDescription>
     </OptionCard>
   );
 }

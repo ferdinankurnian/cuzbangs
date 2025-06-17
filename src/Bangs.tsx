@@ -17,9 +17,22 @@ const BangsHandler = () => {
     Array.isArray(bangsTabs) && bangsTabs.some((b) => b?.t && b?.u);
 
   const activeBangs = useMemo(() => {
-    if (hasValidBangsTabs) return bangsTabs;
-    if (ddgPresets === "true") return ddgBangs;
-    return [];
+    const userBangsMap = hasValidBangsTabs
+      ? Object.fromEntries(bangsTabs.map((b) => [b.t.toLowerCase(), b]))
+      : {};
+
+    const ddgBangsMap =
+      ddgPresets === "true"
+        ? Object.fromEntries(ddgBangs.map((b) => [b.t.toLowerCase(), b]))
+        : {};
+
+    // Merge dan prioritaskan userBangs
+    const mergedBangs = {
+      ...ddgBangsMap,
+      ...userBangsMap, // override
+    };
+
+    return Object.values(mergedBangs);
   }, [ddgPresets, bangsTabs, hasValidBangsTabs]);
 
   const bangMap = useMemo(

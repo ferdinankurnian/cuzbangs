@@ -179,13 +179,6 @@ export default function CustomBangs() {
     }
   };
 
-  // --- HANDLER UNTUK UPDATE FIELD DI LOCAL STATE ---
-  // const handleFieldChange = (field: keyof Bangs, value: string) => {
-  //   if (editingBang) {
-  //     setEditingBang((prev) => (prev ? { ...prev, [field]: value } : null));
-  //   }
-  // };
-
   if (isLoadingBangs) {
     return <p className="text-center">Loading your custom bangs...</p>;
   }
@@ -199,10 +192,9 @@ export default function CustomBangs() {
             <OptionCardTitle>Custom bangs</OptionCardTitle>
             <OptionCardDescription>
               <p className="text-sm opacity-75">
-                Add your own custom bangs to extend more webpages. These custom
-                bangs will take priority over DuckDuckGo bangs when bangs call
-                are same. Remember not adding exclamation mark "!" to bangs
-                call, because it can be enabled or disabled.
+              Add your own custom bangs to extend more webpages. These custom
+              bangs will take priority over DuckDuckGo bangs when bangs call are
+              same. Remember not adding exclamation mark "!" to bangs call.
               </p>
             </OptionCardDescription>
           </OptionCardTitleArea>

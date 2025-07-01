@@ -6,14 +6,14 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { db } from "../db"; // Masih buat settingan aja
+import { db } from "../db";
 import { bangs as ddgBangsData } from "../data/bang";
 
 type SettingsContextType = {
   defaultEngine: string;
   setdefaultEngine: (engine: string) => void;
-  callExclamation: string;
-  setcallExclamation: (exclamation: string) => void;
+  useCallSymbol: string;
+  setUseCallSymbol: (exclamation: string) => void;
   forceFirstBang: string;
   setforceFirstBang: (force: string) => void;
   ddgPresets: string;
@@ -27,7 +27,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [defaultEngine, setdefaultEngineState] = useState<string | null>(null);
-  const [callExclamation, setcallExclamationState] = useState<string | null>(
+  const [useCallSymbol, setUseCallSymbol] = useState<string | null>(
     null,
   );
   const [forceFirstBang, setforceFirstBangState] = useState<string | null>(
@@ -47,8 +47,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           settingsMap.get("cuzbangs.default_engine") ||
             "https://www.google.com/search?q=%s",
         );
-        setcallExclamationState(
-          settingsMap.get("cuzbangs.exclamation_call") || "true",
+        setUseCallSymbol(
+          settingsMap.get("cuzbangs.symbol_call") || "!",
         );
         setforceFirstBangState(
           settingsMap.get("cuzbangs.first_position_call") || "false",
@@ -59,7 +59,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error("Failed to load settings from Dexie:", error);
         setdefaultEngineState("https://www.google.com/search?q=%s");
-        setcallExclamationState("true");
+        setUseCallSymbol("!");
         setforceFirstBangState("false");
         setddgPresetsState("true");
       } finally {
@@ -75,13 +75,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     db.settings.put({ key: "cuzbangs.default_engine", value: engine });
   }, []);
 
-  const setcallExclamation = useCallback((exclamation: string) => {
-    setcallExclamationState(exclamation);
-    db.settings.put({ key: "cuzbangs.exclamation_call", value: exclamation });
-    if (exclamation === "false") {
-      setforceFirstBangState("true");
-      db.settings.put({ key: "cuzbangs.first_position_call", value: "true" });
-    }
+  const setcallSymbol = useCallback((symbol: string) => {
+    setUseCallSymbol(symbol);
+    db.settings.put({ key: "cuzbangs.symbol_call", value: symbol });
   }, []);
 
   const setforceFirstBang = useCallback((force: string) => {
@@ -97,8 +93,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const value: SettingsContextType = {
     defaultEngine: defaultEngine!,
     setdefaultEngine,
-    callExclamation: callExclamation!,
-    setcallExclamation,
+    useCallSymbol: useCallSymbol!,
+    setUseCallSymbol: setcallSymbol,
     forceFirstBang: forceFirstBang!,
     setforceFirstBang,
     ddgPresets: ddgPresets!,

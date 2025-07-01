@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 
 const BangsHandler = () => {
   const location = useLocation();
-  const { defaultEngine, ddgPresets, forceFirstBang, callExclamation } =
+  const { defaultEngine, ddgPresets, forceFirstBang, useCallSymbol } =
     useSettings();
   const { bangsTabs } = useBangsContext();
 
@@ -64,23 +64,25 @@ const BangsHandler = () => {
     for (const i of checkIndexes) {
       const word = words[i];
 
-      if (callExclamation === "true") {
-        if (word.startsWith("!")) {
-          const potentialBang = word.slice(1).toLowerCase();
-          if (bangMap[potentialBang]) {
-            detectedBang = potentialBang;
-            bangIndex = i;
-            break;
-          }
+      // 1. If a call symbol is defined (e.g. !, @, #, $, /) check for that prefix
+      if (useCallSymbol && word.startsWith(useCallSymbol)) {
+        const potentialBang = word.slice(useCallSymbol.length).toLowerCase();
+        if (bangMap[potentialBang]) {
+          detectedBang = potentialBang;
+          bangIndex = i;
+          break;
         }
-      } else {
-        if (!word.startsWith("!")) {
-          const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-          if (bangMap[cleanWord]) {
-            detectedBang = cleanWord;
-            bangIndex = i;
-            break;
-          }
+      }
+
+      // 2. Fallback: if the configured symbol is NOT mandatory (i.e. plain word calls)
+      //    we allow matching without any prefix. This behaviour mirrors the previous
+      //    implementation when `useCallSymbol` was set to a non-exclamation value.
+      if (!useCallSymbol || useCallSymbol === "none") {
+        const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+        if (bangMap[cleanWord]) {
+          detectedBang = cleanWord;
+          bangIndex = i;
+          break;
         }
       }
     }
@@ -114,7 +116,7 @@ const BangsHandler = () => {
     defaultEngine,
     ddgPresets,
     forceFirstBang,
-    callExclamation,
+    useCallSymbol,
     bangMap,
   ]);
 

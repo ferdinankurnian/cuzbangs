@@ -237,8 +237,7 @@ export default function CustomBangs() {
             <p className="text-sm opacity-75">
               Add your own custom bangs to extend more webpages. These custom
               bangs will take priority over DuckDuckGo bangs when bangs call are
-              same. Remember not adding exclamation mark "!" to bangs call,
-              because it can be enabled or disabled.
+              same. Remember not adding exclamation mark "!" to bangs call.
             </p>
           </OptionCardDescription>
         </OptionCardTitleArea>

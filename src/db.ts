@@ -21,7 +21,7 @@ class cuzbangsDB extends Dexie {
   constructor() {
     super("cuzbangsDB");
 
-    this.version(1).stores({
+    this.version(2).stores({
       settings: "&key, value",
       bangs: "++id, t",
     });
@@ -33,7 +33,7 @@ class cuzbangsDB extends Dexie {
           key: "cuzbangs.default_engine",
           value: "https://www.google.com/search?q=%s",
         },
-        { key: "cuzbangs.exclamation_call", value: "true" },
+        { key: "cuzbangs.symbol_call", value: "!" },
         { key: "cuzbangs.first_position_call", value: "false" },
         { key: "duckduckgo.bangs_presets", value: "true" },
       ]);

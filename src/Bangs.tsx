@@ -45,7 +45,16 @@ const BangsHandler = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const rawQuery = decodeURIComponent(params.get("q") || "").trim();
+    let rawQuery: string;
+    try {
+      rawQuery = decodeURIComponent(params.get("q") || "").trim();
+    } catch (error) {
+      if (error instanceof URIError) {
+        rawQuery = (params.get("q") || "").trim();
+      } else {
+        throw error;
+      }
+    }
 
     if (!rawQuery) {
       if (location.pathname === "/go" || location.pathname === "/") {

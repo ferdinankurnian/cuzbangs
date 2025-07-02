@@ -19,7 +19,7 @@ function App() {
       <div className="max-w-xl text-center opacity-75">
         <p className="md:text-[1rem] text-sm">
           Tired with being forced? Search for anything you want with your
-          choosen search engine. Don't like "!" mark? turn it off. Add this to
+          choosen search engine. Don't like "!" mark? change it. Add this to
           your browser as default search engine. Don't forget, cuzbangs, cuz it
           bangs.
         </p>

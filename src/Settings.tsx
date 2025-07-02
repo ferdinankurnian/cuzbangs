@@ -8,6 +8,7 @@ import FirstPositionCall from "./components/settings/FirstPositionCall";
 import DdgBangsPresets from "./components/settings/DdgBangsPresets";
 import CustomBangs from "./components/settings/CustomBangs";
 import { useSettings } from "./context/SettingsContext";
+import ImportExport from "./components/settings/ImportExport";
 
 export default function Settings() {
   const {
@@ -32,6 +33,7 @@ export default function Settings() {
           <h1 className="text-xl font-bold">Settings</h1>
           <Yeah />
         </div>
+        <ImportExport />
         <DefaultSearchEngine
           searchEngine={defaultEngine}
           setsearchEngine={setdefaultEngine}

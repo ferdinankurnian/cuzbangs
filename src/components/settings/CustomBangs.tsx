@@ -266,8 +266,8 @@ export default function CustomBangs() {
           </OptionCardDescription>
         </OptionCardTitleArea>
       </OptionCardHeader>
-      <OptionCardContent className="flex flex-row gap-3">
-        <div className="w-[15rem] max-h-[20rem] overflow-auto border rounded-md p-3 flex flex-col gap-2">
+      <OptionCardContent className="flex flex-row flex-nowrap overflow-x-auto gap-3 pb-2 md:overflow-visible">
+        <div className="w-[15rem] max-h-[20rem] overflow-auto border rounded-md p-3 flex flex-col gap-2 flex-shrink-0">
           {bangsTabs.map((tab) => (
             <Button
               key={tab.id}
@@ -304,7 +304,7 @@ export default function CustomBangs() {
             <Plus /> Add Bangs
           </Button>
         </div>
-        <div className="flex flex-col gap-4 border grow rounded-md p-3 pt-4">
+        <div className="flex flex-col gap-4 border rounded-md p-3 pt-4 min-w-[20rem] flex-shrink-0 md:flex-1">
           {editingBang ? ( // <--- Render berdasarkan editingBang
             <>
               <div className="grid w-full max-w-sm items-center gap-1.5">

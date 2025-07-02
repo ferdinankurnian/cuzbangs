@@ -144,6 +144,7 @@ export default function CustomBangs() {
       );
 
       const errors = validateAllBangs(bangsForValidation);
+      console.log("Validation errors:", errors);
       // Always update Dexie, even if there are validation errors
       console.log("Debounced: Updating bang in Dexie", updatedBang);
       updateBangs(updatedBang);

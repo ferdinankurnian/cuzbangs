@@ -9,10 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Globe, Plus, Trash } from "lucide-react";
+
+import { Globe, Plus, Trash, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react"; // <--- Tambahin useRef
 import { useBangsContext } from "@/context/BangsContext";
 import { type Bangs } from "@/db";
+import { cn } from "@/lib/utils";
 
 const getFaviconUrl = (url: string): string => {
   if (!url) return "";
@@ -45,6 +47,33 @@ export default function CustomBangs() {
   const [bangsName, setBangsName] = useState("");
   const [bangsCall, setBangsCall] = useState("");
   const [bangsURL, setBangsURL] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: { [key: string]: string };
+  }>({});
+
+  const validateAllBangs = (currentBangs: Bangs[]) => {
+    const errors: { [key: string]: { [key: string]: string } } = {};
+    currentBangs.forEach((bang) => {
+      const currentErrors: { [key: string]: string } = {};
+      const duplicates = currentBangs.filter((b) => b.id !== bang.id);
+
+      if (bang.s && duplicates.some((d) => d.s === bang.s)) {
+        currentErrors.s = "Bangs name already exists.";
+      }
+      if (bang.t && duplicates.some((d) => d.t === bang.t)) {
+        currentErrors.t = "Bangs call already exists.";
+      }
+      if (bang.u && duplicates.some((d) => d.u === bang.u)) {
+        currentErrors.u = "URL already exists.";
+      }
+
+      if (Object.keys(currentErrors).length > 0) {
+        errors[bang.id!] = currentErrors;
+      }
+    });
+    setValidationErrors(errors);
+    return errors;
+  };
 
   // Ref untuk timer debounce
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,6 +82,8 @@ export default function CustomBangs() {
   // dan mengisi editingBang saat activeTabId atau bangsTabs berubah
   useEffect(() => {
     if (isLoadingBangs) return;
+
+    validateAllBangs(bangsTabs); // Validate all bangs whenever bangsTabs changes
 
     if (
       bangsTabs.length > 0 &&
@@ -83,10 +114,6 @@ export default function CustomBangs() {
       ) {
         // Hanya update editingBang jika ada perubahan signifikan
         setEditingBang(currentActiveTab);
-        // Update local state with values from the selected tab
-        setBangsName(currentActiveTab.s || "");
-        setBangsCall(currentActiveTab.t || "");
-        setBangsURL(currentActiveTab.u || "");
       }
     }
   }, [bangsTabs, activeTabId, isLoadingBangs, editingBang]);
@@ -103,15 +130,22 @@ export default function CustomBangs() {
 
     // Set timer baru. Fungsi update akan dijalankan setelah 500ms tanpa ketikan
     debounceTimerRef.current = setTimeout(() => {
-      console.log("Debounced: Updating bang in Dexie", editingBang);
-      // Update the editingBang state with the local state values
       const updatedBang = {
         ...editingBang,
         s: bangsName,
         t: bangsCall,
         u: bangsURL,
-        d: extractDomain(bangsURL), // Extract domain here
+        d: extractDomain(bangsURL),
       };
+
+      // Create a temporary array of bangs to validate, replacing the current editingBang
+      const bangsForValidation = bangsTabs.map((b) =>
+        String(b.id) === activeTabId ? updatedBang : b,
+      );
+
+      const errors = validateAllBangs(bangsForValidation);
+      // Always update Dexie, even if there are validation errors
+      console.log("Debounced: Updating bang in Dexie", updatedBang);
       updateBangs(updatedBang);
     }, 500); // <-- Debounce delay 500ms
 
@@ -133,10 +167,8 @@ export default function CustomBangs() {
   // --- HANDLER UNTUK MENGGANTI TAB AKTIF ---
   const handleTabChange = (tabId: string) => {
     setActiveTabId(tabId);
-    // Saat tab diganti, langsung set editingBang ke versi terbaru dari tab tersebut
     const selectedTab = bangsTabs.find((tab) => String(tab.id) === tabId);
     setEditingBang(selectedTab || null);
-    // Update local state with values from the selected tab
     if (selectedTab) {
       setBangsName(selectedTab.s || "");
       setBangsCall(selectedTab.t || "");
@@ -147,7 +179,6 @@ export default function CustomBangs() {
       setBangsURL("");
     }
   };
-
   const handleAddBangs = async () => {
     const newBangTemplate = {
       d: "", // ini bisa kosong, nanti diisi saat user input URL
@@ -159,9 +190,9 @@ export default function CustomBangs() {
       const addedBang = await addBangs(newBangTemplate);
       setActiveTabId(String(addedBang.id));
       setEditingBang(addedBang);
-      setBangsName(addedBang.s || "");
-      setBangsCall(addedBang.t || "");
-      setBangsURL(addedBang.u || "");
+      setBangsName("");
+      setBangsCall("");
+      setBangsURL("");
     } catch (error) {
       console.error("Error adding new bang:", error);
     }
@@ -258,6 +289,9 @@ export default function CustomBangs() {
                 <Globe />
               )}
               <span className="truncate">{tab.s || "Untitled Bang"}</span>
+              {validationErrors[tab.id!] && (
+                <AlertTriangle className="text-yellow-500 w-4 h-4 ml-auto" />
+              )}
             </Button>
           ))}
           <Button
@@ -279,8 +313,39 @@ export default function CustomBangs() {
                   id="bangsname"
                   placeholder="Bangs name"
                   value={bangsName} // <--- Value dari local state
-                  onChange={(e) => setBangsName(e.target.value)} // <--- Update local state
+                  onChange={(e) => {
+                    setBangsName(e.target.value);
+                    // Trigger validation for all bangs on change
+                    const updatedBang = {
+                      ...editingBang!,
+                      s: e.target.value,
+                    };
+                    validateAllBangs(
+                      bangsTabs.map((b) =>
+                        String(b.id) === activeTabId ? updatedBang : b,
+                      ),
+                    );
+                  }}
+                  onBlur={() => {
+                    const updatedBang = {
+                      ...editingBang!,
+                      s: bangsName,
+                    };
+                    validateAllBangs(
+                      bangsTabs.map((b) =>
+                        String(b.id) === activeTabId ? updatedBang : b,
+                      ),
+                    );
+                  }}
+                  className={cn(
+                    validationErrors[activeTabId]?.s && "border-red-500",
+                  )}
                 />
+                {validationErrors[activeTabId]?.s && (
+                  <p className="text-red-500 text-xs">
+                    {validationErrors[activeTabId].s}
+                  </p>
+                )}
               </div>
               <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="bangscall">Bangs call</Label>
@@ -289,8 +354,38 @@ export default function CustomBangs() {
                   id="bangscall"
                   placeholder="Bangs call"
                   value={bangsCall} // <--- Value dari local state
-                  onChange={(e) => setBangsCall(e.target.value)} // <--- Update local state
+                  onChange={(e) => {
+                    setBangsCall(e.target.value);
+                    const updatedBang = {
+                      ...editingBang!,
+                      t: e.target.value,
+                    };
+                    validateAllBangs(
+                      bangsTabs.map((b) =>
+                        String(b.id) === activeTabId ? updatedBang : b,
+                      ),
+                    );
+                  }}
+                  onBlur={() => {
+                    const updatedBang = {
+                      ...editingBang!,
+                      t: bangsCall,
+                    };
+                    validateAllBangs(
+                      bangsTabs.map((b) =>
+                        String(b.id) === activeTabId ? updatedBang : b,
+                      ),
+                    );
+                  }}
+                  className={cn(
+                    validationErrors[activeTabId]?.t && "border-red-500",
+                  )}
                 />
+                {validationErrors[activeTabId]?.t && (
+                  <p className="text-red-500 text-xs">
+                    {validationErrors[activeTabId].t}
+                  </p>
+                )}
               </div>
               <div className="grid w-full max-w-sm items-center gap-1.5">
                 <Label htmlFor="url">URL</Label>
@@ -299,8 +394,38 @@ export default function CustomBangs() {
                   id="url"
                   placeholder="URL"
                   value={bangsURL} // <--- Value dari local state
-                  onChange={(e) => setBangsURL(e.target.value)} // <--- Update local state
+                  onChange={(e) => {
+                    setBangsURL(e.target.value);
+                    const updatedBang = {
+                      ...editingBang!,
+                      u: e.target.value,
+                    };
+                    validateAllBangs(
+                      bangsTabs.map((b) =>
+                        String(b.id) === activeTabId ? updatedBang : b,
+                      ),
+                    );
+                  }}
+                  onBlur={() => {
+                    const updatedBang = {
+                      ...editingBang!,
+                      u: bangsURL,
+                    };
+                    validateAllBangs(
+                      bangsTabs.map((b) =>
+                        String(b.id) === activeTabId ? updatedBang : b,
+                      ),
+                    );
+                  }}
+                  className={cn(
+                    validationErrors[activeTabId]?.u && "border-red-500",
+                  )}
                 />
+                {validationErrors[activeTabId]?.u && (
+                  <p className="text-red-500 text-xs">
+                    {validationErrors[activeTabId].u}
+                  </p>
+                )}
               </div>
               <div className="flex flex-row justify-end">
                 <Button

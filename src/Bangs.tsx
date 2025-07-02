@@ -38,7 +38,7 @@ const BangsHandler = () => {
   const bangMap = useMemo(
     () =>
       Object.fromEntries(
-        activeBangs.map((bang) => [bang.t.toLowerCase(), bang.u]),
+        activeBangs.map((bang) => [bang.t.toLowerCase(), bang]),
       ),
     [activeBangs],
   );
@@ -102,15 +102,20 @@ const BangsHandler = () => {
       const queryParts = [...words];
       queryParts.splice(bangIndex, 1); // remove bang word
       const finalQuery = queryParts.join(" ").trim();
-      const searchParam = encodeURIComponent(finalQuery);
-      const baseUrl = bangMap[detectedBang];
 
-      if (baseUrl.includes("{{{s}}}")) {
-        targetUrl = baseUrl.replace("{{{s}}}", searchParam);
-      } else if (baseUrl.includes("%s")) {
-        targetUrl = baseUrl.replace("%s", searchParam);
+      if (finalQuery) {
+        const searchParam = encodeURIComponent(finalQuery);
+        const baseUrl = bangMap[detectedBang].u;
+
+        if (baseUrl.includes("{{{s}}}")) {
+          targetUrl = baseUrl.replace("{{{s}}}", searchParam);
+        } else if (baseUrl.includes("%s")) {
+          targetUrl = baseUrl.replace("%s", searchParam);
+        } else {
+          targetUrl = baseUrl; // fallback, gak ada parameter
+        }
       } else {
-        targetUrl = baseUrl; // fallback, gak ada parameter
+        targetUrl = `https://${bangMap[detectedBang].d}`;
       }
     } else {
       targetUrl = defaultEngine.replace("%s", encodeURIComponent(rawQuery));

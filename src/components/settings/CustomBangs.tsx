@@ -242,7 +242,7 @@ export default function CustomBangs() {
               <Plus /> Add Bangs
             </Button>
           </div>
-          <div className="flex flex-col gap-4 border grow rounded-md p-3 pt-4">
+          <div className="flex flex-col gap-4 hidden md:block border grow rounded-md p-3 pt-4">
             <p className="text-center text-gray-500">
               You didn't have any custom bangs yet.
             </p>

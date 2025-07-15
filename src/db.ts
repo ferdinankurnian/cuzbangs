@@ -9,9 +9,10 @@ export interface Setting {
 export interface Bangs {
   id?: number;
   d: string;
-  s: string; // bangs name
-  t: string; // Shortcut/Trigger keyword, contoh "t3" (ini yang kita cari: !t3)
-  u: string; // URL template, contoh "https://www.t3.chat/new?q={{{s}}}"
+  s: string;
+  t: string;
+  u: string;
+  jc: boolean;
 }
 
 class cuzbangsDB extends Dexie {
@@ -36,6 +37,29 @@ class cuzbangsDB extends Dexie {
         { key: "cuzbangs.symbol_call", value: "!" },
         { key: "cuzbangs.first_position_call", value: "false" },
         { key: "duckduckgo.bangs_presets", value: "true" },
+      ]);
+      this.bangs.bulkAdd([
+        {
+          d: "cuzbangs.vercel.app",
+          s: "cuzbangs",
+          t: "cuzbangs",
+          u: "https://cuzbangs.vercel.app/",
+          jc: true,
+        },
+        {
+          d: "chatgpt.com",
+          s: "ChatGPT",
+          t: "c",
+          u: "https://chatgpt.com/?q=%s",
+          jc: false,
+        },
+        {
+          d: "claude.ai",
+          s: "Claude",
+          t: "cl",
+          u: "https://claude.ai/new/?q=%s",
+          jc: false,
+        },
       ]);
     });
   }

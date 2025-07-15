@@ -7,11 +7,14 @@ import {
     OptionCardContent,
 } from "@/components/OptionCard";
 import { useState, useRef, useEffect } from "react";
+import { handleChange, handleImport } from "@/lib/importSettings";
+import { handleExport } from "@/lib/exportSettings";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useSettings } from "@/context/SettingsContext";
 import { useBangsContext } from "@/context/BangsContext";
 import { DownloadIcon, UploadIcon } from "lucide-react";
+import { type Bangs } from "@/db";
   
 export default function ImportExport() {
     const {
@@ -37,88 +40,34 @@ export default function ImportExport() {
         const timer = setTimeout(() => setFileName(""), 5000);
         return () => clearTimeout(timer);
     }, [fileName]);
-  
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-  
-      setFileName(file.name);
-  
-      try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-  
-        if (!data.settings) {
-          throw new Error("JSON doesn't contain 'settings' key.");
-        }
-  
-        const {
-          defaultEngine: importedDefaultEngine,
-          useCallSymbol: importedUseCallSymbol,
-          forceFirstBang: importedForceFirstBang,
-          ddgPresets: importedDdgPresets,
-          bangs,
-        } = data.settings;
-  
-        if (importedDefaultEngine !== undefined) setdefaultEngine(importedDefaultEngine);
-        if (importedUseCallSymbol !== undefined) setUseCallSymbol(importedUseCallSymbol);
-        if (importedForceFirstBang !== undefined) setforceFirstBang(importedForceFirstBang);
-        if (importedDdgPresets !== undefined) setddgPresets(importedDdgPresets);
-  
-        if (Array.isArray(bangs)) {
-          await Promise.all(
-            bangsTabs
-              .filter((b) => b.id !== undefined)
-              .map((b) => deleteBangs(b.id!))
-          );
-  
-          // Add new bangs
-          for (const bang of bangs) {
-            const { d, s, t, u } = bang;
-            if (d && s && t && u) {
-              await addBangs({ d, s, t, u });
-            }
-          }
-        }
-  
-        toast("Settings imported successfully");
-      } catch (err) {
-        console.error(err);
-        toast("Failed to import settings. Check the JSON file.");
-      } finally {
-        e.target.value = "";
-      }
+
+    // Wrap addBangs to return Promise<void> for importProps
+    // Accept Bangs (with id), strip id, and pass to addBangs
+    const voidAddBangs = async (bang: Bangs) => {
+      const { id, ...rest } = bang;
+      await addBangs(rest);
     };
-  
-    const handleImportClick = () => {
-      fileInputRef.current?.click();
+
+    const importProps = {
+      bangsTabs,
+      addBangs: voidAddBangs,
+      deleteBangs,
+      setdefaultEngine,
+      setUseCallSymbol,
+      setforceFirstBang,
+      setddgPresets,
+      toast,
+      setFileName,
     };
-  
-    const handleExport = () => {
-      try {
-        const data = {
-          settings: {
-            defaultEngine,
-            useCallSymbol,
-            forceFirstBang,
-            ddgPresets,
-            bangs: bangsTabs,
-          },
-        };
-  
-        const json = JSON.stringify(data, null, 2);
-        const blob = new Blob([json], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "cuzbang-settings.json";
-        a.click();
-  
-        toast("Settings exported successfully as JSON");
-      } catch (err) {
-        console.error(err);
-        toast("Failed to export settings.");
-      }
+
+
+    const exportProps = {
+      defaultEngine,
+      useCallSymbol,
+      forceFirstBang,
+      ddgPresets,
+      bangsTabs,
+      toast,
     };
   
     return (
@@ -135,7 +84,7 @@ export default function ImportExport() {
         </OptionCardHeader>
         <OptionCardContent>
             <div className="flex flex-col md:flex-row gap-2">
-                <Button variant="outline" size="sm" onClick={handleImportClick}>
+                <Button variant="outline" size="sm" onClick={() => handleImport({ fileInputRef })}>
                     <UploadIcon className="w-4 h-4" /> Import from JSON
                 </Button>
                 
@@ -144,10 +93,10 @@ export default function ImportExport() {
                 type="file"
                 accept=".json"
                 style={{ display: "none" }}
-                onChange={handleFileChange}
+                onChange={(e) => handleChange({ e, ...importProps })}
                 />
 
-                <Button variant="outline" size="sm" onClick={handleExport}>
+                <Button variant="outline" size="sm" onClick={() => handleExport(exportProps)}>
                     <DownloadIcon className="w-4 h-4" /> Download as JSON
                 </Button>
             </div>

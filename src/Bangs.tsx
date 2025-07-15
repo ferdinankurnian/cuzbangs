@@ -99,23 +99,36 @@ const BangsHandler = () => {
     let targetUrl: string | null = null;
 
     if (detectedBang && bangMap[detectedBang]) {
-      const queryParts = [...words];
-      queryParts.splice(bangIndex, 1); // remove bang word
-      const finalQuery = queryParts.join(" ").trim();
+      const matchedBang = bangMap[detectedBang];
+      // Only treat as just call if the matched bang is from bangsTabs and has jc === true
+      let isJustCall = false;
+      if (Array.isArray(bangsTabs)) {
+        const userBang = bangsTabs.find(b => b.t.toLowerCase() === detectedBang);
+        isJustCall = !!(userBang && userBang.jc === true);
+      }
 
-      if (finalQuery) {
-        const searchParam = encodeURIComponent(finalQuery);
-        const baseUrl = bangMap[detectedBang].u;
-
-        if (baseUrl.includes("{{{s}}}")) {
-          targetUrl = baseUrl.replace("{{{s}}}", searchParam);
-        } else if (baseUrl.includes("%s")) {
-          targetUrl = baseUrl.replace("%s", searchParam);
-        } else {
-          targetUrl = baseUrl; // fallback, gak ada parameter
-        }
+      if (isJustCall) {
+        // Redirect immediately to the base URL, no query, no %s replacement
+        targetUrl = matchedBang.u;
       } else {
-        targetUrl = `https://${bangMap[detectedBang].d}`;
+        const queryParts = [...words];
+        queryParts.splice(bangIndex, 1); // remove bang word
+        const finalQuery = queryParts.join(" ").trim();
+
+        if (finalQuery) {
+          const searchParam = encodeURIComponent(finalQuery);
+          const baseUrl = matchedBang.u;
+
+          if (baseUrl.includes("{{{s}}}")) {
+            targetUrl = baseUrl.replace("{{{s}}}", searchParam);
+          } else if (baseUrl.includes("%s")) {
+            targetUrl = baseUrl.replace("%s", searchParam);
+          } else {
+            targetUrl = baseUrl; // fallback, gak ada parameter
+          }
+        } else {
+          targetUrl = `https://${matchedBang.d}`;
+        }
       }
     } else {
       targetUrl = defaultEngine.replace("%s", encodeURIComponent(rawQuery));
@@ -132,6 +145,7 @@ const BangsHandler = () => {
     forceFirstBang,
     useCallSymbol,
     bangMap,
+    bangsTabs, // ensure effect re-runs if user bangs change
   ]);
 
   return (

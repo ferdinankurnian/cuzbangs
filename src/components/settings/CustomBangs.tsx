@@ -9,7 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Globe, Plus, Trash, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useRef } from "react"; // <--- Tambahin useRef
 import { useBangsContext } from "@/context/BangsContext";
@@ -47,6 +48,7 @@ export default function CustomBangs() {
   const [bangsName, setBangsName] = useState("");
   const [bangsCall, setBangsCall] = useState("");
   const [bangsURL, setBangsURL] = useState("");
+  const [justCall, setJustCall] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: { [key: string]: string };
   }>({});
@@ -63,8 +65,33 @@ export default function CustomBangs() {
       if (bang.t && duplicates.some((d) => d.t === bang.t)) {
         currentErrors.t = "Bangs call already exists.";
       }
-      if (bang.u && duplicates.some((d) => d.u === bang.u)) {
-        currentErrors.u = "URL already exists.";
+      // --- Enhanced URL validation logic ---
+      if (bang.u) {
+        // 1. Must start with http:// or https://
+        if (!/^https?:\/\//.test(bang.u)) {
+          currentErrors.u = "URL must start with http:// or https://";
+        } else {
+          // 2. Must be a valid domain address
+          try {
+            const parsedUrl = new URL(bang.u);
+            if (!parsedUrl.hostname || parsedUrl.hostname.indexOf('.') === -1) {
+              currentErrors.u = "URL must contain a valid domain address.";
+            }
+          } catch {
+            currentErrors.u = "URL is not valid.";
+          }
+        }
+        // 3. Must contain exactly one %s
+        if (!currentErrors.u && !bang.jc) { // Only check %s if not justCall
+          const matches = bang.u.match(/%s/g) || [];
+          if (matches.length !== 1) {
+            currentErrors.u = "URL must contain exactly one %s.";
+          }
+        }
+        // 4. Duplicate URL check (only if no other error)
+        if (!currentErrors.u && duplicates.some((d) => d.u === bang.u)) {
+          currentErrors.u = "URL already exists.";
+        }
       }
 
       if (Object.keys(currentErrors).length > 0) {
@@ -96,6 +123,7 @@ export default function CustomBangs() {
       setBangsName(firstTab.s || "");
       setBangsCall(firstTab.t || "");
       setBangsURL(firstTab.u || "");
+      setJustCall(firstTab.jc || false);
     } else if (bangsTabs.length === 0 && activeTabId) {
       setActiveTabId("");
       setEditingBang(null);
@@ -103,6 +131,7 @@ export default function CustomBangs() {
       setBangsName("");
       setBangsCall("");
       setBangsURL("");
+      setJustCall(false);
     } else {
       // Jika activeTabId sudah ada dan valid di bangsTabs, update editingBang
       const currentActiveTab = bangsTabs.find(
@@ -136,6 +165,7 @@ export default function CustomBangs() {
         t: bangsCall,
         u: bangsURL,
         d: extractDomain(bangsURL),
+        jc: justCall,
       };
 
       // Create a temporary array of bangs to validate, replacing the current editingBang
@@ -174,10 +204,12 @@ export default function CustomBangs() {
       setBangsName(selectedTab.s || "");
       setBangsCall(selectedTab.t || "");
       setBangsURL(selectedTab.u || "");
+      setJustCall(selectedTab.jc || false);
     } else {
       setBangsName("");
       setBangsCall("");
       setBangsURL("");
+      setJustCall(false);
     }
   };
   const handleAddBangs = async () => {
@@ -186,6 +218,7 @@ export default function CustomBangs() {
       s: "",
       t: "",
       u: "",
+      jc: false,
     };
     try {
       const addedBang = await addBangs(newBangTemplate);
@@ -194,6 +227,7 @@ export default function CustomBangs() {
       setBangsName("");
       setBangsCall("");
       setBangsURL("");
+      setJustCall(false);
     } catch (error) {
       console.error("Error adding new bang:", error);
     }
@@ -205,7 +239,6 @@ export default function CustomBangs() {
     const idToDelete = editingBang.id;
     try {
       await deleteBangs(idToDelete);
-      // activeTabId dan editingBang akan diupdate oleh useEffect setelah bangsTabs berubah
     } catch (error) {
       console.error(`Error deleting bang with ID ${idToDelete}:`, error);
     }
@@ -267,11 +300,11 @@ export default function CustomBangs() {
         </OptionCardTitleArea>
       </OptionCardHeader>
       <OptionCardContent className="flex flex-row flex-nowrap overflow-x-auto gap-3 pb-2 md:overflow-visible">
-        <div className="w-[15rem] max-h-[20rem] overflow-auto border rounded-md p-3 flex flex-col gap-2 flex-shrink-0">
+        <div className="w-[15rem] max-h-[20rem] overflow-auto border rounded-md p-3 flex flex-col gap-1 flex-shrink-0">
           {bangsTabs.map((tab) => (
             <Button
               key={tab.id}
-              variant={String(tab.id) === activeTabId ? "default" : "secondary"}
+              variant={String(tab.id) === activeTabId ? "default" : "ghost"}
               className="justify-start flex items-center gap-2"
               onClick={() => handleTabChange(String(tab.id))} // <--- Pakai handleTabChange
             >
@@ -428,7 +461,37 @@ export default function CustomBangs() {
                   </p>
                 )}
               </div>
-              <div className="flex flex-row justify-end">
+              <div className="flex flex-row justify-between items-center mt-auto">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="justcall"
+                        checked={justCall}
+                        onCheckedChange={(checked) => {
+                          setJustCall(checked as boolean);
+                          if (editingBang) {
+                            const updatedBang = {
+                              ...editingBang,
+                              jc: checked as boolean,
+                            };
+                            validateAllBangs(
+                              bangsTabs.map((b) =>
+                                String(b.id) === activeTabId ? updatedBang : b,
+                              ),
+                            );
+                            updateBangs(updatedBang);
+                          }
+                        }}
+                      />
+                      <Label className="pt-1" htmlFor="justcall">Set Just for Calling</Label>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Set this bangs just for redirect.</p>
+                    <p>It won't send any queries to this bangs.</p>
+                  </TooltipContent>
+                </Tooltip>
                 <Button
                   variant={"destructive"}
                   className="w-fit"

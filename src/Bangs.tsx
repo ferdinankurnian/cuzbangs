@@ -12,7 +12,6 @@ const BangsHandler = () => {
     useSettings();
   const { bangsTabs } = useBangsContext();
 
-  // --- Prioritaskan bangsTabs dari context ---
   const hasValidBangsTabs =
     Array.isArray(bangsTabs) && bangsTabs.some((b) => b?.t && b?.u);
 
@@ -26,10 +25,9 @@ const BangsHandler = () => {
         ? Object.fromEntries(ddgBangs.map((b) => [b.t.toLowerCase(), b]))
         : {};
 
-    // Merge dan prioritaskan userBangs
     const mergedBangs = {
       ...ddgBangsMap,
-      ...userBangsMap, // override
+      ...userBangsMap,
     };
 
     return Object.values(mergedBangs);
@@ -73,7 +71,6 @@ const BangsHandler = () => {
     for (const i of checkIndexes) {
       const word = words[i];
 
-      // 1. If a call symbol is defined (e.g. !, @, #, $, /) check for that prefix
       if (useCallSymbol && word.startsWith(useCallSymbol)) {
         const potentialBang = word.slice(useCallSymbol.length).toLowerCase();
         if (bangMap[potentialBang]) {
@@ -83,9 +80,6 @@ const BangsHandler = () => {
         }
       }
 
-      // 2. Fallback: if the configured symbol is NOT mandatory (i.e. plain word calls)
-      //    we allow matching without any prefix. This behaviour mirrors the previous
-      //    implementation when `useCallSymbol` was set to a non-exclamation value.
       if (!useCallSymbol || useCallSymbol === "none") {
         const cleanWord = word.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
         if (bangMap[cleanWord]) {
@@ -100,7 +94,6 @@ const BangsHandler = () => {
 
     if (detectedBang && bangMap[detectedBang]) {
       const matchedBang = bangMap[detectedBang];
-      // Only treat as just call if the matched bang is from bangsTabs and has jc === true
       let isJustCall = false;
       if (Array.isArray(bangsTabs)) {
         const userBang = bangsTabs.find(b => b.t.toLowerCase() === detectedBang);
@@ -108,11 +101,10 @@ const BangsHandler = () => {
       }
 
       if (isJustCall) {
-        // Redirect immediately to the base URL, no query, no %s replacement
         targetUrl = matchedBang.u;
       } else {
         const queryParts = [...words];
-        queryParts.splice(bangIndex, 1); // remove bang word
+        queryParts.splice(bangIndex, 1);
         const finalQuery = queryParts.join(" ").trim();
 
         if (finalQuery) {
@@ -124,7 +116,7 @@ const BangsHandler = () => {
           } else if (baseUrl.includes("%s")) {
             targetUrl = baseUrl.replace("%s", searchParam);
           } else {
-            targetUrl = baseUrl; // fallback, gak ada parameter
+            targetUrl = baseUrl;
           }
         } else {
           targetUrl = `https://${matchedBang.d}`;
@@ -145,7 +137,7 @@ const BangsHandler = () => {
     forceFirstBang,
     useCallSymbol,
     bangMap,
-    bangsTabs, // ensure effect re-runs if user bangs change
+    bangsTabs,
   ]);
 
   return (

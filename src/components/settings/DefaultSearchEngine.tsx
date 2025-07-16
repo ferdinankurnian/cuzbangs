@@ -31,6 +31,7 @@ export default function DefaultSearchEngine({
   searchEngine,
   setsearchEngine,
 }: DefaultSearchEngineProps) {
+  const [customUrlError, setCustomUrlError] = React.useState("");
   const defaultEngines = [
     { label: "Google", value: "https://www.google.com/search?q=%s" },
     { label: "Bing", value: "https://www.bing.com/search?q=%s" },
@@ -106,9 +107,32 @@ export default function DefaultSearchEngine({
             onChange={(e) => {
               const val = e.target.value;
               setCustomUrl(val);
-              setsearchEngine(val);
+              let error = '';
+              if (!val.trim()) {
+                error = 'URL cannot be empty';
+              } else {
+                try {
+                  const url = new URL(val);
+                  if (!(url.protocol === 'https:' || url.protocol === 'http:')) {
+                    error = 'URL must start with http:// or https://';
+                  } else if (!url.hostname || url.hostname.indexOf('.') === -1) {
+                    error = 'URL must have a valid domain';
+                  } else if ((val.match(/%s/g) || []).length !== 1) {
+                    error = 'URL must contain exactly one %s';
+                  }
+                } catch {
+                  error = 'Invalid URL format';
+                }
+              }
+              setCustomUrlError(error);
+              if (!error) {
+                setsearchEngine(val);
+              }
             }}
           />
+          {customUrlError && (
+            <p className="text-xs text-red-500 mt-1">{customUrlError}</p>
+          )}
         </OptionCardContent>
       )}
     </OptionCard>

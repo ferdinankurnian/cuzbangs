@@ -3,8 +3,14 @@ import { Input } from "@/components/ui/input";
 import { ClipboardIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 function App() {
+
+  useEffect(() => {
+    document.title = "cuzbangs. cuz it bangs";
+  }, []);
+
   const handleXIydheko = () => {
     window.open("https://x.com/iydheko", "_blank");
   };

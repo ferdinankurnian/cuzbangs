@@ -9,8 +9,14 @@ import DdgBangsPresets from "./components/settings/DdgBangsPresets";
 import CustomBangs from "./components/settings/CustomBangs";
 import { useSettings } from "./context/SettingsContext";
 import ImportExport from "./components/settings/ImportExport";
+import { useEffect } from "react";
 
 export default function Settings() {
+
+  useEffect(() => {
+    document.title = "Settings - cuzbangs";
+  }, []);
+
   const {
     defaultEngine,
     setdefaultEngine,

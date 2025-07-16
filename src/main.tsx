@@ -1,4 +1,3 @@
-import { scan } from "react-scan";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
@@ -8,10 +7,6 @@ import Settings from "./Settings";
 import BangsHandler from "./Bangs";
 import { AppProviders } from "./context/AppProvider";
 import { Toaster } from "@/components/ui/sonner";
-
-scan({
-  enabled: true,
-})
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

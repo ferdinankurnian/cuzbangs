@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/go",
+      "destination": "/redirect.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

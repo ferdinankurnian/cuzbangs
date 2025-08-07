@@ -70,10 +70,10 @@ export const handleChange = async ({
 
     toast("Settings imported successfully");
     } catch (err) {
-    console.error(err);
-    toast("Failed to import settings. Check the JSON file.");
+        console.error(err);
+        toast("Failed to import settings. Check the JSON file.");
     } finally {
-    e.target.value = "";
+        e.target.value = "";
     }
 };
 

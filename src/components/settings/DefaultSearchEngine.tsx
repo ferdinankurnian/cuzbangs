@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   OptionCard,
   OptionCardHeader,
@@ -21,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface DefaultSearchEngineProps {
   searchEngine: string;
@@ -31,16 +31,25 @@ export default function DefaultSearchEngine({
   searchEngine,
   setsearchEngine,
 }: DefaultSearchEngineProps) {
-  const [customUrlError, setCustomUrlError] = React.useState("");
+  const [customUrlError, setCustomUrlError] = useState("");
   const defaultEngines = [
     { label: "Google", value: "https://www.google.com/search?q=%s" },
     { label: "Bing", value: "https://www.bing.com/search?q=%s" },
     { label: "DuckDuckGo", value: "https://duckduckgo.com/?q=%s" },
   ];
 
-  const [customUrl, setCustomUrl] = React.useState(
+  const [customUrl, setCustomUrl] = useState(
     !defaultEngines.some((se) => se.value === searchEngine) ? searchEngine : "",
   );
+
+  useEffect(() => {
+    const isNowCustom = !defaultEngines.some(
+      (se) => se.value === searchEngine,
+    );
+    if (isNowCustom) {
+      setCustomUrl(searchEngine);
+    }
+  }, [searchEngine, defaultEngines]);
 
   const isCustom = !defaultEngines.some((se) => se.value === searchEngine);
 

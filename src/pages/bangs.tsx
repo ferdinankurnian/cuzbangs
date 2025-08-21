@@ -1,9 +1,9 @@
 // src/Bangs.tsx
 import { useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { useSettings } from "./context/SettingsContext";
-import { bangs as ddgBangs } from "./data/bang";
-import { useBangsContext } from "./context/BangsContext";
+import { useSettings } from "../context/SettingsContext";
+import { bangs as ddgBangs } from "../data/bang";
+import { useBangsContext } from "../context/BangsContext";
 import { Loader2 } from "lucide-react";
 
 const BangsHandler = () => {

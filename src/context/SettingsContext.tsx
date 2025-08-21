@@ -70,9 +70,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     loadSettings();
   }, []);
 
-  const setdefaultEngine = useCallback((engine: string) => {
+  const setdefaultEngine = useCallback(async (engine: string) => {
     setdefaultEngineState(engine);
-    db.settings.put({ key: "cuzbangs.default_engine", value: engine });
+    try {
+      await db.settings.put({ key: "cuzbangs.default_engine", value: engine });
+      console.log("Default engine saved to IndexedDB:", engine);
+    } catch (error) {
+      console.error("Failed to save default engine to IndexedDB:", error);
+    }
   }, []);
 
   const setcallSymbol = useCallback((symbol: string) => {

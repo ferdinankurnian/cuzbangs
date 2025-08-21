@@ -3,11 +3,12 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./index.css";
-import App from "./App";
-import Settings from "./Settings";
-import BangsHandler from "./Bangs";
+import App from "./pages/home";
+import Settings from "./pages/settings";
+import BangsHandler from "./pages/bangs";
 import { AppProviders } from "./context/AppProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 scan({
   enabled: import.meta.env.DEV
@@ -16,6 +17,7 @@ scan({
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Toaster />
+    <SpeedInsights />
     <AppProviders>
       <BrowserRouter>
         <Routes>

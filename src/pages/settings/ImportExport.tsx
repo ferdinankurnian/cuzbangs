@@ -1,11 +1,11 @@
 import {
-    OptionCard,
-    OptionCardHeader,
-    OptionCardTitleArea,
-    OptionCardTitle,
-    OptionCardDescription,
-    OptionCardContent,
-} from "@/components/OptionCard";
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { useState, useRef, useEffect } from "react";
 import { handleChange, handleImport } from "@/lib/importSettings";
 import { handleExport } from "@/lib/exportSettings";
@@ -15,7 +15,7 @@ import { useSettings } from "@/context/SettingsContext";
 import { useBangsContext } from "@/context/BangsContext";
 import { DownloadIcon, UploadIcon } from "lucide-react";
 import { type Bangs } from "@/db";
-  
+
 export default function ImportExport() {
   const {
     setdefaultEngine,
@@ -29,7 +29,7 @@ export default function ImportExport() {
   } = useSettings();
 
   const { bangsTabs, deleteBangs, addBangs } = useBangsContext();
-  const [fileName, setFileName] = useState<string>("");  
+  const [fileName, setFileName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -66,40 +66,37 @@ export default function ImportExport() {
   };
 
   return (
-    <OptionCard>
-      <OptionCardHeader>
-        <OptionCardTitleArea>
-          <OptionCardTitle>Import / Export Settings</OptionCardTitle>
-          <OptionCardDescription>
-            <p className="text-sm opacity-75">
-              Import or export your settings with a cuzbangs JSON file.
-            </p>
-          </OptionCardDescription>
-        </OptionCardTitleArea>
-      </OptionCardHeader>
-      <OptionCardContent>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Import / Export Settings</CardTitle>
+          <CardDescription>Import or export your settings with a cuzbangs JSON file.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex flex-col md:flex-row gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleImport({ fileInputRef })}>
-                  <UploadIcon className="w-4 h-4" /> Import from JSON
-              </Button>
-              
-              <input
+            <Button variant="outline" size="sm" onClick={() => handleImport({ fileInputRef })}>
+              <UploadIcon className="w-4 h-4" /> Import from JSON
+            </Button>
+
+            <input
               ref={fileInputRef}
               type="file"
               accept=".json"
               style={{ display: "none" }}
               onChange={(e) => handleChange({ e, ...importProps })}
-              />
+            />
 
-              <Button variant="outline" size="sm" onClick={() => handleExport(exportProps)}>
-                  <DownloadIcon className="w-4 h-4" /> Download as JSON
-              </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport(exportProps)}>
+              <DownloadIcon className="w-4 h-4" /> Download as JSON
+            </Button>
           </div>
-
-          {fileName && (
-              <p className="text-xs opacity-70 mt-2">Selected file: {fileName}</p>
-          )}
-      </OptionCardContent>
-    </OptionCard>
+        </CardContent>
+        {fileName && (
+          <CardFooter>
+            <p className="text-xs opacity-70 mt-2">Selected file: {fileName}</p>
+          </CardFooter>
+        )}
+      </Card>
+    </>
   );
 }

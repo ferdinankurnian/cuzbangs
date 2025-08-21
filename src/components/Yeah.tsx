@@ -12,7 +12,7 @@ export default function Yeah() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Yeah!</Button>
+        <Button variant="outline" className="w-fit ml-auto">Yeah!</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

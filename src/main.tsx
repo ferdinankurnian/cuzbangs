@@ -8,7 +8,7 @@ import Settings from "./Settings";
 import BangsHandler from "./Bangs";
 import { AppProviders } from "./context/AppProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 scan({
   enabled: import.meta.env.DEV

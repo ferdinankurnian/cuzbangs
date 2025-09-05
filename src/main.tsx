@@ -8,6 +8,7 @@ import Settings from "./Settings";
 import BangsHandler from "./Bangs";
 import { AppProviders } from "./context/AppProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 scan({
   enabled: import.meta.env.DEV
@@ -15,6 +16,7 @@ scan({
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <SpeedInsights />
     <Toaster />
     <AppProviders>
       <BrowserRouter>

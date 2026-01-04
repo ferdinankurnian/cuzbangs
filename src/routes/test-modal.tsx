@@ -1,5 +1,6 @@
-
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/test-modal")({
@@ -22,7 +23,7 @@ function RouteComponent() {
 		const newUrl = new URL(window.location.href);
 		newUrl.searchParams.set("itemId", id);
 		window.history.pushState({}, "", newUrl);
-	}
+	};
 
 	const handleClose = () => {
 		setOpenItemId(null);
@@ -30,7 +31,7 @@ function RouteComponent() {
 		const newUrl = new URL(window.location.href);
 		newUrl.searchParams.delete("itemId");
 		window.history.pushState({}, "", newUrl);
-	}
+	};
 
 	return (
 		<div className="min-h-screen flex flex-col max-w-2xl mx-auto mt-20 space-y-8 px-4 pb-24">
@@ -52,20 +53,27 @@ function RouteComponent() {
 						}}
 					>
 						<DialogTrigger asChild>
-							<div
+							<button
+								type="button"
 								onClick={() => handleOpen(item.id)}
-								className="p-6 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										handleOpen(item.id);
+									}
+								}}
+								className="w-full text-left p-6 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
 							>
 								<h3 className="font-semibold">{item.name}</h3>
 								<p className="text-sm text-muted-foreground">
 									Click me (Manual History API)
 								</p>
-							</div>
+							</button>
 						</DialogTrigger>
 						<BangDetailsDialogContent
 							mode="store"
 							bang={{
 								name: item.name,
+								trigger: item.id,
 								url: `https://example.com/${item.id}`,
 								description: `Description for ${item.name}`,
 								image: `https://ui-avatars.com/api/?name=${item.name}`,
@@ -80,5 +88,5 @@ function RouteComponent() {
 				))}
 			</div>
 		</div>
-	)
+	);
 }

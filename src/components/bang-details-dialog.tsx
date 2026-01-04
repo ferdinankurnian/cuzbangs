@@ -462,18 +462,14 @@ export function BangDetailsDialogContent({
 									</PopoverContent>
 								</Popover>
 							</>
+						) : isModified ? (
+							<Button variant="outline" onClick={onOpenSettings}>
+								<Edit2 /> Open in Settings
+							</Button>
 						) : (
-							<>
-								{isModified ? (
-									<Button variant="outline" onClick={onOpenSettings}>
-										<Edit2 /> Open in Settings
-									</Button>
-								) : (
-									<Button onClick={onCustomize}>
-										<Plus /> Customize this bang
-									</Button>
-								)}
-							</>
+							<Button onClick={onCustomize}>
+								<Plus /> Customize this bang
+							</Button>
 						)}
 					</div>
 				</div>
@@ -539,9 +535,7 @@ export function BangDetailsDialogContent({
 										className="pb-4"
 									>
 										<EditableBangCall
-											prefix={
-												bang.name.toLowerCase().replace(" site", "") + "/"
-											}
+											prefix={`${bang.name.toLowerCase().replace(" site", "")}/`}
 											value={item.call}
 											description={item.desc}
 											url={item.url}

@@ -27,8 +27,8 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { Item, ItemGroup } from "@/components/ui/item";
-import type { BangEntry } from "@/lib/db";
-import { BangEntrySchema, db } from "@/lib/db";
+import { syncBangs } from "@/lib/bangs-sync";
+import { type BangEntry, BangEntrySchema, db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
 const BATCH_SIZE = 30;
@@ -73,6 +73,11 @@ function RouteComponent() {
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
 	const loadMoreRef = useRef<HTMLDivElement>(null);
+
+	// Trigger popularity sync when on store page
+	useEffect(() => {
+		syncBangs({ popularity: true });
+	}, []);
 
 	// Debounce search query
 	useEffect(() => {

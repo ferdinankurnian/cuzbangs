@@ -1,4 +1,3 @@
-import { useConvex } from "convex/react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { syncBangs } from "@/lib/bangs-sync";
 import { db } from "@/lib/db";
@@ -12,7 +11,6 @@ type AppContextType = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-	const convex = useConvex();
 	const [isConsented, setIsConsented] = useState<boolean>(() => {
 		if (typeof window !== "undefined") {
 			return localStorage.getItem("cuzbangs-consent") === "true";
@@ -22,9 +20,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		if (isConsented) {
-			syncBangs(convex);
+			syncBangs();
 		}
-	}, [isConsented, convex]);
+	}, [isConsented]);
 
 	const acceptConsent = () => {
 		setIsConsented(true);
@@ -37,7 +35,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		await Promise.all([
 			db.storeBangs.clear(),
 			db.userBangs.clear(),
-			db.configs.clear(),
+			db.settings.clear(),
 			db.pings.clear(),
 		]);
 	};

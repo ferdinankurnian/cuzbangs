@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ArrowRightIcon, Search } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({ component: App });
 
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, SETTING_KEYS } from "@/lib/db";
+
 function App() {
 	const { isConsented, acceptConsent } = useApp();
 	const navigate = useNavigate();
@@ -32,6 +36,40 @@ function App() {
 	const [selectedIndex, setSelectedIndex] = useState(-1);
 	const [showConsentModal, setShowConsentModal] = useState(false);
 	const suggestionRef = useRef<HTMLDivElement>(null);
+
+	// Get user's preferred symbol
+	const symbolSetting = useLiveQuery(() =>
+		db.settings.where("key").equals(SETTING_KEYS.SYMBOL).first(),
+	);
+	const symbol = (symbolSetting?.value as string) || "!";
+
+	// Dynamic placeholder logic
+	const [placeholderIndex, setPlaceholderIndex] = useState(0);
+	const [placeholders, setPlaceholders] = useState<string[]>([
+		"yt tutorial masak",
+		"gh iydheko",
+		"gpt buatin pantun",
+	]);
+
+	useEffect(() => {
+		fetch("/data/placeholders.json")
+			.then((res) => res.json())
+			.then((data) => {
+				if (Array.isArray(data) && data.length > 0) {
+					setPlaceholders(data);
+				}
+			})
+			.catch(() => {});
+	}, []);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, [placeholders.length]);
+
+	const currentPlaceholder = `Try \`${symbol}${placeholders[placeholderIndex]}\``;
 
 	useEffect(() => {
 		const updateSuggestions = async () => {
@@ -102,9 +140,28 @@ function App() {
 						{isConsented ? (
 							<>
 								<form onSubmit={handleSearch} className="w-full max-w-xl">
-									<InputGroup size="lg" className="w-full">
+									<InputGroup
+										size="lg"
+										className="w-full relative overflow-hidden"
+									>
+										{!query && (
+											<div className="absolute inset-0 flex items-center pl-13 pointer-events-none z-10">
+												<AnimatePresence mode="wait">
+													<motion.span
+														key={currentPlaceholder}
+														initial={{ opacity: 0, filter: "blur(5px)", y: 2 }}
+														animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+														exit={{ opacity: 0, filter: "blur(5px)", y: -2 }}
+														transition={{ duration: 0.4, ease: "easeInOut" }}
+														className="text-muted-foreground text-lg"
+													>
+														{currentPlaceholder}
+													</motion.span>
+												</AnimatePresence>
+											</div>
+										)}
 										<InputGroupInput
-											placeholder="Try `!c hey, chatgpt`"
+											placeholder=""
 											value={query}
 											onChange={(e) => {
 												setQuery(e.target.value);
@@ -132,7 +189,6 @@ function App() {
 										</InputGroupButton>
 									</InputGroup>
 								</form>
-
 								{showSuggestions && suggestions.length > 0 && (
 									<div
 										ref={suggestionRef}

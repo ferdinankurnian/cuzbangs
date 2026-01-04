@@ -1,8 +1,14 @@
 import { z } from "zod";
-import { type AppConfig, BangEntrySchema, db } from "./db";
+import {
+	type AppConfig,
+	type BangEntry,
+	BangEntrySchema,
+	db,
+	SETTING_KEYS,
+} from "./db";
 
 const DATA_URL = "/data/bangs.json";
-let cachedFallback: any[] | null = null;
+let cachedFallback: BangEntry[] | null = null;
 
 async function fetchFallbackBangs() {
 	if (cachedFallback) return cachedFallback;
@@ -29,11 +35,89 @@ const DEFAULT_CONFIG: AppConfig = {
 	selectedSymbol: "!",
 	forceBangsFirst: false,
 	useStoreBangs: true,
+	enablePopularity: true,
 };
 
 async function getConfig(): Promise<AppConfig> {
-	const config = await db.configs.toCollection().first();
-	return config || DEFAULT_CONFIG;
+	const settings = await db.settings.toArray();
+	const configMap = new Map(settings.map((s) => [s.key, s.value]));
+
+	return {
+		selectedEngine:
+			(configMap.get(SETTING_KEYS.ENGINE) as string) ||
+			DEFAULT_CONFIG.selectedEngine,
+		customUrl:
+			(configMap.get(SETTING_KEYS.CUSTOM_URL) as string) ||
+			DEFAULT_CONFIG.customUrl,
+		selectedSymbol:
+			(configMap.get(SETTING_KEYS.SYMBOL) as string) ||
+			DEFAULT_CONFIG.selectedSymbol,
+		forceBangsFirst:
+			configMap.get(SETTING_KEYS.FORCE_FIRST) === "true" ||
+			configMap.get(SETTING_KEYS.FORCE_FIRST) === true,
+		useStoreBangs:
+			configMap.get(SETTING_KEYS.USE_STORE) === "true" ||
+			configMap.get(SETTING_KEYS.USE_STORE) === true,
+		enablePopularity:
+			configMap.get(SETTING_KEYS.POPULARITY) === "true" ||
+			configMap.get(SETTING_KEYS.POPULARITY) === true ||
+			configMap.get(SETTING_KEYS.POPULARITY) === undefined,
+	};
+}
+
+export async function updateConfig(updates: Partial<AppConfig>) {
+	const promises: Promise<string>[] = [];
+
+	if (updates.selectedEngine !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.ENGINE,
+				value: updates.selectedEngine,
+			}),
+		);
+	}
+	if (updates.customUrl !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.CUSTOM_URL,
+				value: updates.customUrl,
+			}),
+		);
+	}
+	if (updates.selectedSymbol !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.SYMBOL,
+				value: updates.selectedSymbol,
+			}),
+		);
+	}
+	if (updates.forceBangsFirst !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.FORCE_FIRST,
+				value: String(updates.forceBangsFirst),
+			}),
+		);
+	}
+	if (updates.useStoreBangs !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.USE_STORE,
+				value: String(updates.useStoreBangs),
+			}),
+		);
+	}
+	if (updates.enablePopularity !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.POPULARITY,
+				value: String(updates.enablePopularity),
+			}),
+		);
+	}
+
+	await Promise.all(promises);
 }
 
 function getEngineUrl(
@@ -105,10 +189,26 @@ export async function parseInput(input: string) {
  */
 export async function logUsage(trigger: string) {
 	try {
+		const config = await getConfig();
+		if (!config.enablePopularity) return;
+
+		// 1. Log for global sync
 		await db.pings.add({
 			t: trigger,
 			ts: Date.now(),
 		});
+
+		// 2. Update local rank instantly for UI feedback
+		const localUpdate = async (
+			table: typeof db.storeBangs | typeof db.userBangs,
+		) => {
+			const entry = await table.where("t").equals(trigger).first();
+			if (entry && entry.id !== undefined) {
+				await table.update(entry.id, { r: (entry.r || 0) + 1 });
+			}
+		};
+
+		await Promise.all([localUpdate(db.storeBangs), localUpdate(db.userBangs)]);
 	} catch (error) {
 		console.error("Failed to log usage:", error);
 	}
@@ -182,6 +282,58 @@ export async function getRedirectUrl(input: string): Promise<string> {
 				.replace(/\?&/, "?");
 
 	return processedUrl;
+}
+
+/**
+ * Gets local suggestions from Dexie based on trigger or name.
+ */
+export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
+	const trimmed = input.trim();
+	const config = await getConfig();
+	const symbol = config.selectedSymbol;
+
+	// Only suggest if it starts with the user's selected symbol
+	if (!trimmed.startsWith(symbol)) return [];
+
+	const query = trimmed.substring(symbol.length).toLowerCase();
+	if (!query) return [];
+
+	// Search in both userBangs and storeBangs
+	const [userBangs, storeBangs] = await Promise.all([
+		db.userBangs
+			.filter(
+				(b) =>
+					b.t.some((t) => t.toLowerCase().startsWith(query)) ||
+					b.s.toLowerCase().includes(query),
+			)
+			.toArray(),
+		db.storeBangs
+			.filter(
+				(b) =>
+					b.t.some((t) => t.toLowerCase().startsWith(query)) ||
+					b.s.toLowerCase().includes(query),
+			)
+			.toArray(),
+	]);
+
+	// Merge and sort by rank (popularity)
+	const all = [...userBangs, ...storeBangs].sort(
+		(a, b) => (b.r || 0) - (a.r || 0),
+	);
+
+	// Unique by primary trigger and limit to 10
+	const seen = new Set();
+	const unique: BangEntry[] = [];
+	for (const b of all) {
+		const primary = b.t[0];
+		if (!seen.has(primary)) {
+			seen.add(primary);
+			unique.push(b);
+		}
+		if (unique.length >= 10) break;
+	}
+
+	return unique;
 }
 
 /**

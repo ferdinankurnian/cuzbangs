@@ -1,14 +1,12 @@
-import type { ConvexHttpClient } from "convex/browser";
-import type { ConvexReactClient } from "convex/react";
 import { z } from "zod";
-import { api } from "../../convex/_generated/api";
 import { type BangEntry, BangEntrySchema, db } from "./db";
+import { POPULARITY_KEY, redis } from "./redis";
 
 const DATA_URL = "/data/bangs.json";
 
 let isSyncing = false;
 
-export async function syncBangs(convex?: ConvexHttpClient | ConvexReactClient) {
+export async function syncBangs(options: { popularity?: boolean } = {}) {
 	if (isSyncing) return;
 	isSyncing = true;
 
@@ -34,54 +32,101 @@ export async function syncBangs(convex?: ConvexHttpClient | ConvexReactClient) {
 			entries = z.array(BangEntrySchema).parse(rawData);
 		} else {
 			console.log("Bangs base data is up to date.");
-			// We still need the entries to update their 'r' field from global popularity
-			// but loading all of them from Dexie just to update 'r' might be slow.
-			// For now, let's load them if we want to refresh 'r'.
 			entries = await db.storeBangs.toArray();
 		}
 
-		// 1. Fetch Popularity from Convex
+		// 1. Local Time Window Logic (AM/PM)
+		const now = new Date();
+		const hours = now.getHours();
+		const windowId = hours < 12 ? "AM" : "PM";
+		const currentWindowKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}-${windowId}`;
+
+		const lastReadWindow = localStorage.getItem("last-popularity-window-read");
+		const lastPushWindow = localStorage.getItem("last-popularity-window-push");
+
 		let globalPopularity: Record<string, number> = {};
-		if (convex) {
+		const shouldPull =
+			options.popularity && lastReadWindow !== currentWindowKey;
+
+		// --- STEP 1: PULL (Fetch from Redis) ---
+		if (shouldPull) {
 			try {
-				globalPopularity = await convex.query(api.popularity.getAllPopularity);
+				console.log(
+					`[Store] New local window (${windowId}), pulling from Redis...`,
+				);
+				const data =
+					await redis.hgetall<Record<string, number | string>>(POPULARITY_KEY);
+				if (data) {
+					globalPopularity = Object.entries(data).reduce(
+						(acc, [key, val]) => {
+							acc[key] =
+								typeof val === "string"
+									? Number.parseInt(val, 10)
+									: (val as number);
+							return acc;
+						},
+						{} as Record<string, number>,
+					);
+					localStorage.setItem(
+						"global-popularity-cache",
+						JSON.stringify(globalPopularity),
+					);
+					localStorage.setItem("last-popularity-window-read", currentWindowKey);
+				}
 			} catch (err) {
-				console.error("Failed to fetch global popularity:", err);
+				console.error("Failed to pull from Redis:", err);
 			}
+		} else {
+			const cached = localStorage.getItem("global-popularity-cache");
+			if (cached) globalPopularity = JSON.parse(cached);
 		}
 
-		// 2. Clear and bulk add with global hits (or update)
-		// If we load all entries, bulkAdd is safer to ensure consistency
-		const entriesWithPopularity = entries.map((entry) => {
-			const primaryTrigger = entry.t[0];
-			return {
-				...entry,
-				r: globalPopularity[primaryTrigger] || 0,
-			};
-		});
+		// --- STEP 2: UPDATE DEXIE (If base changed OR pulled) ---
+		if (shouldFetchBase || shouldPull) {
+			const entriesWithPopularity = entries.map((entry) => {
+				const primaryTrigger = entry.t[0];
+				return {
+					...entry,
+					r: globalPopularity[primaryTrigger] || entry.r || 0,
+				};
+			});
+			await db.storeBangs.clear();
+			await db.storeBangs.bulkAdd(entriesWithPopularity);
+		}
 
-		await db.storeBangs.clear();
-		await db.storeBangs.bulkAdd(entriesWithPopularity);
+		// --- STEP 3: PUSH (Setoran pings semalem/tadi pagi) ---
+		const shouldPush = lastPushWindow !== currentWindowKey;
+		if (shouldPush) {
+			// Find pings that happened BEFORE the current window started
+			const windowStart = new Date(now);
+			windowStart.setHours(hours < 12 ? 0 : 12, 0, 0, 0);
 
-		// 3. Push pending local hits to Convex
-		if (convex) {
-			const pendingPings = await db.pings.toArray();
+			const pendingPings = await db.pings
+				.where("ts")
+				.below(windowStart.getTime())
+				.toArray();
+
 			if (pendingPings.length > 0) {
-				const triggersToReport = pendingPings.map((p) => p.t);
 				try {
-					console.log(`Syncing ${pendingPings.length} hits to Convex...`);
-					await convex.mutation(api.popularity.incrementHits, {
-						triggers: triggersToReport,
-					});
+					console.log(
+						`[Setoran] Pushing ${pendingPings.length} pings from previous window...`,
+					);
+					const pipeline = redis.pipeline();
+					for (const ping of pendingPings) {
+						pipeline.hincrby(POPULARITY_KEY, ping.t, 1);
+					}
+					await pipeline.exec();
 					await db.pings.bulkDelete(
 						pendingPings
 							.map((p) => p.id)
 							.filter((id): id is number => id !== undefined),
 					);
-					console.log("Hits synced successfully.");
+					localStorage.setItem("last-popularity-window-push", currentWindowKey);
 				} catch (err) {
-					console.error("Failed to sync local hits to Convex:", err);
+					console.error("Failed to push pings to Redis:", err);
 				}
+			} else {
+				localStorage.setItem("last-popularity-window-push", currentWindowKey);
 			}
 		}
 

@@ -40,21 +40,35 @@ export type Ping = z.infer<typeof PingSchema>;
 
 export type BangEntry = z.infer<typeof BangEntrySchema>;
 
-export const AppConfigSchema = z.object({
-	id: z.number().optional(),
-	selectedEngine: z.string(),
-	customUrl: z.string(),
-	selectedSymbol: z.string(),
-	forceBangsFirst: z.boolean(),
-	useStoreBangs: z.boolean(),
+export const SettingSchema = z.object({
+	key: z.string(),
+	value: z.any(),
 });
 
-export type AppConfig = z.infer<typeof AppConfigSchema>;
+export type Setting = z.infer<typeof SettingSchema>;
+
+export type AppConfig = {
+	selectedEngine: string;
+	customUrl: string;
+	selectedSymbol: string;
+	forceBangsFirst: boolean;
+	useStoreBangs: boolean;
+	enablePopularity: boolean;
+};
+
+export const SETTING_KEYS = {
+	ENGINE: "cuzbangs.default_engine",
+	CUSTOM_URL: "cuzbangs.custom_url",
+	SYMBOL: "cuzbangs.symbol_call",
+	FORCE_FIRST: "cuzbangs.first_position_call",
+	USE_STORE: "cuzbangs.use_storebangs",
+	POPULARITY: "cuzbangs.enable_popularity",
+} as const;
 
 export class cuzbangsDB extends Dexie {
 	storeBangs!: Table<BangEntry>;
 	userBangs!: Table<BangEntry>;
-	configs!: Table<AppConfig>;
+	settings!: Table<Setting>;
 	pings!: Table<Ping>;
 
 	constructor() {
@@ -62,7 +76,7 @@ export class cuzbangsDB extends Dexie {
 		this.version(1).stores({
 			storeBangs: "++id, *t, s, d, c, r",
 			userBangs: "++id, *t, s, d, c, r",
-			configs: "++id",
+			settings: "key",
 			pings: "++id, t",
 		});
 	}

@@ -29,7 +29,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { type AppConfig, db } from "@/lib/db";
+import { type AppConfig, db, SETTING_KEYS } from "@/lib/db";
+import { updateConfig } from "@/lib/engine";
 
 export const Route = createFileRoute("/settings/configs")({
 	component: ConfigsPage,
@@ -43,12 +44,44 @@ const DEFAULT_CONFIG: AppConfig = {
 	selectedSymbol: "!",
 	forceBangsFirst: false,
 	useStoreBangs: true,
+	enablePopularity: true,
 };
 
 function ConfigsPage() {
 	const { resetData } = useApp();
 	const navigate = useNavigate();
-	const config = useLiveQuery(() => db.configs.toCollection().first());
+	const settings = useLiveQuery(() => db.settings.toArray());
+
+	const config: AppConfig | null = settings
+		? {
+				selectedEngine:
+					(settings.find((s) => s.key === SETTING_KEYS.ENGINE)
+						?.value as string) || DEFAULT_CONFIG.selectedEngine,
+				customUrl:
+					(settings.find((s) => s.key === SETTING_KEYS.CUSTOM_URL)
+						?.value as string) || DEFAULT_CONFIG.customUrl,
+				selectedSymbol:
+					(settings.find((s) => s.key === SETTING_KEYS.SYMBOL)
+						?.value as string) || DEFAULT_CONFIG.selectedSymbol,
+				forceBangsFirst:
+					settings.find((s) => s.key === SETTING_KEYS.FORCE_FIRST)?.value ===
+						"true" ||
+					settings.find((s) => s.key === SETTING_KEYS.FORCE_FIRST)?.value ===
+						true,
+				useStoreBangs:
+					settings.find((s) => s.key === SETTING_KEYS.USE_STORE)?.value ===
+						"true" ||
+					settings.find((s) => s.key === SETTING_KEYS.USE_STORE)?.value ===
+						true,
+				enablePopularity:
+					settings.find((s) => s.key === SETTING_KEYS.POPULARITY)?.value ===
+						"true" ||
+					settings.find((s) => s.key === SETTING_KEYS.POPULARITY)?.value ===
+						true ||
+					settings.find((s) => s.key === SETTING_KEYS.POPULARITY) === undefined,
+			}
+		: null;
+
 	const customUrlId = useId();
 	const [showResetDialog, setShowResetDialog] = useState(false);
 	const [confirmText, setConfirmText] = useState("");
@@ -56,23 +89,21 @@ function ConfigsPage() {
 
 	useEffect(() => {
 		const initConfig = async () => {
-			const existing = await db.configs.toCollection().first();
-			if (!existing) {
-				await db.configs.add(DEFAULT_CONFIG);
+			const count = await db.settings.count();
+			if (count === 0) {
+				await updateConfig(DEFAULT_CONFIG);
 			}
 		};
 		initConfig();
 	}, []);
 
-	const updateConfig = async (updates: Partial<AppConfig>) => {
-		if (config?.id) {
-			await db.configs.update(config.id, updates);
-		}
+	const handleUpdateConfig = async (updates: Partial<AppConfig>) => {
+		await updateConfig(updates);
 	};
 
 	const handleExport = async () => {
 		const userBangs = await db.userBangs.toArray();
-		const configData = await db.configs.toCollection().first();
+		const configData = config;
 
 		const exportFile = {
 			version: 1,
@@ -108,8 +139,7 @@ function ConfigsPage() {
 					await db.userBangs.bulkPut(data.userBangs);
 				}
 				if (data.config) {
-					const { id: _, ...configToUpdate } = data.config;
-					await updateConfig(configToUpdate);
+					await updateConfig(data.config);
 				}
 				alert("Settings imported successfully!");
 			} catch (err) {
@@ -156,7 +186,7 @@ function ConfigsPage() {
 					</div>
 					<Select
 						value={config.selectedEngine}
-						onValueChange={(val) => updateConfig({ selectedEngine: val })}
+						onValueChange={(val) => handleUpdateConfig({ selectedEngine: val })}
 					>
 						<SelectTrigger className="w-[140px]">
 							<SelectValue placeholder="Select engine" />
@@ -175,7 +205,9 @@ function ConfigsPage() {
 						<Input
 							id={customUrlId}
 							value={config.customUrl}
-							onChange={(e) => updateConfig({ customUrl: e.target.value })}
+							onChange={(e) =>
+								handleUpdateConfig({ customUrl: e.target.value })
+							}
 							placeholder="https://example.com/search?q=%s"
 						/>
 					</CardContent>
@@ -199,7 +231,7 @@ function ConfigsPage() {
 									config.selectedSymbol === symbol ? "default" : "outline"
 								}
 								size="icon"
-								onClick={() => updateConfig({ selectedSymbol: symbol })}
+								onClick={() => handleUpdateConfig({ selectedSymbol: symbol })}
 								className="size-10 active:scale-95"
 							>
 								{symbol}
@@ -219,7 +251,9 @@ function ConfigsPage() {
 					<Switch
 						size="lg"
 						checked={config.forceBangsFirst}
-						onCheckedChange={(val) => updateConfig({ forceBangsFirst: val })}
+						onCheckedChange={(val) =>
+							handleUpdateConfig({ forceBangsFirst: val })
+						}
 					/>
 				</CardHeader>
 			</Card>
@@ -236,7 +270,29 @@ function ConfigsPage() {
 					<Switch
 						size="lg"
 						checked={config.useStoreBangs}
-						onCheckedChange={(val) => updateConfig({ useStoreBangs: val })}
+						onCheckedChange={(val) =>
+							handleUpdateConfig({ useStoreBangs: val })
+						}
+					/>
+				</CardHeader>
+			</Card>
+
+			{/* Enable popularity tracking */}
+			<Card>
+				<CardHeader className="flex flex-row items-center justify-between space-y-0">
+					<div className="space-y-1.5">
+						<CardTitle>Enable popularity tracking</CardTitle>
+						<CardDescription>
+							Allow anonymous usage tracking to help improve bang rankings for
+							everyone.
+						</CardDescription>
+					</div>
+					<Switch
+						size="lg"
+						checked={config.enablePopularity}
+						onCheckedChange={(val) =>
+							handleUpdateConfig({ enablePopularity: val })
+						}
 					/>
 				</CardHeader>
 			</Card>

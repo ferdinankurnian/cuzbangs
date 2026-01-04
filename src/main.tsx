@@ -27,9 +27,6 @@ declare module "@tanstack/react-router" {
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
-
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL);
 
 // Create a new QueryClient
 const queryClient = new QueryClient({
@@ -47,12 +44,10 @@ if (rootElement && !rootElement.innerHTML) {
 	const root = ReactDOM.createRoot(rootElement);
 	root.render(
 		<StrictMode>
-			<ConvexProvider client={convex}>
-				<QueryClientProvider client={queryClient}>
-					<RouterProvider router={router} />
-					<ReactQueryDevtools initialIsOpen={false} />
-				</QueryClientProvider>
-			</ConvexProvider>
+			<QueryClientProvider client={queryClient}>
+				<RouterProvider router={router} />
+				<ReactQueryDevtools initialIsOpen={false} />
+			</QueryClientProvider>
 		</StrictMode>,
 	);
 }

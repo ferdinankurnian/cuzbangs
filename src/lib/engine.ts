@@ -1,4 +1,22 @@
-import { type AppConfig, db } from "./db";
+import { z } from "zod";
+import { type AppConfig, BangEntrySchema, db } from "./db";
+
+const DATA_URL = "/data/bangs.json";
+let cachedFallback: any[] | null = null;
+
+async function fetchFallbackBangs() {
+	if (cachedFallback) return cachedFallback;
+	try {
+		const response = await fetch(DATA_URL);
+		if (!response.ok) return [];
+		const rawData = await response.json();
+		cachedFallback = z.array(BangEntrySchema).parse(rawData);
+		return cachedFallback;
+	} catch (err) {
+		console.error("Fallback fetch failed:", err);
+		return [];
+	}
+}
 
 export interface RedirectResult {
 	url: string;
@@ -83,14 +101,39 @@ export async function parseInput(input: string) {
 }
 
 /**
+ * Logs a bang usage locally in Dexie.
+ */
+export async function logUsage(trigger: string) {
+	try {
+		await db.pings.add({
+			t: trigger,
+			ts: Date.now(),
+		});
+	} catch (error) {
+		console.error("Failed to log usage:", error);
+	}
+}
+
+/**
  * Finds a bang entry by trigger.
  */
 export async function findBang(trigger: string, useStore = true) {
 	let bang = await db.userBangs.where("t").equals(trigger).first();
-	if (!bang && useStore) {
+	if (bang) return bang;
+
+	if (useStore) {
 		bang = await db.storeBangs.where("t").equals(trigger).first();
+		if (bang) return bang;
+
+		// Last resort: check if DB is empty and fallback to JSON
+		const dbCount = await db.storeBangs.count();
+		if (dbCount === 0) {
+			const fallback = await fetchFallbackBangs();
+			return fallback?.find((b) => b.t.includes(trigger)) || null;
+		}
 	}
-	return bang;
+
+	return null;
 }
 
 /**
@@ -108,6 +151,9 @@ export async function getRedirectUrl(input: string): Promise<string> {
 	if (!bang) {
 		return getEngineUrl(config.selectedEngine, config.customUrl, input);
 	}
+
+	// Log usage for popularity
+	logUsage(trigger);
 
 	// 3. Check for sub-routes
 	let targetUrl = bang.u;

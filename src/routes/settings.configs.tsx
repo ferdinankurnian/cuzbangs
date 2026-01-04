@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Download, Upload } from "lucide-react";
-import { useEffect, useId } from "react";
+import { AlertTriangle, Download, Upload } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { useApp } from "@/components/providers/app-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -10,6 +11,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -37,8 +46,13 @@ const DEFAULT_CONFIG: AppConfig = {
 };
 
 function ConfigsPage() {
+	const { resetData } = useApp();
+	const navigate = useNavigate();
 	const config = useLiveQuery(() => db.configs.toCollection().first());
 	const customUrlId = useId();
+	const [showResetDialog, setShowResetDialog] = useState(false);
+	const [confirmText, setConfirmText] = useState("");
+	const CONFIRMATION_STRING = "i understand, i want to delete my data now";
 
 	useEffect(() => {
 		const initConfig = async () => {
@@ -226,6 +240,86 @@ function ConfigsPage() {
 					/>
 				</CardHeader>
 			</Card>
+
+			{/* Danger Zone */}
+			<Card className="border-destructive/20 bg-destructive/[0.02]">
+				<CardHeader>
+					<CardTitle className="text-destructive flex items-center gap-2">
+						<AlertTriangle className="size-5" />
+						Danger Zone
+					</CardTitle>
+					<CardDescription>
+						Actions here are permanent and cannot be undone.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<div className="flex flex-col gap-4">
+						<div className="flex items-center justify-between">
+							<div className="space-y-1 text-left">
+								<p className="text-sm font-medium">Reset Data</p>
+								<p className="text-xs text-muted-foreground">
+									Clearing data will take you back to the onboarding flow.
+								</p>
+							</div>
+							<Button
+								variant="destructive"
+								size="sm"
+								onClick={() => setShowResetDialog(true)}
+							>
+								Reset Data
+							</Button>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+
+			<Dialog
+				open={showResetDialog}
+				onOpenChange={(open) => {
+					setShowResetDialog(open);
+					if (!open) setConfirmText("");
+				}}
+			>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Reset All Data</DialogTitle>
+						<DialogDescription>
+							This action is irreversible. All your custom bangs,
+							configurations, and local cache will be permanently deleted.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-3 py-4">
+						<p className="text-sm font-medium">
+							Please type{" "}
+							<span className="font-mono text-destructive">
+								"{CONFIRMATION_STRING}"
+							</span>{" "}
+							to confirm.
+						</p>
+						<Input
+							value={confirmText}
+							onChange={(e) => setConfirmText(e.target.value)}
+							placeholder="Type the exact phrase above"
+							className="border-destructive/50 focus-visible:ring-destructive"
+						/>
+					</div>
+					<DialogFooter className="grid grid-cols-2 gap-2">
+						<Button variant="outline" onClick={() => setShowResetDialog(false)}>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							disabled={confirmText !== CONFIRMATION_STRING}
+							onClick={async () => {
+								await resetData();
+								navigate({ to: "/" });
+							}}
+						>
+							Reset Data
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</section>
 	);
 }

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestModalRouteImport } from './routes/test-modal'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as GoRouteImport } from './routes/go'
@@ -17,6 +18,11 @@ import { Route as SettingsMybangsRouteImport } from './routes/settings.mybangs'
 import { Route as SettingsConfigsRouteImport } from './routes/settings.configs'
 import { Route as SettingsAboutRouteImport } from './routes/settings.about'
 
+const TestModalRoute = TestModalRouteImport.update({
+  id: '/test-modal',
+  path: '/test-modal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/go': typeof GoRoute
   '/settings': typeof SettingsRouteWithChildren
   '/store': typeof StoreRoute
+  '/test-modal': typeof TestModalRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/configs': typeof SettingsConfigsRoute
   '/settings/mybangs': typeof SettingsMybangsRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/go': typeof GoRoute
   '/settings': typeof SettingsRouteWithChildren
   '/store': typeof StoreRoute
+  '/test-modal': typeof TestModalRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/configs': typeof SettingsConfigsRoute
   '/settings/mybangs': typeof SettingsMybangsRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/go': typeof GoRoute
   '/settings': typeof SettingsRouteWithChildren
   '/store': typeof StoreRoute
+  '/test-modal': typeof TestModalRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/configs': typeof SettingsConfigsRoute
   '/settings/mybangs': typeof SettingsMybangsRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/go'
     | '/settings'
     | '/store'
+    | '/test-modal'
     | '/settings/about'
     | '/settings/configs'
     | '/settings/mybangs'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/go'
     | '/settings'
     | '/store'
+    | '/test-modal'
     | '/settings/about'
     | '/settings/configs'
     | '/settings/mybangs'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/go'
     | '/settings'
     | '/store'
+    | '/test-modal'
     | '/settings/about'
     | '/settings/configs'
     | '/settings/mybangs'
@@ -116,10 +128,18 @@ export interface RootRouteChildren {
   GoRoute: typeof GoRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   StoreRoute: typeof StoreRoute
+  TestModalRoute: typeof TestModalRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/test-modal': {
+      id: '/test-modal'
+      path: '/test-modal'
+      fullPath: '/test-modal'
+      preLoaderRoute: typeof TestModalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/store': {
       id: '/store'
       path: '/store'
@@ -193,6 +213,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoRoute: GoRoute,
   SettingsRoute: SettingsRouteWithChildren,
   StoreRoute: StoreRoute,
+  TestModalRoute: TestModalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

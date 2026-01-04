@@ -30,6 +30,14 @@ export const BangEntrySchema = z.object({
 	isCustom: z.boolean().default(false),
 });
 
+export const PingSchema = z.object({
+	id: z.number().optional(),
+	t: z.string(), // trigger
+	ts: z.number(), // timestamp
+});
+
+export type Ping = z.infer<typeof PingSchema>;
+
 export type BangEntry = z.infer<typeof BangEntrySchema>;
 
 export const AppConfigSchema = z.object({
@@ -47,6 +55,7 @@ export class cuzbangsDB extends Dexie {
 	storeBangs!: Table<BangEntry>;
 	userBangs!: Table<BangEntry>;
 	configs!: Table<AppConfig>;
+	pings!: Table<Ping>;
 
 	constructor() {
 		super("cuzbangsDB");
@@ -54,6 +63,7 @@ export class cuzbangsDB extends Dexie {
 			storeBangs: "++id, *t, s, d, c, r",
 			userBangs: "++id, *t, s, d, c, r",
 			configs: "++id",
+			pings: "++id, t",
 		});
 	}
 }

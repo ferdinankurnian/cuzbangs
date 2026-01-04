@@ -3,13 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3000",
+    "dev": "concurrently -n \"vite,convex\" -c \"cyan,magenta\" \"vite --port 3000\" \"npx convex dev\"",
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "biome check",
+    "clean-data": "jq 'map(del(.r))' public/data/bangs.json > public/data/bangs.json.tmp && mv public/data/bangs.json.tmp public/data/bangs.json"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -28,9 +29,11 @@
     "@tanstack/react-query-devtools": "^5.91.2",
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-router-devtools": "^1.132.0",
+    "@tanstack/react-virtual": "^3.13.14",
     "@tanstack/router-plugin": "^1.132.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convex": "^1.31.2",
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.2.0",
     "lucide-react": "^0.562.0",
@@ -52,6 +55,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "concurrently": "^9.2.1",
     "jsdom": "^27.0.0",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5.7.2",

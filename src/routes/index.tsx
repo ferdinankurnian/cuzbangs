@@ -192,13 +192,13 @@ function App() {
 					</p>
 					<div className="flex flex-wrap gap-2">
 						<Badge variant="secondary" className="px-3 py-1 text-xs">
-							!yt math
+							yt math
 						</Badge>
 						<Badge variant="secondary" className="px-3 py-1 text-xs">
-							!gh cuzbangs
+							gh cuzbangs
 						</Badge>
 						<Badge variant="secondary" className="px-3 py-1 text-xs">
-							!gpt fix my code
+							gpt fix my code
 						</Badge>
 					</div>
 				</div>
@@ -211,9 +211,9 @@ function App() {
 						</div>
 						<div className="space-y-3">
 							{[
-								{ t: "!yt", d: "YouTube Search" },
-								{ t: "!gh", d: "GitHub Repository" },
-								{ t: "!gpt", d: "ChatGPT Query" },
+								{ t: "yt", d: "YouTube Search" },
+								{ t: "gh", d: "GitHub Repository" },
+								{ t: "gpt", d: "ChatGPT Query" },
 							].map((b) => (
 								<div
 									key={b.t}

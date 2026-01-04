@@ -319,6 +319,7 @@ interface BangDetailsDialogProps {
 	mode: "my-bangs" | "store";
 	bang: {
 		name: string;
+		trigger: string;
 		url: string;
 		description?: string;
 		image: string;
@@ -338,6 +339,7 @@ interface BangDetailsDialogProps {
 	) => void;
 	handleDeleteBang?: (id: string) => void;
 	handleAddBang?: () => void;
+	isLoading?: boolean;
 	onCustomize?: () => void;
 	onOpenSettings?: () => void;
 	onDeleteMainBang?: () => void;
@@ -350,6 +352,7 @@ export function BangDetailsDialogContent({
 	subRoutes,
 	isModified,
 	editingCount = 0,
+	isLoading,
 	handleEditingChange,
 	handleUpdateBang,
 	handleDeleteBang,
@@ -360,6 +363,39 @@ export function BangDetailsDialogContent({
 	onOpenInStore,
 }: BangDetailsDialogProps) {
 	const isReadOnly = mode === "store";
+
+	if (isLoading) {
+		return (
+			<DialogContent className="overflow-hidden">
+				<div className="flex flex-col gap-4 animate-pulse">
+					<DialogHeader className="flex flex-row gap-4">
+						<div className="size-16 rounded-sm bg-muted" />
+						<div className="flex flex-col justify-center gap-2 flex-1">
+							<div className="h-6 w-3/4 bg-muted rounded" />
+							<div className="h-4 w-1/2 bg-muted rounded" />
+						</div>
+					</DialogHeader>
+
+					<div className="flex flex-row justify-between items-center">
+						<div className="h-8 w-32 bg-muted rounded" />
+						<div className="h-10 w-40 bg-muted rounded" />
+					</div>
+
+					<Separator />
+
+					<div className="flex flex-col gap-2 mb-2">
+						<div className="h-7 w-32 bg-muted rounded" />
+						<div className="h-20 w-full bg-muted rounded-xl" />
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<div className="h-7 w-32 bg-muted rounded" />
+						<div className="h-40 w-full bg-muted rounded-xl" />
+					</div>
+				</div>
+			</DialogContent>
+		);
+	}
 
 	return (
 		<DialogContent
@@ -389,7 +425,7 @@ export function BangDetailsDialogContent({
 							</div>
 						) : mode === "store" ? (
 							<div className="border rounded-sm px-3 h-full flex items-center">
-								<span className="text-muted-foreground text-xs italic">
+								<span className="text-muted-foreground text-xs">
 									Official Preset
 								</span>
 							</div>
@@ -448,7 +484,7 @@ export function BangDetailsDialogContent({
 					<h1 className="text-xl font-semibold">Main Routes</h1>
 					<div className="flex flex-col gap-2">
 						<EditableBangCall
-							value={bang.name.toLowerCase().replace(" site", "")}
+							value={bang.trigger}
 							description={bang.description || `Main shortcut for ${bang.name}`}
 							url={bang.url}
 							variant={bang.url.includes("%s") ? "green" : "blue"}

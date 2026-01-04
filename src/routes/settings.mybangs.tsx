@@ -12,17 +12,19 @@ import {
 	DropdownMenuTrigger as DropdownTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
+import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import {
-	Item,
-	ItemContent,
-	ItemGroup,
-	ItemHeader,
-	ItemTitle,
-} from "@/components/ui/item";
+import { Item, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { BangEntrySchema, type BangSubRoute, db } from "@/lib/db";
 
 export const Route = createFileRoute("/settings/mybangs")({
@@ -212,7 +214,7 @@ function RouteComponent() {
 							<DialogTrigger asChild>
 								<Item
 									variant="outline"
-									className="hover:bg-secondary/50 active:scale-95 transition-all outline-0 cursor-default p-4 h-full flex flex-col"
+									className="hover:bg-secondary/50 active:scale-95 transition-all outline-0 cursor-default p-4 h-full flex flex-col items-center text-center gap-2"
 									onClick={() => {
 										navigate({
 											search: (prev) => ({
@@ -222,25 +224,23 @@ function RouteComponent() {
 										});
 									}}
 								>
-									<div className="mb-2">
-										<div className="aspect-square w-full rounded-sm bg-muted overflow-hidden">
-											<img
-												src={favicon}
-												alt={bang.s}
-												className="w-full h-full object-contain p-4"
-												onError={(e) => {
-													(e.target as HTMLImageElement).src =
-														`https://ui-avatars.com/api/?name=${encodeURIComponent(bang.s)}&background=random`;
-												}}
-											/>
-										</div>
+									<div className="size-16 shrink-0 overflow-hidden rounded-sm bg-muted/50 flex items-center justify-center">
+										<img
+											src={favicon}
+											alt={bang.s}
+											className="size-full object-contain p-1 rounded-sm"
+											onError={(e) => {
+												(e.target as HTMLImageElement).src =
+													`https://ui-avatars.com/api/?name=${encodeURIComponent(bang.s)}&background=random`;
+											}}
+										/>
 									</div>
-									<div className="flex flex-col flex-1 justify-center">
-										<ItemTitle className="mx-auto font-semibold text-sm line-clamp-1">
+									<div className="flex flex-col flex-1 min-w-0 items-center w-full">
+										<ItemTitle className="block font-semibold text-sm truncate w-full text-center">
 											{bang.s}
 										</ItemTitle>
-										<p className="text-[10px] text-muted-foreground mt-1 text-center">
-											!{primaryTrigger || "???"}
+										<p className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
+											{primaryTrigger || "???"}
 										</p>
 									</div>
 								</Item>
@@ -249,6 +249,7 @@ function RouteComponent() {
 								mode="my-bangs"
 								bang={{
 									name: bang.s,
+									trigger: primaryTrigger,
 									url: bang.u,
 									description: bang.desc,
 									image: favicon,
@@ -308,9 +309,47 @@ function RouteComponent() {
 					);
 				})}
 
-				{filteredBangs.length === 0 && searchQuery !== "" && (
-					<div className="col-span-full py-20 text-center text-muted-foreground">
-						No bangs found for "{searchQuery}"
+				{filteredBangs.length === 0 && (
+					<div className="col-span-full">
+						{searchQuery !== "" ? (
+							<Empty>
+								<EmptyHeader>
+									<EmptyMedia variant="icon" className="size-12">
+										<Search />
+									</EmptyMedia>
+									<EmptyTitle>No bangs found</EmptyTitle>
+									<EmptyDescription>
+										We couldn't find any bangs matching "{searchQuery}".
+									</EmptyDescription>
+								</EmptyHeader>
+							</Empty>
+						) : (
+							<Empty>
+								<EmptyHeader>
+									<EmptyMedia variant="icon" className="size-12">
+										<Plus />
+									</EmptyMedia>
+									<EmptyTitle>No bangs yet</EmptyTitle>
+									<EmptyDescription>
+										You haven't added any custom bangs. Create your own or
+										import from the store.
+									</EmptyDescription>
+								</EmptyHeader>
+								<EmptyContent>
+									<div className="grid grid-cols-2 gap-4">
+										<Button onClick={handleAddBang}>
+											<Plus /> Create your first bang
+										</Button>
+										<Button
+											variant="outline"
+											onClick={() => navigate({ to: "/store" })}
+										>
+											<Download /> Go to Store
+										</Button>
+									</div>
+								</EmptyContent>
+							</Empty>
+						)}
 					</div>
 				)}
 			</ItemGroup>

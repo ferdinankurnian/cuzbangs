@@ -291,10 +291,7 @@ export async function getRedirectUrl(input: string): Promise<string> {
 
 	const processedUrl = finalQuery
 		? targetUrl.replace(placeholder, encodeURIComponent(finalQuery))
-		: targetUrl
-				.replace(placeholder, "")
-				.replace(/[?&]$/, "")
-				.replace(/\?&/, "?");
+		: `https://${bang.d}`;
 
 	return processedUrl;
 }

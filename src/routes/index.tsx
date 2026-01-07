@@ -10,6 +10,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
+import { StoreBangsDisabledAlert } from "@/components/store-bangs-disabled-alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +56,15 @@ function App() {
 		db.settings.where("key").equals(SETTING_KEYS.SYMBOL).first(),
 	);
 	const symbol = (symbolSetting?.value as string) || "!";
+
+	// Check if store bangs is enabled
+	const useStoreBangsSetting = useLiveQuery(() =>
+		db.settings.where("key").equals(SETTING_KEYS.USE_STORE).first(),
+	);
+	const showStoreBangsAlert =
+		useStoreBangsSetting !== undefined &&
+		useStoreBangsSetting.value !== "true" &&
+		useStoreBangsSetting.value !== true;
 
 	// Dynamic placeholder logic
 	const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -157,6 +167,9 @@ function App() {
 
 	return (
 		<div className="min-h-screen flex flex-col max-w-5xl mx-auto mt-32 px-4 space-y-8">
+			{isConsented && showStoreBangsAlert && (
+				<StoreBangsDisabledAlert className="max-w-5xl" />
+			)}
 			<section className="relative p-16 text-center h-[25rem] overflow-hidden flex flex-col justify-center border rounded-xl">
 				<div className="absolute inset-0 w-full h-full bg-black bg-[radial-gradient(#1B1B1C_1px,transparent_1px)] [background-size:16px_16px]" />
 				<div className="relative space-y-8">

@@ -1,5 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, ArrowRightIcon, Search } from "lucide-react";
+import {
+	ArrowRight,
+	ArrowRightIcon,
+	Check,
+	Copy,
+	Loader2,
+	Search,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
@@ -19,6 +26,8 @@ import {
 	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import { syncBangs } from "@/lib/bangs-sync";
 import { fetchSuggestions, getSuggestionUrl } from "@/lib/engine";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +44,10 @@ function App() {
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [selectedIndex, setSelectedIndex] = useState(-1);
 	const [showConsentModal, setShowConsentModal] = useState(false);
+	const [downloadState, setDownloadState] = useState<
+		"idle" | "downloading" | "finished"
+	>("idle");
+	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const suggestionRef = useRef<HTMLDivElement>(null);
 
 	// Get user's preferred symbol
@@ -115,12 +128,31 @@ function App() {
 
 	const handleGetStarted = () => {
 		setShowConsentModal(true);
+		setDownloadState("idle");
 	};
 
-	const handleAgree = () => {
+	const handleAgree = async () => {
+		setDownloadState("downloading");
+
+		// Wait for both the minimum animation time and the actual sync
+		await Promise.all([
+			new Promise((resolve) => setTimeout(resolve, 2000)),
+			syncBangs({ force: true }),
+		]);
+
+		setDownloadState("finished");
 		acceptConsent();
+	};
+
+	const handleCloseConfig = () => {
 		setShowConsentModal(false);
 		navigate({ to: "/settings" });
+	};
+
+	const copyToClipboard = (text: string, field: string) => {
+		navigator.clipboard.writeText(text);
+		setCopiedField(field);
+		setTimeout(() => setCopiedField(null), 2000);
 	};
 
 	return (
@@ -284,49 +316,150 @@ function App() {
 				</div>
 			</section>
 
-			<Dialog open={showConsentModal} onOpenChange={setShowConsentModal}>
-				<DialogContent>
+			<Dialog
+				open={showConsentModal}
+				onOpenChange={(open) => {
+					if (downloadState === "downloading") return;
+					setShowConsentModal(open);
+				}}
+			>
+				<DialogContent
+					className="sm:max-w-md"
+					disableClose={downloadState === "downloading"}
+					showCloseButton={downloadState !== "downloading"}
+				>
 					<DialogHeader>
-						<DialogTitle>Get Started</DialogTitle>
+						<DialogTitle>
+							{downloadState === "finished"
+								? "You're almost done!"
+								: downloadState === "downloading"
+									? ""
+									: "Get Started"}
+						</DialogTitle>
 						<DialogDescription>
-							To ensure cuzbangs works fast and respects your privacy, you need
-							to read:
+							{downloadState === "finished"
+								? "Set cuzbangs as default search engine on your browser."
+								: downloadState === "downloading"
+									? ""
+									: "To ensure cuzbangs works fast and respects your privacy, you need to read:"}
 						</DialogDescription>
 					</DialogHeader>
-					<div>
-						<ul className="mb-2 ml-6 list-disc [&>li]:mb-2">
-							<li>
-								We will download bangs data and store them on your local device.
-							</li>
-							<li>
-								We do not track your history searches; cause i don't want your
-								data.
-							</li>
-							<li>
-								We do not collect any personal data; cause i don't need to know
-								you.
-							</li>
-							<li>Redirects works even in offline.</li>
-							<li>An internet is required to sync bangs data.</li>
-							<li>
-								If you want, you can submit a pull request to add websites to
-								the store.
-							</li>
-						</ul>
-					</div>
-					<p className="text-xs text-muted-foreground">
-						By clicking "I Agree", I assume you read already and we will
-						download bangs and store it on your local device.
-					</p>
-					<DialogFooter className="grid grid-cols-2 gap-2">
-						<Button
-							variant="outline"
-							onClick={() => setShowConsentModal(false)}
-						>
-							Cancel
-						</Button>
-						<Button onClick={handleAgree}>I Agree</Button>
-					</DialogFooter>
+
+					{downloadState === "idle" && (
+						<>
+							<div>
+								<ul className="mb-2 ml-6 list-disc [&>li]:mb-2">
+									<li>
+										We will download bangs data and store them on your local
+										device.
+									</li>
+									<li>
+										We do not collect any personal data; cause i don't need to
+										know you.
+									</li>
+									<li>
+										We probably track your history searches; for sorting the
+										bangs popularity on store; you can disable it tho
+									</li>
+									<li>Redirects works even in offline.</li>
+									<li>An internet is required to sync bangs data.</li>
+									<li>
+										If you want, you can submit a pull request to add websites
+										to the store.
+									</li>
+								</ul>
+							</div>
+							<p className="text-xs text-muted-foreground">
+								By clicking "I Agree", I assume you read already and we will
+								download bangs and store it on your local device.
+							</p>
+							<DialogFooter className="grid grid-cols-2 gap-2">
+								<Button
+									variant="outline"
+									onClick={() => setShowConsentModal(false)}
+								>
+									Cancel
+								</Button>
+								<Button onClick={handleAgree}>I Agree</Button>
+							</DialogFooter>
+						</>
+					)}
+
+					{downloadState === "downloading" && (
+						<div className="flex flex-col items-center justify-center py-12 space-y-4">
+							<Loader2 className="h-12 w-12 animate-spin text-primary" />
+							<p className="text-lg font-medium animate-pulse">
+								Downloading bangs...
+							</p>
+						</div>
+					)}
+
+					{downloadState === "finished" && (
+						<div>
+							<div className="space-y-6">
+								<div className="space-y-4">
+									<div className="space-y-2">
+										<Label>Search URL</Label>
+										<div className="flex items-center space-x-2">
+											<div className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+												https://cuzbangs.iydheko.site/go?q=%s
+											</div>
+											<Button
+												size="icon"
+												variant="outline"
+												onClick={() =>
+													copyToClipboard(
+														"https://cuzbangs.iydheko.site/go?q=%s",
+														"search",
+													)
+												}
+											>
+												{copiedField === "search" ? (
+													<Check className="h-4 w-4 text-green-500" />
+												) : (
+													<Copy className="h-4 w-4" />
+												)}
+											</Button>
+										</div>
+									</div>
+
+									<div className="space-y-2">
+										<Label>Suggestion URL</Label>
+										<div className="flex items-center space-x-2">
+											<div className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
+												https://cuzbangs.iydheko.site/suggestions?q=%s
+											</div>
+											<Button
+												size="icon"
+												variant="outline"
+												onClick={() =>
+													copyToClipboard(
+														"https://cuzbangs.iydheko.site/suggestions?q=%s",
+														"suggest",
+													)
+												}
+											>
+												{copiedField === "suggest" ? (
+													<Check className="h-4 w-4 text-green-500" />
+												) : (
+													<Copy className="h-4 w-4" />
+												)}
+											</Button>
+										</div>
+									</div>
+								</div>
+								<p className="text-xs text-muted-foreground">
+									You can visit about settings page to see this again.
+								</p>
+
+								<DialogFooter>
+									<Button onClick={handleCloseConfig} className="w-full">
+										Close
+									</Button>
+								</DialogFooter>
+							</div>
+						</div>
+					)}
 				</DialogContent>
 			</Dialog>
 		</div>

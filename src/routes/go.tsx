@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { syncBangs } from "@/lib/bangs-sync";
 import { getRedirectUrl } from "@/lib/engine";
 
 export const Route = createFileRoute("/go")({
@@ -12,6 +13,9 @@ export const Route = createFileRoute("/go")({
 		if (!query) {
 			throw redirect({ to: "/" });
 		}
+
+		// Trigger background sync (push pings & update base only)
+		syncBangs({ popularity: false }).catch(console.error);
 
 		const targetUrl = await getRedirectUrl(query);
 		// Using window.location.href for external redirects

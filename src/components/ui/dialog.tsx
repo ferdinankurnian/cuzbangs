@@ -48,9 +48,11 @@ function DialogContent({
 	className,
 	children,
 	showCloseButton = true,
+	disableClose = false,
 	...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
 	showCloseButton?: boolean;
+	disableClose?: boolean;
 }) {
 	const [isBouncing, setIsBouncing] = React.useState(false);
 
@@ -71,16 +73,26 @@ function DialogContent({
 					)}
 					{...props}
 					onPointerDownOutside={(e) => {
+						if (disableClose) {
+							e.preventDefault();
+							triggerBounce();
+							return;
+						}
 						props.onPointerDownOutside?.(e);
 						if (e.defaultPrevented) triggerBounce();
 					}}
 					onEscapeKeyDown={(e) => {
+						if (disableClose) {
+							e.preventDefault();
+							triggerBounce();
+							return;
+						}
 						props.onEscapeKeyDown?.(e);
 						if (e.defaultPrevented) triggerBounce();
 					}}
 				>
 					{children}
-					{showCloseButton && (
+					{showCloseButton && !disableClose && (
 						<DialogPrimitive.Close
 							data-slot="dialog-close"
 							className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"

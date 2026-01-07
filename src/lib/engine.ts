@@ -36,6 +36,7 @@ const DEFAULT_CONFIG: AppConfig = {
 	forceBangsFirst: false,
 	useStoreBangs: true,
 	enablePopularity: true,
+	useKagiPrivacy: false,
 };
 
 async function getConfig(): Promise<AppConfig> {
@@ -62,6 +63,9 @@ async function getConfig(): Promise<AppConfig> {
 			configMap.get(SETTING_KEYS.POPULARITY) === "true" ||
 			configMap.get(SETTING_KEYS.POPULARITY) === true ||
 			configMap.get(SETTING_KEYS.POPULARITY) === undefined,
+		useKagiPrivacy:
+			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === "true" ||
+			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === true,
 	};
 }
 
@@ -116,6 +120,14 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 			}),
 		);
 	}
+	if (updates.useKagiPrivacy !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.KAGI_PRIVACY,
+				value: String(updates.useKagiPrivacy),
+			}),
+		);
+	}
 
 	await Promise.all(promises);
 }
@@ -135,6 +147,9 @@ function getEngineUrl(
 			break;
 		case "duckduckgo":
 			baseUrl = "https://duckduckgo.com/?q=%s";
+			break;
+		case "kagi":
+			baseUrl = "https://kagi.com/search?q=%s";
 			break;
 		case "custom":
 			baseUrl = customUrl;
@@ -342,7 +357,21 @@ export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
 export async function getSuggestionUrl(input: string): Promise<string | null> {
 	const { trigger, query, config } = await parseInput(input);
 
-	if (!trigger) return null;
+	if (!trigger) {
+		// Provide suggestions for default engine if supported
+		if (config.selectedEngine === "kagi") {
+			return config.useKagiPrivacy
+				? "https://kagisuggest.com/api/autosuggest?q=%s".replace(
+						"%s",
+						encodeURIComponent(query),
+					)
+				: "https://kagi.com/api/autosuggest?q=%s".replace(
+						"%s",
+						encodeURIComponent(query),
+					);
+		}
+		return null;
+	}
 
 	const bang = await findBang(trigger, config.useStoreBangs);
 	if (!bang) return null;

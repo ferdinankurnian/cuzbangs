@@ -54,6 +54,7 @@ export type AppConfig = {
 	forceBangsFirst: boolean;
 	useStoreBangs: boolean;
 	enablePopularity: boolean;
+	useKagiPrivacy: boolean;
 };
 
 export const SETTING_KEYS = {
@@ -63,6 +64,7 @@ export const SETTING_KEYS = {
 	FORCE_FIRST: "cuzbangs.first_position_call",
 	USE_STORE: "cuzbangs.use_storebangs",
 	POPULARITY: "cuzbangs.enable_popularity",
+	KAGI_PRIVACY: "cuzbangs.kagi_privacy",
 } as const;
 
 export class cuzbangsDB extends Dexie {

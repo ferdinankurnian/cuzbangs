@@ -45,6 +45,7 @@ const DEFAULT_CONFIG: AppConfig = {
 	forceBangsFirst: false,
 	useStoreBangs: true,
 	enablePopularity: true,
+	useKagiPrivacy: false,
 };
 
 function ConfigsPage() {
@@ -79,6 +80,11 @@ function ConfigsPage() {
 					settings.find((s) => s.key === SETTING_KEYS.POPULARITY)?.value ===
 						true ||
 					settings.find((s) => s.key === SETTING_KEYS.POPULARITY) === undefined,
+				useKagiPrivacy:
+					settings.find((s) => s.key === SETTING_KEYS.KAGI_PRIVACY)?.value ===
+						"true" ||
+					settings.find((s) => s.key === SETTING_KEYS.KAGI_PRIVACY)?.value ===
+						true,
 			}
 		: null;
 
@@ -195,6 +201,7 @@ function ConfigsPage() {
 							<SelectItem value="google">Google</SelectItem>
 							<SelectItem value="bing">Bing</SelectItem>
 							<SelectItem value="duckduckgo">DuckDuckGo</SelectItem>
+							<SelectItem value="kagi">Kagi</SelectItem>
 							<SelectItem value="custom">Custom</SelectItem>
 						</SelectContent>
 					</Select>
@@ -210,6 +217,26 @@ function ConfigsPage() {
 							}
 							placeholder="https://example.com/search?q=%s"
 						/>
+					</CardContent>
+				)}
+				{config.selectedEngine === "kagi" && (
+					<CardContent className="pt-0">
+						<div className="flex flex-row items-center justify-between p-4 border rounded-lg bg-muted/30">
+							<div className="space-y-0.5">
+								<Label className="text-base">
+									Use Privacy Pass suggestion URL
+								</Label>
+								<p className="text-sm text-muted-foreground">
+									Use kagisuggest.com for anonymous suggestions
+								</p>
+							</div>
+							<Switch
+								checked={config.useKagiPrivacy}
+								onCheckedChange={(val) =>
+									handleUpdateConfig({ useKagiPrivacy: val })
+								}
+							/>
+						</div>
 					</CardContent>
 				)}
 			</Card>

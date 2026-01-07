@@ -6,8 +6,23 @@ const DATA_URL = "/data/bangs.json";
 
 let isSyncing = false;
 
-export async function syncBangs(options: { popularity?: boolean } = {}) {
+export async function syncBangs(
+	options: { popularity?: boolean; force?: boolean } = {},
+) {
 	if (isSyncing) return;
+
+	// 1. Local Time Window Logic (AM/PM)
+	const now = new Date();
+	const hours = now.getHours();
+	const windowId = hours < 12 ? "AM" : "PM";
+	const currentWindowKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}-${windowId}`;
+
+	// Check if we already synced in this window
+	const lastSyncWindow = localStorage.getItem("last-sync-window");
+	if (!options.force && lastSyncWindow === currentWindowKey) {
+		return;
+	}
+
 	isSyncing = true;
 
 	try {
@@ -35,16 +50,12 @@ export async function syncBangs(options: { popularity?: boolean } = {}) {
 			entries = await db.storeBangs.toArray();
 		}
 
-		// 1. Local Time Window Logic (AM/PM)
-		const now = new Date();
-		const hours = now.getHours();
-		const windowId = hours < 12 ? "AM" : "PM";
-		const currentWindowKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}-${windowId}`;
-
 		const lastReadWindow = localStorage.getItem("last-popularity-window-read");
 		const lastPushWindow = localStorage.getItem("last-popularity-window-push");
 
 		let globalPopularity: Record<string, number> = {};
+
+		// Only pull if requested explicitly (e.g. from Store page) AND time window changed
 		const shouldPull =
 			options.popularity && lastReadWindow !== currentWindowKey;
 
@@ -134,6 +145,7 @@ export async function syncBangs(options: { popularity?: boolean } = {}) {
 			localStorage.setItem("bangs-last-modified", lastModified);
 		}
 
+		localStorage.setItem("last-sync-window", currentWindowKey);
 		console.log(`Successfully synced ${entries.length} bangs.`);
 	} catch (error) {
 		console.error("Error syncing bangs:", error);

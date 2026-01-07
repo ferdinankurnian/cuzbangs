@@ -1,5 +1,25 @@
 [
   {
+    "c": "AI",
+    "d": "chatgpt.com",
+    "s": "ChatGPT",
+    "sc": "AI Chatbot",
+    "t": [
+      "c",
+      "gpt",
+      "chatgpt"
+    ],
+    "u": "https://chatgpt.com/?q={{{s}}}",
+    "desc": "Ask ChatGPT",
+    "sr": [
+      {
+        "t": ["settings"],
+        "u": "https://chatgpt.com/#settings",
+        "desc": "ChatGPT Settings"
+      }
+    ]
+  },
+  {
     "c": "Tech",
     "d": "www.01net.com",
     "s": "01net",

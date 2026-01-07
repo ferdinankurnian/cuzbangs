@@ -285,43 +285,56 @@ function ConfigsPage() {
 				</CardHeader>
 			</Card>
 
-			{/* Use store bangs */}
+			{/* Store & Privacy */}
 			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0">
-					<div className="space-y-1.5">
-						<CardTitle>Use store bangs</CardTitle>
-						<CardDescription>
-							Use store bangs preset lists to bangs.
-						</CardDescription>
-					</div>
-					<Switch
-						size="lg"
-						checked={config.useStoreBangs}
-						onCheckedChange={(val) =>
-							handleUpdateConfig({ useStoreBangs: val })
-						}
-					/>
+				<CardHeader>
+					<CardTitle>Store & Privacy</CardTitle>
+					<CardDescription>
+						Manage store bangs and usage tracking preferences.
+					</CardDescription>
 				</CardHeader>
-			</Card>
-
-			{/* Enable popularity tracking */}
-			<Card>
-				<CardHeader className="flex flex-row items-center justify-between space-y-0">
-					<div className="space-y-1.5">
-						<CardTitle>Enable popularity tracking</CardTitle>
-						<CardDescription>
-							Allow anonymous usage tracking to help improve bang rankings for
-							everyone.
-						</CardDescription>
+				<CardContent>
+					<div className="flex flex-col gap-4">
+						<div className="flex items-center justify-between">
+							<div className="space-y-1 text-left">
+								<p className="text-sm font-medium">Use store bangs</p>
+								<p className="text-xs text-muted-foreground">
+									Use store bangs preset lists to bangs.
+								</p>
+							</div>
+							<Switch
+								size="lg"
+								checked={config.useStoreBangs}
+								onCheckedChange={(val) =>
+									handleUpdateConfig({ useStoreBangs: val })
+								}
+							/>
+						</div>
+						<div
+							className={`flex items-center justify-between ${
+								!config.useStoreBangs ? "opacity-50" : ""
+							}`}
+						>
+							<div className="space-y-1 text-left">
+								<p className="text-sm font-medium">
+									Enable popularity tracking
+								</p>
+								<p className="text-xs text-muted-foreground">
+									Allow anonymous usage tracking to help improve bang rankings
+									for everyone.
+								</p>
+							</div>
+							<Switch
+								size="lg"
+								checked={config.enablePopularity}
+								disabled={!config.useStoreBangs}
+								onCheckedChange={(val) =>
+									handleUpdateConfig({ enablePopularity: val })
+								}
+							/>
+						</div>
 					</div>
-					<Switch
-						size="lg"
-						checked={config.enablePopularity}
-						onCheckedChange={(val) =>
-							handleUpdateConfig({ enablePopularity: val })
-						}
-					/>
-				</CardHeader>
+				</CardContent>
 			</Card>
 
 			{/* Danger Zone */}

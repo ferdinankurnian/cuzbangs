@@ -46,7 +46,6 @@ const DEFAULT_CONFIG: AppConfig = {
 	useStoreBangs: true,
 	enablePopularity: true,
 	useKagiPrivacy: false,
-	autosuggestionEnabled: true,
 	customSuggestionUrl: "",
 };
 
@@ -87,11 +86,6 @@ function ConfigsPage() {
 						"true" ||
 					settings.find((s) => s.key === SETTING_KEYS.KAGI_PRIVACY)?.value ===
 						true,
-				autosuggestionEnabled: (() => {
-					const setting = settings.find((s) => s.key === SETTING_KEYS.AUTOSUGGESTION_ENABLED);
-					if (setting === undefined) return DEFAULT_CONFIG.autosuggestionEnabled;
-					return setting.value === "true" || setting.value === true;
-				})(),
 				customSuggestionUrl:
 					(settings.find((s) => s.key === SETTING_KEYS.CUSTOM_SUGGESTION_URL)
 						?.value as string) || DEFAULT_CONFIG.customSuggestionUrl,
@@ -150,8 +144,6 @@ function ConfigsPage() {
 			try {
 				const data = JSON.parse(text);
 				if (data.userBangs) {
-					// Clearing existing userBangs might be too destructive, let's just add new ones
-					// or maybe merge? Let's use bulkPut to overwrite by ID if exists, or just add.
 					await db.userBangs.bulkPut(data.userBangs);
 				}
 				if (data.config) {
@@ -216,50 +208,35 @@ function ConfigsPage() {
 						</SelectContent>
 					</Select>
 				</CardHeader>
-				<CardContent className="space-y-3">
-					{config.selectedEngine === "custom" ? (
-						<div className="space-y-5">
-							<div className="space-y-2">
-								<Label htmlFor={customUrlId}>Custom URL</Label>
-								<Input
-									id={customUrlId}
-									value={config.customUrl}
-									onChange={(e) =>
-										handleUpdateConfig({ customUrl: e.target.value })
-									}
-									placeholder="https://example.com/search?q=%s"
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label>Custom Suggestion URL (Optional)</Label>
-								<Input
-									value={config.customSuggestionUrl}
-									onChange={(e) =>
-										handleUpdateConfig({ customSuggestionUrl: e.target.value })
-									}
-									placeholder="https://example.com/suggestions?q=%s"
-								/>
-							</div>
-						</div>
-					) : (
-						<div className="space-y-3">
-							<div className="flex flex-row items-center justify-between">
-								<div className="space-y-0.5">
-									<Label className="text-base">Enable Autosuggestions</Label>
-									<p className="text-sm text-muted-foreground">
-										Show search suggestions as you type
-									</p>
+				{(config.selectedEngine === "custom" || config.selectedEngine === "kagi") && (
+					<CardContent className="space-y-3">
+						{config.selectedEngine === "custom" ? (
+							<div className="space-y-5">
+								<div className="space-y-2">
+									<Label htmlFor={customUrlId}>Custom URL</Label>
+									<Input
+										id={customUrlId}
+										value={config.customUrl}
+										onChange={(e) =>
+											handleUpdateConfig({ customUrl: e.target.value })
+										}
+										placeholder="https://example.com/search?q=%s"
+									/>
 								</div>
-								<Switch
-									size="lg"
-									checked={config.autosuggestionEnabled}
-									onCheckedChange={(val) =>
-										handleUpdateConfig({ autosuggestionEnabled: val })
-									}
-								/>
+								<div className="space-y-2">
+									<Label>Custom Suggestion URL (Optional)</Label>
+									<Input
+										value={config.customSuggestionUrl}
+										onChange={(e) =>
+											handleUpdateConfig({ customSuggestionUrl: e.target.value })
+										}
+										placeholder="https://example.com/suggestions?q=%s"
+									/>
+								</div>
 							</div>
-							{config.autosuggestionEnabled && config.selectedEngine === "kagi" && (
-								<div className="flex flex-row items-center justify-between mt-3">
+						) : (
+							<div className="space-y-3">
+								<div className="flex flex-row items-center justify-between">
 									<div className="space-y-0.5">
 										<Label className="text-base">
 											Use Privacy Pass suggestion URL
@@ -276,10 +253,10 @@ function ConfigsPage() {
 										}
 									/>
 								</div>
-							)}
-						</div>
-					)}
-				</CardContent>
+							</div>
+						)}
+					</CardContent>
+				)}
 			</Card>
 
 			{/* Custom Symbol to call */}

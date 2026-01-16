@@ -11,6 +11,7 @@ const SUGGESTION_CACHE = "suggestions-v1";
 self.addEventListener("fetch", (event: FetchEvent) => {
 	const url = new URL(event.request.url);
 
+	// 1. Logic buat /go (Redirect)
 	if (url.pathname === "/go") {
 		const query = url.searchParams.get("q");
 		if (query) {
@@ -27,24 +28,22 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 		}
 	}
 
+	// 2. Logic buat /suggestions (Simple Proxy & Smart Cache)
 	if (url.pathname === "/suggestions") {
 		const query = url.searchParams.get("q");
 		
 		if (query && !url.searchParams.has("sw-internal")) {
-			console.log(`[SW] Intercepting suggestions for: ${query}`);
 			event.respondWith(
 				(async () => {
 					try {
 						const targetUrl = await getSuggestionUrl(query);
 						
+						// Kalo engine ga support suggestion (misal custom URL kosong)
 						if (!targetUrl) {
-							console.log("[SW] Suggestions are DISABLED or URL is empty.");
 							return new Response(JSON.stringify([query, []]), {
 								headers: { "Content-Type": "application/json" },
 							});
 						}
-
-						console.log(`[SW] Fetching from: ${targetUrl}`);
 
 						const proxyRequestUrl = new URL("/suggestions", self.location.origin);
 						proxyRequestUrl.searchParams.set("q", query);
@@ -54,6 +53,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 						const cache = await caches.open(SUGGESTION_CACHE);
 						const cachedResponse = await cache.match(proxyRequestUrl);
 
+						// SWR Pattern
 						const networkFetch = fetch(proxyRequestUrl).then(async (res) => {
 							if (res.ok) {
 								const clone = res.clone();
@@ -66,14 +66,12 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 						});
 
 						if (cachedResponse) {
-							console.log("[SW] Found in cache!");
 							event.waitUntil(networkFetch);
 							return cachedResponse;
 						}
 
 						return networkFetch;
 					} catch (error) {
-						console.error("[SW] Error:", error);
 						return new Response(JSON.stringify([query, []]), {
 							headers: { "Content-Type": "application/json" },
 						});

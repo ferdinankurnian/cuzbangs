@@ -41,12 +41,10 @@ export default defineConfig({
         target: 'https://www.google.com', // Default target (Google)
         changeOrigin: true,
         secure: false,
-        bypass: (req) => {
-            // Kita JANGAN bypass request ini biar ga jatuh ke index.html
-            // Biarin masuk ke router/rewrite di bawah
+        bypass: () => {
             return undefined;
         },
-        router: (req) => {
+        router: (req: any) => {
           const url = new URL(req.url || '', 'http://localhost');
           const proxyTarget = url.searchParams.get('proxy_target');
           
@@ -57,10 +55,9 @@ export default defineConfig({
               return 'https://www.google.com';
             }
           }
-          // Fallback Default kalo ga ada proxy_target: Google
           return 'https://www.google.com';
         },
-        rewrite: (path) => {
+        rewrite: (path: string) => {
           const url = new URL(path, 'http://localhost');
           const proxyTarget = url.searchParams.get('proxy_target');
           const query = url.searchParams.get('q');
@@ -70,18 +67,16 @@ export default defineConfig({
               const targetUrl = new URL(proxyTarget);
               return targetUrl.pathname + targetUrl.search;
             } catch (e) {
-                // Fallback rewrite
                 return `/complete/search?client=chrome&q=${encodeURIComponent(query || '')}`;
             }
           }
           
-          // Fallback Default: Google Path
           return `/complete/search?client=chrome&q=${encodeURIComponent(query || '')}`;
         },
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
-      },
+      } as any,
     },
   },
   resolve: {

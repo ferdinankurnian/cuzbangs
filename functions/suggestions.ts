@@ -1,3 +1,17 @@
+// Definisi tipe minimal buat Cloudflare Pages Functions
+type PagesFunction<Env = any> = (context: EventContext<Env, any, any>) => Response | Promise<Response>;
+
+interface EventContext<Env, P extends string, Data> {
+  request: Request;
+  functionPath: string;
+  waitUntil: (promise: Promise<any>) => void;
+  passThroughOnException: () => void;
+  next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
+  env: Env;
+  params: Record<P, string | string[]>;
+  data: Data;
+}
+
 export const onRequest: PagesFunction = async (context) => {
   const { searchParams } = new URL(context.request.url);
   const query = searchParams.get("q");
@@ -21,21 +35,22 @@ export const onRequest: PagesFunction = async (context) => {
     const data = await response.json();
     
     // Normalize response biar address bar browser ga bingung
-    // Kita balikin format standar Google: ["query", ["suggestion1", "suggestion2"]]
     let suggestions: string[] = [];
 
+    // Validasi tipe data yang aman
     if (Array.isArray(data)) {
-      if (Array.isArray(data[1])) {
-        suggestions = data[1]; // Google/Bing format
+      if (data.length > 1 && Array.isArray(data[1])) {
+        suggestions = data[1] as string[]; // Google/Bing format
       } else {
-        suggestions = data.filter(i => typeof i === "string");
+        suggestions = data.filter((i): i is string => typeof i === "string");
       }
     } else if (typeof data === "object" && data !== null) {
-      // Handle DuckDuckGo format [{"phrase": "..."}]
-      if (Array.isArray(data)) {
-        suggestions = data.map(i => i.phrase || i).filter(Boolean);
-      } else if (data.suggestions) {
-        suggestions = data.suggestions;
+      // Handle DuckDuckGo format
+      const ddgData = data as any;
+      if (Array.isArray(ddgData)) {
+        suggestions = ddgData.map((i: any) => i.phrase || i).filter(Boolean);
+      } else if (ddgData.suggestions) {
+        suggestions = ddgData.suggestions;
       }
     }
 

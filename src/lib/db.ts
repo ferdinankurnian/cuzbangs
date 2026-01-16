@@ -55,7 +55,6 @@ export type AppConfig = {
 	useStoreBangs: boolean;
 	enablePopularity: boolean;
 	useKagiPrivacy: boolean;
-	autosuggestionEnabled: boolean;
 	customSuggestionUrl: string;
 };
 
@@ -66,9 +65,8 @@ export const SETTING_KEYS = {
 	FORCE_FIRST: "cuzbangs.first_position_call",
 	USE_STORE: "cuzbangs.use_storebangs",
 	POPULARITY: "cuzbangs.enable_popularity",
-	KAGI_PRIVACY: "cuzbangs.kagi_privacy",
-	AUTOSUGGESTION_ENABLED: "cuzbangs.autosuggestion_enabled",
-	CUSTOM_SUGGESTION_URL: "cuzbangs.custom_suggestion_url",
+	KAGI_PRIVACY: "useKagiPrivacy",
+	CUSTOM_SUGGESTION_URL: "customSuggestionUrl",
 } as const;
 
 export class cuzbangsDB extends Dexie {

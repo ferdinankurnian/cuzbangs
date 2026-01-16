@@ -37,7 +37,6 @@ const DEFAULT_CONFIG: AppConfig = {
 	useStoreBangs: true,
 	enablePopularity: true,
 	useKagiPrivacy: false,
-	autosuggestionEnabled: true,
 	customSuggestionUrl: "",
 };
 
@@ -68,11 +67,7 @@ async function getConfig(): Promise<AppConfig> {
 		useKagiPrivacy:
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === "true" ||
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === true,
-		        autosuggestionEnabled:
-		            configMap.has(SETTING_KEYS.AUTOSUGGESTION_ENABLED)
-		                ? configMap.get(SETTING_KEYS.AUTOSUGGESTION_ENABLED) === "true" ||
-		                  configMap.get(SETTING_KEYS.AUTOSUGGESTION_ENABLED) === true
-		                : DEFAULT_CONFIG.autosuggestionEnabled,		customSuggestionUrl:
+		customSuggestionUrl:
 			(configMap.get(SETTING_KEYS.CUSTOM_SUGGESTION_URL) as string) ||
 			DEFAULT_CONFIG.customSuggestionUrl,
 	};
@@ -134,14 +129,6 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 			db.settings.put({
 				key: SETTING_KEYS.KAGI_PRIVACY,
 				value: String(updates.useKagiPrivacy),
-			}),
-		);
-	}
-	if (updates.autosuggestionEnabled !== undefined) {
-		promises.push(
-			db.settings.put({
-				key: SETTING_KEYS.AUTOSUGGESTION_ENABLED,
-				value: String(updates.autosuggestionEnabled),
 			}),
 		);
 	}
@@ -379,8 +366,6 @@ export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
 export async function getSuggestionUrl(input: string): Promise<string | null> {
 	const { trigger, query, config } = await parseInput(input);
 
-	if (!config.autosuggestionEnabled) return null;
-
 	if (!trigger) {
 		switch (config.selectedEngine) {
 			case "google":
@@ -400,7 +385,6 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 							encodeURIComponent(query),
 						);
 			case "custom":
-				// Kalo custom tapi URL-nya kosong, jangan kasih apa-apa
 				if (!config.customSuggestionUrl || config.customSuggestionUrl.trim() === "") {
 					return null;
 				}
@@ -415,7 +399,6 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 
 	let suggestionUrl = bang.su;
 
-	// Check sub-routes
 	if (bang.sr && query) {
 		const subParts = query.split(/\s+/);
 		const subTrigger = subParts[0].toLowerCase();
@@ -441,12 +424,10 @@ export async function fetchSuggestions(url: string): Promise<string[]> {
 		if (!response.ok) return [];
 		const data = await response.json();
 
-		// Google/Bing format: ["query", ["s1", "s2", ...]]
 		if (Array.isArray(data) && data.length >= 2 && Array.isArray(data[1])) {
 			return data[1];
 		}
 
-		// DuckDuckGo format: [{"phrase":"..."}, ...]
 		if (
 			Array.isArray(data) &&
 			data.length > 0 &&
@@ -457,7 +438,6 @@ export async function fetchSuggestions(url: string): Promise<string[]> {
 			return data.map((i: unknown) => (i as { phrase: string }).phrase);
 		}
 
-		// Fallback for simple arrays
 		if (Array.isArray(data)) {
 			return data.filter((i) => typeof i === "string");
 		}

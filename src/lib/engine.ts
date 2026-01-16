@@ -83,6 +83,8 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 				value: updates.selectedEngine,
 			}),
 		);
+		// Simpen ke Cookie (tahan 1 tahun)
+		document.cookie = `selected_engine=${updates.selectedEngine};path=/;max-age=31536000;SameSite=Lax`;
 	}
 	if (updates.customUrl !== undefined) {
 		promises.push(
@@ -139,6 +141,7 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 				value: updates.customSuggestionUrl,
 			}),
 		);
+		document.cookie = `custom_suggestion_url=${encodeURIComponent(updates.customSuggestionUrl)};path=/;max-age=31536000;SameSite=Lax`;
 	}
 
 	await Promise.all(promises);

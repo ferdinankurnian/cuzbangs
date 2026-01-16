@@ -102,6 +102,8 @@ function ConfigsPage() {
 			const count = await db.settings.count();
 			if (count === 0) {
 				await updateConfig(DEFAULT_CONFIG);
+				// Set default cookies
+				document.cookie = `selected_engine=${DEFAULT_CONFIG.selectedEngine};path=/;max-age=31536000;SameSite=Lax`;
 			}
 		};
 		initConfig();

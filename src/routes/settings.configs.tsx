@@ -46,6 +46,8 @@ const DEFAULT_CONFIG: AppConfig = {
 	useStoreBangs: true,
 	enablePopularity: true,
 	useKagiPrivacy: false,
+	autosuggestionEnabled: true,
+	customSuggestionUrl: "",
 };
 
 function ConfigsPage() {
@@ -85,6 +87,14 @@ function ConfigsPage() {
 						"true" ||
 					settings.find((s) => s.key === SETTING_KEYS.KAGI_PRIVACY)?.value ===
 						true,
+				autosuggestionEnabled: (() => {
+					const setting = settings.find((s) => s.key === SETTING_KEYS.AUTOSUGGESTION_ENABLED);
+					if (setting === undefined) return DEFAULT_CONFIG.autosuggestionEnabled;
+					return setting.value === "true" || setting.value === true;
+				})(),
+				customSuggestionUrl:
+					(settings.find((s) => s.key === SETTING_KEYS.CUSTOM_SUGGESTION_URL)
+						?.value as string) || DEFAULT_CONFIG.customSuggestionUrl,
 			}
 		: null;
 
@@ -206,39 +216,70 @@ function ConfigsPage() {
 						</SelectContent>
 					</Select>
 				</CardHeader>
-				{config.selectedEngine === "custom" && (
-					<CardContent className="space-y-3">
-						<Label htmlFor={customUrlId}>Custom URL</Label>
-						<Input
-							id={customUrlId}
-							value={config.customUrl}
-							onChange={(e) =>
-								handleUpdateConfig({ customUrl: e.target.value })
-							}
-							placeholder="https://example.com/search?q=%s"
-						/>
-					</CardContent>
-				)}
-				{config.selectedEngine === "kagi" && (
-					<CardContent className="pt-0">
-						<div className="flex flex-row items-center justify-between p-4 border rounded-lg bg-muted/30">
-							<div className="space-y-0.5">
-								<Label className="text-base">
-									Use Privacy Pass suggestion URL
-								</Label>
-								<p className="text-sm text-muted-foreground">
-									Use kagisuggest.com for anonymous suggestions
-								</p>
+				<CardContent className="space-y-3">
+					{config.selectedEngine === "custom" ? (
+						<div className="space-y-5">
+							<div className="space-y-2">
+								<Label htmlFor={customUrlId}>Custom URL</Label>
+								<Input
+									id={customUrlId}
+									value={config.customUrl}
+									onChange={(e) =>
+										handleUpdateConfig({ customUrl: e.target.value })
+									}
+									placeholder="https://example.com/search?q=%s"
+								/>
 							</div>
-							<Switch
-								checked={config.useKagiPrivacy}
-								onCheckedChange={(val) =>
-									handleUpdateConfig({ useKagiPrivacy: val })
-								}
-							/>
+							<div className="space-y-2">
+								<Label>Custom Suggestion URL (Optional)</Label>
+								<Input
+									value={config.customSuggestionUrl}
+									onChange={(e) =>
+										handleUpdateConfig({ customSuggestionUrl: e.target.value })
+									}
+									placeholder="https://example.com/suggestions?q=%s"
+								/>
+							</div>
 						</div>
-					</CardContent>
-				)}
+					) : (
+						<div className="space-y-3">
+							<div className="flex flex-row items-center justify-between">
+								<div className="space-y-0.5">
+									<Label className="text-base">Enable Autosuggestions</Label>
+									<p className="text-sm text-muted-foreground">
+										Show search suggestions as you type
+									</p>
+								</div>
+								<Switch
+									size="lg"
+									checked={config.autosuggestionEnabled}
+									onCheckedChange={(val) =>
+										handleUpdateConfig({ autosuggestionEnabled: val })
+									}
+								/>
+							</div>
+							{config.autosuggestionEnabled && config.selectedEngine === "kagi" && (
+								<div className="flex flex-row items-center justify-between mt-3">
+									<div className="space-y-0.5">
+										<Label className="text-base">
+											Use Privacy Pass suggestion URL
+										</Label>
+										<p className="text-sm text-muted-foreground">
+											Use kagisuggest.com for anonymous suggestions
+										</p>
+									</div>
+									<Switch
+										size="lg"
+										checked={config.useKagiPrivacy}
+										onCheckedChange={(val) =>
+											handleUpdateConfig({ useKagiPrivacy: val })
+										}
+									/>
+								</div>
+							)}
+						</div>
+					)}
+				</CardContent>
 			</Card>
 
 			{/* Custom Symbol to call */}
@@ -246,7 +287,7 @@ function ConfigsPage() {
 				<CardHeader>
 					<CardTitle>Custom Symbol to call</CardTitle>
 					<CardDescription>
-						You can custom the symbol to call bangs like !yt or @yt for youtube
+						You can custom the symbol to call bangs like {`${config.selectedSymbol}yt`} for youtube
 					</CardDescription>
 				</CardHeader>
 				<CardContent>

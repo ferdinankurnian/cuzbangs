@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
 	ArrowRight,
 	ArrowRightIcon,
@@ -39,7 +39,6 @@ import { db, SETTING_KEYS } from "@/lib/db";
 
 function App() {
 	const { isConsented, acceptConsent } = useApp();
-	const navigate = useNavigate();
 	const [query, setQuery] = useState("");
 	const [suggestions, setSuggestions] = useState<string[]>([]);
 	const [showSuggestions, setShowSuggestions] = useState(false);
@@ -156,7 +155,6 @@ function App() {
 
 	const handleCloseConfig = () => {
 		setShowConsentModal(false);
-		navigate({ to: "/settings" });
 	};
 
 	const copyToClipboard = (text: string, field: string) => {

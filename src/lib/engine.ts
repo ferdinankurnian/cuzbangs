@@ -37,6 +37,8 @@ const DEFAULT_CONFIG: AppConfig = {
 	useStoreBangs: true,
 	enablePopularity: true,
 	useKagiPrivacy: false,
+	autosuggestionEnabled: true,
+	customSuggestionUrl: "",
 };
 
 async function getConfig(): Promise<AppConfig> {
@@ -66,6 +68,13 @@ async function getConfig(): Promise<AppConfig> {
 		useKagiPrivacy:
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === "true" ||
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === true,
+		        autosuggestionEnabled:
+		            configMap.has(SETTING_KEYS.AUTOSUGGESTION_ENABLED)
+		                ? configMap.get(SETTING_KEYS.AUTOSUGGESTION_ENABLED) === "true" ||
+		                  configMap.get(SETTING_KEYS.AUTOSUGGESTION_ENABLED) === true
+		                : DEFAULT_CONFIG.autosuggestionEnabled,		customSuggestionUrl:
+			(configMap.get(SETTING_KEYS.CUSTOM_SUGGESTION_URL) as string) ||
+			DEFAULT_CONFIG.customSuggestionUrl,
 	};
 }
 
@@ -125,6 +134,22 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 			db.settings.put({
 				key: SETTING_KEYS.KAGI_PRIVACY,
 				value: String(updates.useKagiPrivacy),
+			}),
+		);
+	}
+	if (updates.autosuggestionEnabled !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.AUTOSUGGESTION_ENABLED,
+				value: String(updates.autosuggestionEnabled),
+			}),
+		);
+	}
+	if (updates.customSuggestionUrl !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.CUSTOM_SUGGESTION_URL,
+				value: updates.customSuggestionUrl,
 			}),
 		);
 	}
@@ -354,20 +379,35 @@ export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
 export async function getSuggestionUrl(input: string): Promise<string | null> {
 	const { trigger, query, config } = await parseInput(input);
 
+	if (!config.autosuggestionEnabled) return null;
+
 	if (!trigger) {
-		// Provide suggestions for default engine if supported
-		if (config.selectedEngine === "kagi") {
-			return config.useKagiPrivacy
-				? "https://kagisuggest.com/api/autosuggest?q=%s".replace(
-						"%s",
-						encodeURIComponent(query),
-					)
-				: "https://kagi.com/api/autosuggest?q=%s".replace(
-						"%s",
-						encodeURIComponent(query),
-					);
+		switch (config.selectedEngine) {
+			case "google":
+				return "https://www.google.com/complete/search?client=chrome&q=%s".replace("%s", encodeURIComponent(query));
+			case "bing":
+				return "https://api.bing.com/osjson.aspx?query=%s".replace("%s", encodeURIComponent(query));
+			case "duckduckgo":
+				return "https://duckduckgo.com/ac/?q=%s&type=list".replace("%s", encodeURIComponent(query));
+			case "kagi":
+				return config.useKagiPrivacy
+					? "https://kagisuggest.com/api/autosuggest?q=%s".replace(
+							"%s",
+							encodeURIComponent(query),
+						)
+					: "https://kagi.com/api/autosuggest?q=%s".replace(
+							"%s",
+							encodeURIComponent(query),
+						);
+			case "custom":
+				// Kalo custom tapi URL-nya kosong, jangan kasih apa-apa
+				if (!config.customSuggestionUrl || config.customSuggestionUrl.trim() === "") {
+					return null;
+				}
+				return config.customSuggestionUrl.replace("%s", encodeURIComponent(query));
+			default:
+				return null;
 		}
-		return null;
 	}
 
 	const bang = await findBang(trigger, config.useStoreBangs);

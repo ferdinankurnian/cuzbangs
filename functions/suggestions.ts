@@ -1,7 +1,8 @@
+// Fungsi utama yang super aman
 async function handleSuggestion(request: Request) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, x-target-url, x-proxy-target",
   };
 
@@ -9,96 +10,85 @@ async function handleSuggestion(request: Request) {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const urlObj = new URL(request.url);
-  const query = urlObj.searchParams.get("q") || "";
-
+  // Taruh variabel di luar biar bisa diakses di catch
+  let currentQuery = "";
+  
   try {
-    console.log(`[DEBUG] Processing query: "${query}"`);
-
-    // 1. Parse Cookies
-    const cookieHeader = request.headers.get("Cookie") || "";
-    const cookies = Object.fromEntries(
-      cookieHeader.split(';').map((c: string) => {
-        const parts = c.trim().split('=');
-        if (parts.length < 2) return ["", ""];
-        return [parts[0], parts.slice(1).join('=')];
-      }).filter(p => p[0] !== "")
-    );
+    const urlObj = new URL(request.url);
+    currentQuery = urlObj.searchParams.get("q") || "";
     
-    const selectedEngine = cookies["selected_engine"] || "google";
-    const customSuggestionUrl = cookies["custom_suggestion_url"] ? decodeURIComponent(cookies["custom_suggestion_url"]) : "";
+    // 1. Parsing Cookie yang lebih aman (manual split)
+    let selectedEngine = "google";
+    let customSuggestionUrl = "";
+    
+    const cookieHeader = request.headers.get("Cookie");
+    if (cookieHeader) {
+      const cookies = cookieHeader.split(';');
+      for (const cookie of cookies) {
+        const [name, ...value] = cookie.trim().split('=');
+        if (name === "selected_engine") selectedEngine = value.join('=');
+        if (name === "custom_suggestion_url") customSuggestionUrl = decodeURIComponent(value.join('='));
+      }
+    }
 
-    console.log(`[DEBUG] Engine: ${selectedEngine}, CustomURL: ${customSuggestionUrl}`);
-
-    // 2. Determine Target URL
+    // 2. Tentukan target URL (Logic Fallback)
     let targetUrl = urlObj.searchParams.get("proxy_target");
 
     if (!targetUrl) {
       if (selectedEngine === "custom" && customSuggestionUrl) {
-        targetUrl = customSuggestionUrl.replace("%s", encodeURIComponent(query));
+        targetUrl = customSuggestionUrl.replace("%s", encodeURIComponent(currentQuery));
       } else {
         switch (selectedEngine) {
           case "bing":
-            targetUrl = `https://api.bing.com/osjson.aspx?query=${encodeURIComponent(query)}`;
+            targetUrl = `https://api.bing.com/osjson.aspx?query=${encodeURIComponent(currentQuery)}`;
             break;
           case "duckduckgo":
-            targetUrl = `https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`;
+            targetUrl = `https://duckduckgo.com/ac/?q=${encodeURIComponent(currentQuery)}&type=list`;
             break;
           case "kagi":
-            targetUrl = `https://kagi.com/api/autosuggest?q=${encodeURIComponent(query)}`;
+            targetUrl = `https://kagi.com/api/autosuggest?q=${encodeURIComponent(currentQuery)}`;
             break;
-          default: // google
-            targetUrl = `https://www.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}`;
+          default:
+            targetUrl = `https://www.google.com/complete/search?client=chrome&q=${encodeURIComponent(currentQuery)}`;
         }
       }
     }
 
-    console.log(`[DEBUG] Final Target URL: ${targetUrl}`);
+    if (!targetUrl) throw new Error("Gagal nentuin Target URL ko.");
 
-    if (!targetUrl) {
-      throw new Error("Target URL is null or empty");
-    }
-
-    // 3. Fetch from Upstream
+    // 3. Nembak Upstream
     const upstreamRes = await fetch(targetUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
     });
 
-    console.log(`[DEBUG] Upstream Status: ${upstreamRes.status}`);
-
     if (!upstreamRes.ok) {
-      const errorText = await upstreamRes.text();
-      throw new Error(`Upstream returned ${upstreamRes.status}: ${errorText.substring(0, 100)}`);
+      return new Response(JSON.stringify([currentQuery, [], { error: `Upstream error: ${upstreamRes.status}` }]), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
-    const text = await upstreamRes.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      throw new Error(`Failed to parse Upstream JSON: ${text.substring(0, 100)}`);
-    }
-
-    // 4. Normalize Response
+    const data = await upstreamRes.json();
+    
+    // 4. Normalize (Sesuai format Google)
     let suggestions: string[] = [];
     if (Array.isArray(data)) {
       if (data.length > 1 && Array.isArray(data[1])) {
-        suggestions = data[1] as string[];
+        suggestions = data[1];
       } else {
-        suggestions = data.filter((i: any) => typeof i === "string");
+        suggestions = data.filter(i => typeof i === "string");
       }
     } else if (typeof data === "object" && data !== null) {
       const d = data as any;
       if (Array.isArray(d)) {
-        suggestions = d.map((i: any) => i.phrase || i).filter(Boolean);
+        suggestions = d.map(i => i.phrase || i).filter(Boolean);
       } else if (d.suggestions) {
         suggestions = d.suggestions;
       }
     }
 
-    return new Response(JSON.stringify([query, suggestions]), {
+    return new Response(JSON.stringify([currentQuery, suggestions]), {
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
@@ -107,25 +97,25 @@ async function handleSuggestion(request: Request) {
     });
 
   } catch (error: any) {
-    console.error(`[ERROR] ${error.message}`);
-    // Balikin info error yang detail biar bisa dibaca di Suggestion Tester
+    // Kita balikin status 200 biar Suggestion Tester bisa nampilin detail error-nya
     return new Response(JSON.stringify({
-      status: "error",
+      error: true,
       message: error.message,
-      query: query,
       stack: error.stack,
-      requestUrl: request.url
-    }), { 
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      query: currentQuery
+    }), {
+      status: 200, 
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 }
 
+// Export buat Pages
 export const onRequest = async (context: any) => {
   return handleSuggestion(context.request);
 };
 
+// Export buat Workers
 export default {
   async fetch(request: Request) {
     return handleSuggestion(request);

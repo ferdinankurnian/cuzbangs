@@ -1,46 +1,32 @@
-// Definisi tipe minimal buat Cloudflare Pages Functions
-type PagesFunction<Env = any> = (context: EventContext<Env, any, any>) => Response | Promise<Response>;
-
-interface EventContext<Env, P extends string, Data> {
-  request: Request;
-  functionPath: string;
-  waitUntil: (promise: Promise<any>) => void;
-  passThroughOnException: () => void;
-  next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
-  env: Env;
-  params: Record<P, string | string[]>;
-  data: Data;
-}
-
-export const onRequest: PagesFunction = async (context: any) => {
+// Fungsi utama buat handle suggestion
+async function handleSuggestion(request: Request) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, x-target-url, x-proxy-target",
   };
 
-  // Handle CORS Preflight
-  if (context.request.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { searchParams } = new URL(context.request.url);
+    const { searchParams } = new URL(request.url);
     const query = searchParams.get("q") || "";
     
-    // 1. Ambil dari Cookie
-    const cookieHeader = context.request.headers.get("Cookie") || "";
+    // Ambil dari Cookie
+    const cookieHeader = request.headers.get("Cookie") || "";
     const cookies = Object.fromEntries(
       cookieHeader.split(';').map((c: string) => {
         const parts = c.trim().split('=');
+        if (parts.length < 2) return ["", ""];
         return [parts[0], parts.slice(1).join('=')];
-      })
+      }).filter(p => p[0] !== "")
     );
     
     const selectedEngine = cookies["selected_engine"] || "google";
     const customSuggestionUrl = cookies["custom_suggestion_url"] ? decodeURIComponent(cookies["custom_suggestion_url"]) : "";
 
-    // 2. Tentukan target URL
     let targetUrl = searchParams.get("proxy_target");
 
     if (!targetUrl) {
@@ -80,12 +66,11 @@ export const onRequest: PagesFunction = async (context: any) => {
     const data = await response.json();
     let suggestions: string[] = [];
 
-    // Normalize data
     if (Array.isArray(data)) {
       if (data.length > 1 && Array.isArray(data[1])) {
         suggestions = data[1] as string[];
       } else {
-        suggestions = data.filter((i): i is string => typeof i === "string");
+        suggestions = data.filter((i: any) => typeof i === "string");
       }
     } else if (typeof data === "object" && data !== null) {
       const d = data as any;
@@ -103,9 +88,21 @@ export const onRequest: PagesFunction = async (context: any) => {
         "Cache-Control": "public, max-age=3600",
       },
     });
-  } catch (error) {
-    return new Response(JSON.stringify(["", []]), {
+  } catch (error: any) {
+    return new Response(JSON.stringify(["", [], { error: error.message }]), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+}
+
+// Support for Cloudflare Pages
+export const onRequest = async (context: any) => {
+  return handleSuggestion(context.request);
+};
+
+// Support for standard Cloudflare Workers (export default)
+export default {
+  async fetch(request: Request) {
+    return handleSuggestion(request);
   }
 };

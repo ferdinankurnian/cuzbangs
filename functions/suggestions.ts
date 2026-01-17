@@ -13,11 +13,22 @@ interface EventContext<Env, P extends string, Data> {
 }
 
 export const onRequest: PagesFunction = async (context: any) => {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-target-url, x-proxy-target",
+  };
+
+  // Handle CORS Preflight
+  if (context.request.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
     const { searchParams } = new URL(context.request.url);
     const query = searchParams.get("q") || "";
     
-    // 1. Ambil dari Cookie dulu buat tau pilihan user
+    // 1. Ambil dari Cookie
     const cookieHeader = context.request.headers.get("Cookie") || "";
     const cookies = Object.fromEntries(
       cookieHeader.split(';').map((c: string) => {
@@ -60,7 +71,11 @@ export const onRequest: PagesFunction = async (context: any) => {
       },
     });
 
-    if (!response.ok) return new Response(JSON.stringify([query, []]), { headers: { "Content-Type": "application/json" } });
+    if (!response.ok) {
+      return new Response(JSON.stringify([query, []]), { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
 
     const data = await response.json();
     let suggestions: string[] = [];
@@ -83,14 +98,14 @@ export const onRequest: PagesFunction = async (context: any) => {
 
     return new Response(JSON.stringify([query, suggestions]), {
       headers: {
+        ...corsHeaders,
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
         "Cache-Control": "public, max-age=3600",
       },
     });
   } catch (error) {
     return new Response(JSON.stringify(["", []]), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 };

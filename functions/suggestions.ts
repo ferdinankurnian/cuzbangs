@@ -1,4 +1,3 @@
-// Fungsi utama buat handle suggestion
 async function handleSuggestion(request: Request) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -10,11 +9,13 @@ async function handleSuggestion(request: Request) {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const urlObj = new URL(request.url);
+  const query = urlObj.searchParams.get("q") || "";
+
   try {
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get("q") || "";
-    
-    // Ambil dari Cookie
+    console.log(`[DEBUG] Processing query: "${query}"`);
+
+    // 1. Parse Cookies
     const cookieHeader = request.headers.get("Cookie") || "";
     const cookies = Object.fromEntries(
       cookieHeader.split(';').map((c: string) => {
@@ -27,7 +28,10 @@ async function handleSuggestion(request: Request) {
     const selectedEngine = cookies["selected_engine"] || "google";
     const customSuggestionUrl = cookies["custom_suggestion_url"] ? decodeURIComponent(cookies["custom_suggestion_url"]) : "";
 
-    let targetUrl = searchParams.get("proxy_target");
+    console.log(`[DEBUG] Engine: ${selectedEngine}, CustomURL: ${customSuggestionUrl}`);
+
+    // 2. Determine Target URL
+    let targetUrl = urlObj.searchParams.get("proxy_target");
 
     if (!targetUrl) {
       if (selectedEngine === "custom" && customSuggestionUrl) {
@@ -49,23 +53,36 @@ async function handleSuggestion(request: Request) {
       }
     }
 
-    if (!targetUrl) throw new Error("No target URL");
+    console.log(`[DEBUG] Final Target URL: ${targetUrl}`);
 
-    const response = await fetch(targetUrl, {
+    if (!targetUrl) {
+      throw new Error("Target URL is null or empty");
+    }
+
+    // 3. Fetch from Upstream
+    const upstreamRes = await fetch(targetUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
     });
 
-    if (!response.ok) {
-      return new Response(JSON.stringify([query, []]), { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      });
+    console.log(`[DEBUG] Upstream Status: ${upstreamRes.status}`);
+
+    if (!upstreamRes.ok) {
+      const errorText = await upstreamRes.text();
+      throw new Error(`Upstream returned ${upstreamRes.status}: ${errorText.substring(0, 100)}`);
     }
 
-    const data = await response.json();
-    let suggestions: string[] = [];
+    const text = await upstreamRes.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`Failed to parse Upstream JSON: ${text.substring(0, 100)}`);
+    }
 
+    // 4. Normalize Response
+    let suggestions: string[] = [];
     if (Array.isArray(data)) {
       if (data.length > 1 && Array.isArray(data[1])) {
         suggestions = data[1] as string[];
@@ -88,19 +105,27 @@ async function handleSuggestion(request: Request) {
         "Cache-Control": "public, max-age=3600",
       },
     });
+
   } catch (error: any) {
-    return new Response(JSON.stringify(["", [], { error: error.message }]), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error(`[ERROR] ${error.message}`);
+    // Balikin info error yang detail biar bisa dibaca di Suggestion Tester
+    return new Response(JSON.stringify({
+      status: "error",
+      message: error.message,
+      query: query,
+      stack: error.stack,
+      requestUrl: request.url
+    }), { 
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" } 
     });
   }
 }
 
-// Support for Cloudflare Pages
 export const onRequest = async (context: any) => {
   return handleSuggestion(context.request);
 };
 
-// Support for standard Cloudflare Workers (export default)
 export default {
   async fetch(request: Request) {
     return handleSuggestion(request);

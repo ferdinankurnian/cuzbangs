@@ -11,7 +11,6 @@ const SUGGESTION_CACHE = "suggestions-v1";
 self.addEventListener("fetch", (event: FetchEvent) => {
 	const url = new URL(event.request.url);
 
-	// 1. Logic buat /go (Redirect)
 	if (url.pathname === "/go") {
 		const query = url.searchParams.get("q");
 		if (query) {
@@ -28,7 +27,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 		}
 	}
 
-	// 2. Logic buat /suggestions (Simple Proxy & Smart Cache)
 	if (url.pathname === "/suggestions") {
 		const query = url.searchParams.get("q");
 		
@@ -38,7 +36,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 					try {
 						const targetUrl = await getSuggestionUrl(query);
 						
-						// Kalo engine ga support suggestion (misal custom URL kosong)
 						if (!targetUrl) {
 							return new Response(JSON.stringify([query, []]), {
 								headers: { "Content-Type": "application/json" },
@@ -53,7 +50,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 						const cache = await caches.open(SUGGESTION_CACHE);
 						const cachedResponse = await cache.match(proxyRequestUrl);
 
-						// SWR Pattern
 						const networkFetch = fetch(proxyRequestUrl).then(async (res) => {
 							if (res.ok) {
 								const clone = res.clone();

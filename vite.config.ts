@@ -38,39 +38,28 @@ export default defineConfig({
   server: {
     proxy: {
       '/suggestions': {
-        target: 'https://www.google.com', // Default target (Google)
+        target: 'https://www.google.com',
         changeOrigin: true,
         secure: false,
-        bypass: () => {
-            return undefined;
-        },
+        bypass: () => undefined,
         router: (req: any) => {
           const url = new URL(req.url || '', 'http://localhost');
           const proxyTarget = url.searchParams.get('proxy_target');
-          
           if (proxyTarget) {
-            try {
-              return new URL(proxyTarget).origin;
-            } catch (e) {
-              return 'https://www.google.com';
-            }
+            try { return new URL(proxyTarget).origin; } catch (e) { return 'https://www.google.com'; }
           }
           return 'https://www.google.com';
         },
         rewrite: (path: string) => {
           const url = new URL(path, 'http://localhost');
           const proxyTarget = url.searchParams.get('proxy_target');
-          const query = url.searchParams.get('q');
-          
           if (proxyTarget) {
             try {
               const targetUrl = new URL(proxyTarget);
               return targetUrl.pathname + targetUrl.search;
-            } catch (e) {
-                return `/complete/search?client=chrome&q=${encodeURIComponent(query || '')}`;
-            }
+            } catch (e) { return path; }
           }
-          
+          const query = url.searchParams.get('q');
           return `/complete/search?client=chrome&q=${encodeURIComponent(query || '')}`;
         },
         headers: {

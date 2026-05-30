@@ -13,6 +13,7 @@ import { Route as TestModalRouteImport } from './routes/test-modal'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as GoRouteImport } from './routes/go'
+import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsMybangsRouteImport } from './routes/settings.mybangs'
 import { Route as SettingsConfigsRouteImport } from './routes/settings.configs'
@@ -38,6 +39,11 @@ const GoRoute = GoRouteImport.update({
   path: '/go',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GetStartedRoute = GetStartedRouteImport.update({
+  id: '/get-started',
+  path: '/get-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,6 +67,7 @@ const SettingsAboutRoute = SettingsAboutRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/get-started': typeof GetStartedRoute
   '/go': typeof GoRoute
   '/settings': typeof SettingsRouteWithChildren
   '/store': typeof StoreRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/get-started': typeof GetStartedRoute
   '/go': typeof GoRoute
   '/settings': typeof SettingsRouteWithChildren
   '/store': typeof StoreRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/get-started': typeof GetStartedRoute
   '/go': typeof GoRoute
   '/settings': typeof SettingsRouteWithChildren
   '/store': typeof StoreRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/get-started'
     | '/go'
     | '/settings'
     | '/store'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/get-started'
     | '/go'
     | '/settings'
     | '/store'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/get-started'
     | '/go'
     | '/settings'
     | '/store'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GetStartedRoute: typeof GetStartedRoute
   GoRoute: typeof GoRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   StoreRoute: typeof StoreRoute
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       path: '/go'
       fullPath: '/go'
       preLoaderRoute: typeof GoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-started': {
+      id: '/get-started'
+      path: '/get-started'
+      fullPath: '/get-started'
+      preLoaderRoute: typeof GetStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -210,6 +230,7 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GetStartedRoute: GetStartedRoute,
   GoRoute: GoRoute,
   SettingsRoute: SettingsRouteWithChildren,
   StoreRoute: StoreRoute,

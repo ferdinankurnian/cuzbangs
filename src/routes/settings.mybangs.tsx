@@ -214,7 +214,7 @@ function RouteComponent() {
 							<DialogTrigger asChild>
 								<Item
 									variant="outline"
-									className="hover:bg-secondary/50 active:scale-95 transition-all outline-0 cursor-default p-4 h-full flex flex-col items-center text-center gap-2"
+									className="hover:bg-secondary/50 active:scale-95 transition-all outline-0 p-4 h-full flex flex-col items-center text-center gap-2"
 									onClick={() => {
 										navigate({
 											search: (prev) => ({

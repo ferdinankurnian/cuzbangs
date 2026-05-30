@@ -20,7 +20,6 @@ export const BangEntrySchema = z.object({
 	t: TriggerSchema,
 	s: z.string(),
 	u: z.string(),
-	r: z.number().default(0),
 	d: z.string(),
 	c: z.string().optional(),
 	sc: z.string().optional(),
@@ -29,14 +28,6 @@ export const BangEntrySchema = z.object({
 	sr: z.array(BangSubRouteSchema).optional(),
 	isCustom: z.boolean().default(false),
 });
-
-export const PingSchema = z.object({
-	id: z.number().optional(),
-	t: z.string(), // trigger
-	ts: z.number(), // timestamp
-});
-
-export type Ping = z.infer<typeof PingSchema>;
 
 export type BangEntry = z.infer<typeof BangEntrySchema>;
 
@@ -53,7 +44,6 @@ export type AppConfig = {
 	selectedSymbol: string;
 	forceBangsFirst: boolean;
 	useStoreBangs: boolean;
-	enablePopularity: boolean;
 	useKagiPrivacy: boolean;
 	customSuggestionUrl: string;
 };
@@ -64,7 +54,6 @@ export const SETTING_KEYS = {
 	SYMBOL: "cuzbangs.symbol_call",
 	FORCE_FIRST: "cuzbangs.first_position_call",
 	USE_STORE: "cuzbangs.use_storebangs",
-	POPULARITY: "cuzbangs.enable_popularity",
 	KAGI_PRIVACY: "useKagiPrivacy",
 	CUSTOM_SUGGESTION_URL: "customSuggestionUrl",
 } as const;
@@ -73,15 +62,13 @@ export class cuzbangsDB extends Dexie {
 	storeBangs!: Table<BangEntry>;
 	userBangs!: Table<BangEntry>;
 	settings!: Table<Setting>;
-	pings!: Table<Ping>;
 
 	constructor() {
 		super("cuzbangsDB");
 		this.version(1).stores({
-			storeBangs: "++id, *t, s, d, c, r",
-			userBangs: "++id, *t, s, d, c, r",
+			storeBangs: "++id, *t, s, d, c",
+			userBangs: "++id, *t, s, d, c",
 			settings: "key",
-			pings: "++id, t",
 		});
 	}
 }

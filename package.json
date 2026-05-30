@@ -10,7 +10,7 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "clean-data": "jq 'map(del(.r))' public/data/bangs.json > public/data/bangs.json.tmp && mv public/data/bangs.json.tmp public/data/bangs.json"
+    "download-bangs": "echo 'TODO: fetch from kagisearch/bangs releases'"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

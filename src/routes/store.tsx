@@ -1,19 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowDownAZ, Filter, Flame, Search } from "lucide-react";
+import { ArrowDownAZ, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
 	Empty,
 	EmptyDescription,
@@ -27,7 +20,6 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { Item, ItemGroup } from "@/components/ui/item";
-import { syncBangs } from "@/lib/bangs-sync";
 import { type BangEntry, BangEntrySchema, db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
@@ -49,11 +41,11 @@ async function fetchFallbackBangs(): Promise<BangEntry[]> {
 export const Route = createFileRoute("/store")({
 	validateSearch: (
 		search: Record<string, unknown>,
-	): { bang?: string; category?: string; sort?: "popularity" | "name" } => {
+	): { bang?: string; category?: string; sort?: "name" } => {
 		return {
 			bang: search.bang as string | undefined,
 			category: (search.category as string) || "all",
-			sort: (search.sort as "popularity" | "name") || "popularity",
+			sort: (search.sort as "name") || "name",
 		};
 	},
 	component: RouteComponent,
@@ -64,7 +56,7 @@ function RouteComponent() {
 	const {
 		bang: openBangTrigger,
 		category: selectedCategory = "all",
-		sort: selectedSort = "popularity",
+		sort: selectedSort = "name",
 	} = Route.useSearch();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -73,11 +65,6 @@ function RouteComponent() {
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
 	const loadMoreRef = useRef<HTMLDivElement>(null);
-
-	// Trigger popularity sync when on store page
-	useEffect(() => {
-		syncBangs({ popularity: true });
-	}, []);
 
 	// Debounce search query
 	useEffect(() => {
@@ -144,12 +131,6 @@ function RouteComponent() {
 			resetScroll: false,
 		});
 	};
-	const handleSortChange = (sort: "popularity" | "name") => {
-		navigate({
-			search: (prev) => ({ ...prev, sort }),
-			resetScroll: false,
-		});
-	};
 
 	const { data: initialBangs, isLoading } = useQuery({
 		queryKey: [
@@ -179,19 +160,13 @@ function RouteComponent() {
 					);
 				}
 
-				filtered.sort((a, b) => {
-					if (selectedSort === "popularity") return (b.r || 0) - (a.r || 0);
-					return a.s.localeCompare(b.s);
-				});
+				filtered.sort((a, b) => a.s.localeCompare(b.s));
 
 				return filtered.slice(0, BATCH_SIZE);
 			}
 
-			const sortField = selectedSort === "popularity" ? "r" : "s";
-
 			if (selectedCategory === "all") {
-				const collection = db.storeBangs.orderBy(sortField);
-				if (selectedSort === "popularity") collection.reverse();
+				const collection = db.storeBangs.orderBy("s");
 
 				if (query) {
 					return await collection
@@ -206,7 +181,6 @@ function RouteComponent() {
 				return await collection.limit(BATCH_SIZE).toArray();
 			}
 
-			// Category filter
 			const collection = db.storeBangs.where("c").equals(selectedCategory);
 			if (query) {
 				const results = await collection
@@ -218,15 +192,11 @@ function RouteComponent() {
 					.toArray();
 
 				return results
-					.sort((a, b) => {
-						if (selectedSort === "popularity") return (b.r || 0) - (a.r || 0);
-						return a.s.localeCompare(b.s);
-					})
+					.sort((a, b) => a.s.localeCompare(b.s))
 					.slice(0, BATCH_SIZE);
 			}
 
-			const results = await collection.sortBy(sortField);
-			if (selectedSort === "popularity") results.reverse();
+			const results = await collection.sortBy("s");
 			return results.slice(0, BATCH_SIZE);
 		},
 	});
@@ -265,10 +235,7 @@ function RouteComponent() {
 					);
 				}
 
-				filtered.sort((a, b) => {
-					if (selectedSort === "popularity") return (b.r || 0) - (a.r || 0);
-					return a.s.localeCompare(b.s);
-				});
+				filtered.sort((a, b) => a.s.localeCompare(b.s));
 
 				const nextBangs = filtered.slice(offset, offset + BATCH_SIZE);
 				if (nextBangs.length < BATCH_SIZE) setHasMore(false);
@@ -277,12 +244,10 @@ function RouteComponent() {
 				return;
 			}
 
-			const sortField = selectedSort === "popularity" ? "r" : "s";
 			let newBangs: BangEntry[];
 
 			if (selectedCategory === "all") {
-				const collection = db.storeBangs.orderBy(sortField);
-				if (selectedSort === "popularity") collection.reverse();
+				const collection = db.storeBangs.orderBy("s");
 
 				if (query) {
 					newBangs = await collection
@@ -301,7 +266,6 @@ function RouteComponent() {
 						.toArray();
 				}
 			} else {
-				// Category filter
 				const collection = db.storeBangs.where("c").equals(selectedCategory);
 				const results = await (query
 					? collection
@@ -314,10 +278,7 @@ function RouteComponent() {
 					: collection.toArray());
 
 				newBangs = results
-					.sort((a, b) => {
-						if (selectedSort === "popularity") return (b.r || 0) - (a.r || 0);
-						return a.s.localeCompare(b.s);
-					})
+					.sort((a, b) => a.s.localeCompare(b.s))
 					.slice(offset, offset + BATCH_SIZE);
 			}
 
@@ -363,7 +324,7 @@ function RouteComponent() {
 	}, [loadMore, hasMore, isLoadingMore, isLoading]);
 
 	return (
-		<div className="min-h-screen flex flex-col max-w-5xl mx-auto mt-32 space-y-16 px-4 pb-24">
+		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-32 space-y-16 px-4 pb-24">
 			<section className="text-center overflow-hidden space-y-8">
 				<div className="flex flex-col items-center gap-8">
 					<div className="flex flex-col items-center gap-2">
@@ -386,40 +347,16 @@ function RouteComponent() {
 						</InputGroup>
 
 						<div className="flex flex-wrap items-center justify-center gap-2">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Badge
-										variant="secondary"
-										className="cursor-pointer px-3 py-3 transition-all active:scale-95 hover:bg-secondary/80"
-									>
-										<Filter />
-									</Badge>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="start" className="w-40">
-									<DropdownMenuRadioGroup
-										value={selectedSort}
-										onValueChange={(v) =>
-											handleSortChange(v as "popularity" | "name")
-										}
-									>
-										<DropdownMenuRadioItem value="popularity">
-											<Flame className="size-3.5 mr-2 text-orange-500" />
-											Popularity
-										</DropdownMenuRadioItem>
-										<DropdownMenuRadioItem value="name">
-											<ArrowDownAZ className="size-3.5 mr-2 text-blue-500" />
-											A-Z
-										</DropdownMenuRadioItem>
-									</DropdownMenuRadioGroup>
-								</DropdownMenuContent>
-							</DropdownMenu>
+							<Badge variant="secondary" className="px-3 py-3">
+								<ArrowDownAZ />
+							</Badge>
 
 							{categories?.map((cat) => (
 								<Badge
 									key={cat}
 									variant={selectedCategory === cat ? "default" : "outline"}
 									className={cn(
-										"cursor-pointer px-4 py-1.5 text-sm transition-all active:scale-95 capitalize",
+										"px-4 py-1.5 text-sm transition-all active:scale-95 capitalize",
 										selectedCategory !== cat && "hover:bg-secondary/80",
 									)}
 									onClick={() => handleCategoryChange(cat)}
@@ -433,7 +370,7 @@ function RouteComponent() {
 
 				<ItemGroup
 					className={cn(
-						"grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 transition-opacity",
+						"grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 transition-opacity",
 						(isLoading || searchQuery !== debouncedQuery) &&
 							"opacity-50 pointer-events-none",
 					)}
@@ -446,27 +383,35 @@ function RouteComponent() {
 							<Item
 								key={bang.id}
 								variant="outline"
-								className="hover:bg-secondary/50 active:scale-95 transition-all outline-0 cursor-default p-4 h-full flex flex-col items-center text-center gap-2"
+								className="hover:bg-secondary/50 active:scale-[0.99] transition-all outline-0 p-3 min-h-20 flex-row flex-nowrap items-center text-left gap-3 rounded-xl overflow-hidden"
 								onClick={() => handleOpenBang(primaryTrigger)}
 							>
-								<div className="size-16 shrink-0 overflow-hidden rounded-sm bg-muted/50 flex items-center justify-center">
+								<div className="size-8 shrink-0 overflow-hidden rounded-md flex items-center justify-center">
 									<img
 										src={favicon}
 										alt={bang.s}
-										className="size-full object-contain p-1 rounded-sm"
+										className="size-8 object-contain rounded-sm"
 										onError={(e) => {
 											(e.target as HTMLImageElement).src =
 												`https://ui-avatars.com/api/?name=${encodeURIComponent(bang.s)}&background=random`;
 										}}
 									/>
 								</div>
-								<div className="flex flex-col flex-1 min-w-0 items-center w-full">
-									<h1 className="font-semibold text-sm truncate w-full text-center">
-										{bang.s}
-									</h1>
-									<p className="text-[10px] text-muted-foreground mt-1 truncate w-full text-center">
+								<div className="flex min-w-0 flex-1 flex-col items-start gap-1 overflow-hidden">
+									<div className="min-w-0 w-full">
+										<h1 className="font-medium text-sm leading-tight truncate w-full">
+											{bang.s}
+										</h1>
+										<p className="text-xs text-muted-foreground truncate w-full">
+											{bang.d}
+										</p>
+									</div>
+									<Badge
+										variant="secondary"
+										className="max-w-full truncate px-1 py-0 font-mono text-[10px] leading-3"
+									>
 										{primaryTrigger}
-									</p>
+									</Badge>
 								</div>
 							</Item>
 						);
@@ -517,12 +462,13 @@ function RouteComponent() {
 					)}
 				</ItemGroup>
 
-				<div
-					ref={loadMoreRef}
-					className="py-4 text-center text-muted-foreground"
-				>
-					{isLoadingMore && "Loading more..."}
-					{!hasMore && allBangs.length > 0 && "You've reached the end"}
+				<div ref={loadMoreRef} className="min-h-20">
+					{(isLoadingMore || (!hasMore && allBangs.length > 0)) && (
+						<div className="rounded-xl border border-border px-4 py-3 text-center text-xs text-muted-foreground">
+							{isLoadingMore && "Loading more..."}
+							{!hasMore && allBangs.length > 0 && "You've reached the end"}
+						</div>
+					)}
 				</div>
 			</section>
 

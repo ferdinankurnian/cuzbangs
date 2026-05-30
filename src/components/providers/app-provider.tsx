@@ -36,7 +36,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 			db.storeBangs.clear(),
 			db.userBangs.clear(),
 			db.settings.clear(),
-			db.pings.clear(),
 		]);
 	};
 

@@ -14,8 +14,7 @@ export const Route = createFileRoute("/go")({
 			throw redirect({ to: "/" });
 		}
 
-		// Trigger background sync (push pings & update base only)
-		syncBangs({ popularity: false }).catch(console.error);
+		syncBangs().catch(console.error);
 
 		const targetUrl = await getRedirectUrl(query);
 		// Using window.location.href for external redirects

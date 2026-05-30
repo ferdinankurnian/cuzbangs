@@ -61,7 +61,7 @@ function RouteComponent() {
 										handleOpen(item.id);
 									}
 								}}
-								className="w-full text-left p-6 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+								className="w-full text-left p-6 border rounded-lg hover:bg-muted/50 transition-colors"
 							>
 								<h3 className="font-semibold">{item.name}</h3>
 								<p className="text-sm text-muted-foreground">

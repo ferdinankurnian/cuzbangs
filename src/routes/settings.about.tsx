@@ -26,17 +26,7 @@ function AboutPage() {
 	};
 
 	return (
-		<section className="space-y-6 max-w-2xl mx-auto">
-			{/* Hero Section */}
-			<div className="text-center space-y-4">
-				<div className="space-y-2">
-					<h1 className="text-3xl font-bold">cuzbangs</h1>
-					<p className="text-muted-foreground text-lg">cuz it bangs</p>
-				</div>
-			</div>
-
-			<Separator />
-
+		<section className="w-full space-y-6">
 			{/* Configuration */}
 			<Card>
 				<CardHeader>

@@ -1,11 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useLiveQuery } from "dexie-react-hooks";
 import {
 	ArrowRight,
 	ArrowRightIcon,
 	Check,
 	Copy,
-	Loader2,
+	Download,
+	Github,
+	MousePointerClick,
+	RouteIcon,
 	Search,
+	Settings2,
+	SlidersHorizontal,
+	Store,
+	Twitter,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -14,49 +22,29 @@ import { StoreBangsDisabledAlert } from "@/components/store-bangs-disabled-alert
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupButton,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { syncBangs } from "@/lib/bangs-sync";
+import { db, SETTING_KEYS } from "@/lib/db";
 import { fetchSuggestions, getSuggestionUrl } from "@/lib/engine";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({ component: App });
 
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, SETTING_KEYS } from "@/lib/db";
-
 function App() {
-	const { isConsented, acceptConsent } = useApp();
+	const { isConsented } = useApp();
 	const [query, setQuery] = useState("");
 	const [suggestions, setSuggestions] = useState<string[]>([]);
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [selectedIndex, setSelectedIndex] = useState(-1);
-	const [showConsentModal, setShowConsentModal] = useState(false);
-	const [downloadState, setDownloadState] = useState<
-		"idle" | "downloading" | "finished"
-	>("idle");
-	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const suggestionRef = useRef<HTMLDivElement>(null);
 
-	// Get user's preferred symbol
 	const symbolSetting = useLiveQuery(() =>
 		db.settings.where("key").equals(SETTING_KEYS.SYMBOL).first(),
 	);
 	const symbol = (symbolSetting?.value as string) || "!";
-
-	// Check if store bangs is enabled
 	const useStoreBangsSetting = useLiveQuery(() =>
 		db.settings.where("key").equals(SETTING_KEYS.USE_STORE).first(),
 	);
@@ -65,9 +53,8 @@ function App() {
 		useStoreBangsSetting.value !== "true" &&
 		useStoreBangsSetting.value !== true;
 
-	// Dynamic placeholder logic
 	const [placeholderIndex, setPlaceholderIndex] = useState(0);
-	const [placeholders, setPlaceholders] = useState<string[]>([
+	const [placeholders, setPlaceholders] = useState([
 		"yt tutorial masak",
 		"gh iydheko",
 		"gpt buatin pantun",
@@ -76,11 +63,9 @@ function App() {
 	useEffect(() => {
 		fetch("/data/placeholders.json")
 			.then((res) => res.json())
-			.then((data) => {
-				if (Array.isArray(data) && data.length > 0) {
-					setPlaceholders(data);
-				}
-			})
+			.then(
+				(data) => Array.isArray(data) && data.length && setPlaceholders(data),
+			)
 			.catch(() => {});
 	}, []);
 
@@ -101,12 +86,7 @@ function App() {
 			}
 
 			const url = await getSuggestionUrl(query);
-			if (url) {
-				const fetched = await fetchSuggestions(url);
-				setSuggestions(fetched);
-			} else {
-				setSuggestions([]);
-			}
+			setSuggestions(url ? await fetchSuggestions(url) : []);
 		};
 
 		const timeout = setTimeout(updateSuggestions, 100);
@@ -135,50 +115,26 @@ function App() {
 		}
 	};
 
-	const handleGetStarted = () => {
-		setShowConsentModal(true);
-		setDownloadState("idle");
-	};
-
-	const handleAgree = async () => {
-		setDownloadState("downloading");
-
-		// Wait for both the minimum animation time and the actual sync
-		await Promise.all([
-			new Promise((resolve) => setTimeout(resolve, 2000)),
-			syncBangs({ force: true }),
-		]);
-
-		setDownloadState("finished");
-		acceptConsent();
-	};
-
-	const handleCloseConfig = () => {
-		setShowConsentModal(false);
-	};
-
-	const copyToClipboard = (text: string, field: string) => {
-		navigator.clipboard.writeText(text);
-		setCopiedField(field);
-		setTimeout(() => setCopiedField(null), 2000);
-	};
-
 	return (
-		<div className="min-h-screen flex flex-col max-w-5xl mx-auto mt-32 px-4 space-y-8">
+		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-28 px-4 space-y-10 pb-20">
 			{isConsented && showStoreBangsAlert && (
 				<StoreBangsDisabledAlert className="max-w-5xl" />
 			)}
-			<section className="relative p-16 text-center h-[25rem] overflow-hidden flex flex-col justify-center border rounded-xl">
-				<div className="absolute inset-0 w-full h-full bg-black bg-[radial-gradient(#1B1B1C_1px,transparent_1px)] [background-size:16px_16px]" />
+
+			<section className="relative px-6 py-16 md:p-16 text-center min-h-[31rem] overflow-hidden flex flex-col justify-center border rounded-2xl">
+				<div className="absolute inset-0 bg-black bg-[radial-gradient(#1B1B1C_1px,transparent_1px)] [background-size:16px_16px]" />
+				<div className="absolute inset-x-0 top-0 mx-auto h-56 max-w-3xl bg-primary/10 blur-3xl" />
 				<div className="relative space-y-8">
-					<div className="space-y-4">
-						<h1 className="text-4xl md:text-6xl font-semibold text-white [letter-spacing:-0.03em]">
+					<div className="space-y-5">
+						<h1 className="text-5xl md:text-7xl font-semibold text-white [letter-spacing:-0.05em]">
 							cuzbangs. cuz it bangs
 						</h1>
-						<p className="text-lg text-gray-400 max-w-3xl mx-auto">
-							A redirect engine with cuztomizable bangs.
+						<p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+							Type <span className="text-white font-mono">!yt lo-fi</span>. Go
+							straight there. Pick your own defaults.
 						</p>
 					</div>
+
 					<div className="flex flex-col items-center gap-4 relative">
 						{isConsented ? (
 							<>
@@ -204,7 +160,6 @@ function App() {
 											</div>
 										)}
 										<InputGroupInput
-											placeholder=""
 											value={query}
 											onChange={(e) => {
 												setQuery(e.target.value);
@@ -213,10 +168,9 @@ function App() {
 											}}
 											onFocus={() => setShowSuggestions(true)}
 											onKeyDown={handleKeyDown}
-											onBlur={() => {
-												// Small delay to allow clicking suggestions
-												setTimeout(() => setShowSuggestions(false), 200);
-											}}
+											onBlur={() =>
+												setTimeout(() => setShowSuggestions(false), 200)
+											}
 										/>
 										<InputGroupAddon className="mr-[-8px]">
 											<Search className="mb-[1px]" />
@@ -259,17 +213,12 @@ function App() {
 							</>
 						) : (
 							<div className="flex gap-2">
-								<Button size="lg" onClick={handleGetStarted}>
-									Get Started
+								<Button size="lg" asChild>
+									<Link to="/get-started">Get Started</Link>
 								</Button>
-								<Button
-									size="lg"
-									variant="ghost"
-									className="cursor-default"
-									asChild
-								>
+								<Button size="lg" variant="ghost" asChild>
 									<Link to="/store">
-										View Bangs List <ArrowRight />
+										View Bangs <ArrowRight />
 									</Link>
 								</Button>
 							</div>
@@ -277,202 +226,135 @@ function App() {
 					</div>
 				</div>
 			</section>
-			<section className="grid grid-cols-1 md:grid-cols-2 gap-12 py-16 items-center">
-				<div className="space-y-6">
-					<h2 className="text-4xl font-semibold text-white tracking-tight">
-						Precision Navigation
-					</h2>
-					<p className="text-lg text-muted-foreground leading-relaxed">
-						Stop scrolling through search results. Go directly to
-						<span className="text-primary font-medium"> YouTube</span>,
-						<span className="text-blue-400 font-medium"> GitHub</span>, or your
-						own <span className="text-green-400 font-medium">custom tools</span>{" "}
-						with a single command.
-					</p>
-					<div className="flex flex-wrap gap-2">
-						<Badge variant="secondary" className="px-3 py-1 text-xs">
-							yt math
-						</Badge>
-						<Badge variant="secondary" className="px-3 py-1 text-xs">
-							gh cuzbangs
-						</Badge>
-						<Badge variant="secondary" className="px-3 py-1 text-xs">
-							gpt fix my code
-						</Badge>
+
+			<section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				{[
+					{ icon: RouteIcon, title: "Redirect", text: "Bang → website" },
+					{ icon: Search, title: "Search", text: "Your fallback" },
+					{
+						icon: SlidersHorizontal,
+						title: "Customize",
+						text: "Prefix + bangs",
+					},
+				].map((feature) => (
+					<div
+						key={feature.title}
+						className="rounded-2xl border bg-card/50 p-6"
+					>
+						<feature.icon className="mb-6 size-8 text-primary" />
+						<h2 className="text-xl font-semibold tracking-tight">
+							{feature.title}
+						</h2>
+						<p className="mt-2 text-sm text-muted-foreground">{feature.text}</p>
 					</div>
+				))}
+			</section>
+
+			<section className="rounded-2xl border p-6 md:p-10 space-y-8">
+				<div className="space-y-3">
+					<Badge variant="outline" className="rounded-full">
+						3 pages
+					</Badge>
+					<h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+						Tiny app. Clear flow.
+					</h2>
 				</div>
-				<div className="relative group">
-					<div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-					<div className="relative p-8 bg-background border rounded-xl space-y-4">
-						<div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-							<div className="size-2 rounded-full bg-green-500 animate-pulse" />
-							Live Engine Status: Ready
+				<div className="grid gap-4 md:grid-cols-3">
+					{[
+						{
+							icon: MousePointerClick,
+							name: "Landing",
+							items: ["Hero", "Setup", "Search"],
+						},
+						{ icon: Store, name: "Store", items: ["Bangs", "Search", "FYI"] },
+						{
+							icon: Settings2,
+							name: "Config",
+							items: ["Engine", "Prefix", "Custom"],
+						},
+					].map((section) => (
+						<div key={section.name} className="rounded-2xl bg-muted/20 p-5">
+							<section.icon className="mb-5 size-7 text-primary" />
+							<h3 className="text-xl font-semibold tracking-tight">
+								{section.name}
+							</h3>
+							<div className="mt-4 flex flex-wrap gap-2">
+								{section.items.map((item) => (
+									<Badge
+										key={item}
+										variant="secondary"
+										className="rounded-full"
+									>
+										{item}
+									</Badge>
+								))}
+							</div>
 						</div>
-						<div className="space-y-3">
-							{[
-								{ t: "yt", d: "YouTube Search" },
-								{ t: "gh", d: "GitHub Repository" },
-								{ t: "gpt", d: "ChatGPT Query" },
-							].map((b) => (
-								<div
-									key={b.t}
-									className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-transparent hover:border-border hover:bg-muted/50 transition-all cursor-default"
-								>
-									<span className="font-mono text-primary">{b.t}</span>
-									<span className="text-xs text-muted-foreground">{b.d}</span>
-								</div>
-							))}
-						</div>
+					))}
+				</div>
+			</section>
+
+			<section className="relative min-h-[31rem] overflow-hidden rounded-2xl border px-6 py-16 md:p-16 flex flex-col justify-center">
+				<div className="absolute inset-0 bg-black bg-[radial-gradient(#1B1B1C_1px,transparent_1px)] [background-size:16px_16px]" />
+				<div className="absolute inset-x-0 bottom-0 mx-auto h-56 max-w-3xl bg-primary/10 blur-3xl" />
+				<div className="relative grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+					<div className="space-y-5">
+						<h2 className="text-4xl md:text-6xl font-semibold text-white [letter-spacing:-0.04em]">
+							No sneaky sync.
+						</h2>
+						<p className="max-w-2xl text-lg text-gray-400 leading-8">
+							Consent → download → copy URL. that's it.
+						</p>
+						<Button size="lg" disabled={isConsented} asChild={!isConsented}>
+							{isConsented ? (
+								<>
+									You're set
+									<Download />
+								</>
+							) : (
+								<Link to="/get-started">
+									Start setup
+									<Download />
+								</Link>
+							)}
+						</Button>
+					</div>
+					<div className="relative grid grid-cols-2 gap-4 rounded-2xl border bg-background/90 p-5">
+						{[
+							{ icon: MousePointerClick, step: "Start" },
+							{ icon: Check, step: "Consent" },
+							{ icon: Download, step: "Download" },
+							{ icon: Copy, step: "Copy URL" },
+						].map((item) => (
+							<div
+								key={item.step}
+								className="flex min-h-28 flex-col justify-between rounded-xl bg-muted/30 p-4"
+							>
+								<item.icon className="size-6 text-primary" />
+								<span className="text-sm font-medium">{item.step}</span>
+							</div>
+						))}
 					</div>
 				</div>
 			</section>
 
-			<Dialog
-				open={showConsentModal}
-				onOpenChange={(open) => {
-					if (downloadState === "downloading") return;
-					setShowConsentModal(open);
-				}}
-			>
-				<DialogContent
-					className="sm:max-w-md"
-					disableClose={downloadState === "downloading"}
-					showCloseButton={downloadState !== "downloading"}
-				>
-					<DialogHeader>
-						<DialogTitle>
-							{downloadState === "finished"
-								? "You're almost done!"
-								: downloadState === "downloading"
-									? ""
-									: "Get Started"}
-						</DialogTitle>
-						<DialogDescription>
-							{downloadState === "finished"
-								? "Set cuzbangs as default search engine on your browser."
-								: downloadState === "downloading"
-									? ""
-									: "To ensure cuzbangs works fast and respects your privacy, you need to read:"}
-						</DialogDescription>
-					</DialogHeader>
-
-					{downloadState === "idle" && (
-						<>
-							<div>
-								<ul className="mb-2 ml-6 list-disc [&>li]:mb-2">
-									<li>
-										We will download bangs data and store them on your local
-										device.
-									</li>
-									<li>
-										We do not collect any personal data; cause i don't need to
-										know you.
-									</li>
-									<li>
-										We probably track your history searches; for sorting the
-										bangs popularity on store; you can disable it tho
-									</li>
-									<li>Redirects works even in offline.</li>
-									<li>An internet is required to sync bangs data.</li>
-									<li>
-										If you want, you can submit a pull request to add websites
-										to the store.
-									</li>
-								</ul>
-							</div>
-							<p className="text-xs text-muted-foreground">
-								By clicking "I Agree", I assume you read already and we will
-								download bangs and store it on your local device.
-							</p>
-							<DialogFooter className="grid grid-cols-2 gap-2">
-								<Button
-									variant="outline"
-									onClick={() => setShowConsentModal(false)}
-								>
-									Cancel
-								</Button>
-								<Button onClick={handleAgree}>I Agree</Button>
-							</DialogFooter>
-						</>
-					)}
-
-					{downloadState === "downloading" && (
-						<div className="flex flex-col items-center justify-center py-12 space-y-4">
-							<Loader2 className="h-12 w-12 animate-spin text-primary" />
-							<p className="text-lg font-medium animate-pulse">
-								Downloading bangs...
-							</p>
-						</div>
-					)}
-
-					{downloadState === "finished" && (
-						<div>
-							<div className="space-y-6">
-								<div className="space-y-4">
-									<div className="space-y-2">
-										<Label>Search URL</Label>
-										<div className="flex items-center space-x-2">
-											<div className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
-												https://cuzbangs.iydheko.site/go?q=%s
-											</div>
-											<Button
-												size="icon"
-												variant="outline"
-												onClick={() =>
-													copyToClipboard(
-														"https://cuzbangs.iydheko.site/go?q=%s",
-														"search",
-													)
-												}
-											>
-												{copiedField === "search" ? (
-													<Check className="h-4 w-4 text-green-500" />
-												) : (
-													<Copy className="h-4 w-4" />
-												)}
-											</Button>
-										</div>
-									</div>
-
-									<div className="space-y-2">
-										<Label>Suggestion URL</Label>
-										<div className="flex items-center space-x-2">
-											<div className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
-												https://cuzbangs.iydheko.site/suggestions?q=%s
-											</div>
-											<Button
-												size="icon"
-												variant="outline"
-												onClick={() =>
-													copyToClipboard(
-														"https://cuzbangs.iydheko.site/suggestions?q=%s",
-														"suggest",
-													)
-												}
-											>
-												{copiedField === "suggest" ? (
-													<Check className="h-4 w-4 text-green-500" />
-												) : (
-													<Copy className="h-4 w-4" />
-												)}
-											</Button>
-										</div>
-									</div>
-								</div>
-								<p className="text-xs text-muted-foreground">
-									You can visit about settings page to see this again.
-								</p>
-
-								<DialogFooter>
-									<Button onClick={handleCloseConfig} className="w-full">
-										Close
-									</Button>
-								</DialogFooter>
-							</div>
-						</div>
-					)}
-				</DialogContent>
-			</Dialog>
+			<footer className="flex flex-col gap-4 border-t pt-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+				<p>© {new Date().getFullYear()} cuzbangs.</p>
+				<div className="flex items-center gap-4">
+					<a
+						href="https://github.com/iydheko/cuzbangs"
+						className="inline-flex items-center gap-2 hover:text-foreground"
+					>
+						<Github className="size-4" /> GitHub
+					</a>
+					<a
+						href="https://twitter.com/iydheko"
+						className="inline-flex items-center gap-2 hover:text-foreground"
+					>
+						<Twitter className="size-4" /> Twitter
+					</a>
+				</div>
+			</footer>
 		</div>
 	);
 }

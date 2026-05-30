@@ -44,7 +44,6 @@ const DEFAULT_CONFIG: AppConfig = {
 	selectedSymbol: "!",
 	forceBangsFirst: false,
 	useStoreBangs: true,
-	enablePopularity: true,
 	useKagiPrivacy: false,
 	customSuggestionUrl: "",
 };
@@ -75,12 +74,6 @@ function ConfigsPage() {
 						"true" ||
 					settings.find((s) => s.key === SETTING_KEYS.USE_STORE)?.value ===
 						true,
-				enablePopularity:
-					settings.find((s) => s.key === SETTING_KEYS.POPULARITY)?.value ===
-						"true" ||
-					settings.find((s) => s.key === SETTING_KEYS.POPULARITY)?.value ===
-						true ||
-					settings.find((s) => s.key === SETTING_KEYS.POPULARITY) === undefined,
 				useKagiPrivacy:
 					settings.find((s) => s.key === SETTING_KEYS.KAGI_PRIVACY)?.value ===
 						"true" ||
@@ -163,7 +156,7 @@ function ConfigsPage() {
 	if (!config) return null;
 
 	return (
-		<section className="space-y-6 max-w-2xl mx-auto pb-24">
+		<section className="w-full space-y-6 pb-24">
 			{/* Import / Export Settings */}
 			<Card>
 				<CardHeader>
@@ -210,7 +203,8 @@ function ConfigsPage() {
 						</SelectContent>
 					</Select>
 				</CardHeader>
-				{(config.selectedEngine === "custom" || config.selectedEngine === "kagi") && (
+				{(config.selectedEngine === "custom" ||
+					config.selectedEngine === "kagi") && (
 					<CardContent className="space-y-3">
 						{config.selectedEngine === "custom" ? (
 							<div className="space-y-5">
@@ -230,7 +224,9 @@ function ConfigsPage() {
 									<Input
 										value={config.customSuggestionUrl}
 										onChange={(e) =>
-											handleUpdateConfig({ customSuggestionUrl: e.target.value })
+											handleUpdateConfig({
+												customSuggestionUrl: e.target.value,
+											})
 										}
 										placeholder="https://example.com/suggestions?q=%s"
 									/>
@@ -266,7 +262,8 @@ function ConfigsPage() {
 				<CardHeader>
 					<CardTitle>Custom Symbol to call</CardTitle>
 					<CardDescription>
-						You can custom the symbol to call bangs like {`${config.selectedSymbol}yt`} for youtube
+						You can custom the symbol to call bangs like{" "}
+						{`${config.selectedSymbol}yt`} for youtube
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -327,29 +324,6 @@ function ConfigsPage() {
 								checked={config.useStoreBangs}
 								onCheckedChange={(val) =>
 									handleUpdateConfig({ useStoreBangs: val })
-								}
-							/>
-						</div>
-						<div
-							className={`flex items-center justify-between ${
-								!config.useStoreBangs ? "opacity-50" : ""
-							}`}
-						>
-							<div className="space-y-1 text-left">
-								<p className="text-sm font-medium">
-									Enable popularity tracking
-								</p>
-								<p className="text-xs text-muted-foreground">
-									Allow anonymous usage tracking to help improve bang rankings
-									for everyone.
-								</p>
-							</div>
-							<Switch
-								size="lg"
-								checked={config.enablePopularity}
-								disabled={!config.useStoreBangs}
-								onCheckedChange={(val) =>
-									handleUpdateConfig({ enablePopularity: val })
 								}
 							/>
 						</div>

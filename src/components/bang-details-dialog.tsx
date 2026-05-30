@@ -261,7 +261,7 @@ function EditableBangCall({
 					<div className="flex flex-col gap-1 items-start">
 						<button
 							type="button"
-							className="group flex flex-row items-center gap-2 cursor-pointer w-fit active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm border-none bg-transparent p-0"
+							className="group flex flex-row items-center gap-2 w-fit active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm border-none bg-transparent p-0"
 							onClick={readOnly ? handleCopy : startEditing}
 							onKeyDown={(e) => {
 								if (e.key === "Enter" || e.key === " ") {

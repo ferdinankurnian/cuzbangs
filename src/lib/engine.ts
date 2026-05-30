@@ -35,7 +35,6 @@ const DEFAULT_CONFIG: AppConfig = {
 	selectedSymbol: "!",
 	forceBangsFirst: false,
 	useStoreBangs: true,
-	enablePopularity: true,
 	useKagiPrivacy: false,
 	customSuggestionUrl: "",
 };
@@ -60,10 +59,6 @@ async function getConfig(): Promise<AppConfig> {
 		useStoreBangs:
 			configMap.get(SETTING_KEYS.USE_STORE) === "true" ||
 			configMap.get(SETTING_KEYS.USE_STORE) === true,
-		enablePopularity:
-			configMap.get(SETTING_KEYS.POPULARITY) === "true" ||
-			configMap.get(SETTING_KEYS.POPULARITY) === true ||
-			configMap.get(SETTING_KEYS.POPULARITY) === undefined,
 		useKagiPrivacy:
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === "true" ||
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === true,
@@ -115,14 +110,6 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 			db.settings.put({
 				key: SETTING_KEYS.USE_STORE,
 				value: String(updates.useStoreBangs),
-			}),
-		);
-	}
-	if (updates.enablePopularity !== undefined) {
-		promises.push(
-			db.settings.put({
-				key: SETTING_KEYS.POPULARITY,
-				value: String(updates.enablePopularity),
 			}),
 		);
 	}
@@ -215,36 +202,6 @@ export async function parseInput(input: string) {
 }
 
 /**
- * Logs a bang usage locally in Dexie.
- */
-export async function logUsage(trigger: string) {
-	try {
-		const config = await getConfig();
-		if (!config.enablePopularity) return;
-
-		// 1. Log for global sync
-		await db.pings.add({
-			t: trigger,
-			ts: Date.now(),
-		});
-
-		// 2. Update local rank instantly for UI feedback
-		const localUpdate = async (
-			table: typeof db.storeBangs | typeof db.userBangs,
-		) => {
-			const entry = await table.where("t").equals(trigger).first();
-			if (entry && entry.id !== undefined) {
-				await table.update(entry.id, { r: (entry.r || 0) + 1 });
-			}
-		};
-
-		await Promise.all([localUpdate(db.storeBangs), localUpdate(db.userBangs)]);
-	} catch (error) {
-		console.error("Failed to log usage:", error);
-	}
-}
-
-/**
  * Finds a bang entry by trigger.
  */
 export async function findBang(trigger: string, useStore = true) {
@@ -282,10 +239,7 @@ export async function getRedirectUrl(input: string): Promise<string> {
 		return getEngineUrl(config.selectedEngine, config.customUrl, input);
 	}
 
-	// Log usage for popularity
-	logUsage(trigger);
-
-	// 3. Check for sub-routes
+	// Check for sub-routes
 	let targetUrl = bang.u;
 	let finalQuery = query;
 
@@ -343,10 +297,7 @@ export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
 			.toArray(),
 	]);
 
-	// Merge and sort by rank (popularity)
-	const all = [...userBangs, ...storeBangs].sort(
-		(a, b) => (b.r || 0) - (a.r || 0),
-	);
+	const all = [...userBangs, ...storeBangs];
 
 	// Unique by primary trigger and limit to 10
 	const seen = new Set();

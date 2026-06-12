@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { AlertTriangle, Download, Upload } from "lucide-react";
 import { useEffect, useId, useState } from "react";
@@ -32,10 +32,6 @@ import { Switch } from "@/components/ui/switch";
 import { type AppConfig, db, SETTING_KEYS } from "@/lib/db";
 import { updateConfig } from "@/lib/engine";
 
-export const Route = createFileRoute("/settings/configs")({
-	component: ConfigsPage,
-});
-
 const SYMBOLS = ["!", "@", "#", "$", "."] as const;
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -48,7 +44,7 @@ const DEFAULT_CONFIG: AppConfig = {
 	customSuggestionUrl: "",
 };
 
-function ConfigsPage() {
+export function ConfigsPanel() {
 	const { resetData } = useApp();
 	const navigate = useNavigate();
 	const settings = useLiveQuery(() => db.settings.toArray());

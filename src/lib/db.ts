@@ -6,15 +6,6 @@ const TriggerSchema = z.preprocess(
 	z.array(z.string()),
 );
 
-export const BangSubRouteSchema = z.object({
-	t: TriggerSchema,
-	u: z.string(),
-	su: z.string().optional(),
-	desc: z.string().optional(),
-});
-
-export type BangSubRoute = z.infer<typeof BangSubRouteSchema>;
-
 export const BangEntrySchema = z.object({
 	id: z.number().optional(),
 	t: TriggerSchema,
@@ -25,7 +16,6 @@ export const BangEntrySchema = z.object({
 	sc: z.string().optional(),
 	su: z.string().optional(),
 	desc: z.string().optional(),
-	sr: z.array(BangSubRouteSchema).optional(),
 	isCustom: z.boolean().default(false),
 });
 

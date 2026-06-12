@@ -1,13 +1,12 @@
 import { z } from "zod";
+import { normalizeBangEntryTriggers } from "./bangs";
 import { BangEntrySchema, db } from "./db";
 
 const DATA_URL = "/data/bangs.json";
 
 let isSyncing = false;
 
-export async function syncBangs(
-	options: { force?: boolean } = {},
-) {
+export async function syncBangs(options: { force?: boolean } = {}) {
 	if (isSyncing) return;
 
 	const now = new Date();
@@ -40,7 +39,11 @@ export async function syncBangs(
 		if (shouldFetch) {
 			console.log("Fetching fresh bangs.json...");
 			const rawData = await response.json();
-			const entries = z.array(BangEntrySchema).parse(rawData);
+			const entries = z
+				.array(BangEntrySchema)
+				.parse(rawData)
+				.map(normalizeBangEntryTriggers)
+				.filter((entry) => entry.t.length > 0);
 			await db.storeBangs.clear();
 			await db.storeBangs.bulkAdd(entries);
 			console.log(`Synced ${entries.length} bangs.`);

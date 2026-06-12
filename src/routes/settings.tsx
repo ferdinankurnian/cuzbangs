@@ -1,59 +1,83 @@
-import {
-	createFileRoute,
-	Link,
-	Outlet,
-	redirect,
-	useLocation,
-	useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
 	ChevronRight,
 	CircleHelp,
 	LibraryBig,
+	Search,
 	SlidersHorizontal,
 } from "lucide-react";
+import { AboutPanel } from "@/components/settings/about-panel";
+import { ConfigsPanel } from "@/components/settings/configs-panel";
+import { MyBangsPanel } from "@/components/settings/my-bangs-panel";
+import { SetupPanel } from "@/components/settings/setup-panel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+
+const tabValues = ["mybangs", "configs", "setup", "about"] as const;
+type SettingsTab = (typeof tabValues)[number];
+
+function isSettingsTab(value: unknown): value is SettingsTab {
+	return tabValues.includes(value as SettingsTab);
+}
 
 export const Route = createFileRoute("/settings")({
-	component: SettingsLayout,
-	beforeLoad: ({ location }) => {
-		// Redirect /settings to /settings/mybangs
-		if (location.pathname === "/settings") {
-			throw redirect({ to: "/settings/mybangs" });
-		}
+	validateSearch: (
+		search: Record<string, unknown>,
+	): { tab?: SettingsTab; bang?: string } => {
+		return {
+			tab: isSettingsTab(search.tab) ? search.tab : undefined,
+			bang: typeof search.bang === "string" ? search.bang : undefined,
+		};
 	},
+	component: SettingsPage,
 });
 
 const tabs = [
 	{
 		value: "mybangs",
 		label: "My Bangs",
-		path: "/settings/mybangs",
 		icon: LibraryBig,
 	},
 	{
 		value: "configs",
 		label: "Configs",
-		path: "/settings/configs",
 		icon: SlidersHorizontal,
+	},
+	{
+		value: "setup",
+		label: "Setup",
+		icon: Search,
 	},
 	{
 		value: "about",
 		label: "About",
-		path: "/settings/about",
 		icon: CircleHelp,
 	},
-];
+] as const;
 
-function SettingsLayout() {
-	const navigate = useNavigate();
-	const location = useLocation();
+function SettingsPage() {
+	const navigate = useNavigate({ from: Route.fullPath });
+	const { tab, bang } = Route.useSearch();
+	const currentTab = tab ?? "mybangs";
+	const currentTabDetails = tabs.find((tab) => tab.value === currentTab);
 
-	// Get current tab from URL
-	const currentTab = location.pathname.split("/").pop() || "mybangs";
+	const setSearch = (nextTab: SettingsTab, nextBang?: string) => {
+		navigate({
+			search: (prev) => ({
+				...prev,
+				tab: nextTab === "mybangs" ? undefined : nextTab,
+				bang: nextBang,
+			}),
+			resetScroll: false,
+		});
+	};
 
 	const handleTabChange = (value: string) => {
-		navigate({ to: `/settings/${value}` });
+		setSearch(isSettingsTab(value) ? value : "mybangs");
+	};
+
+	const handleOpenBang = (bangId?: string) => {
+		setSearch("mybangs", bangId);
 	};
 
 	return (
@@ -65,7 +89,7 @@ function SettingsLayout() {
 						onValueChange={handleTabChange}
 						className="w-full"
 					>
-						<TabsList className="grid h-auto w-full grid-cols-3 rounded-2xl bg-muted/80 p-1">
+						<TabsList className="grid h-auto w-full grid-cols-4 rounded-2xl bg-muted/80 p-1">
 							{tabs.map((tab) => (
 								<TabsTrigger
 									key={tab.value}
@@ -79,43 +103,49 @@ function SettingsLayout() {
 					</Tabs>
 				</div>
 
-				<aside className="hidden w-full max-w-xs shrink-0 lg:block">
-					<div className="sticky top-24 rounded-xl border bg-card/80 p-3 shadow-sm backdrop-blur">
-						<div className="px-3 py-2">
-							<h1 className="text-2xl font-semibold">Settings</h1>
-						</div>
-
-						<nav className="mt-3 space-y-1">
+				<aside className="hidden w-full max-w-xs shrink-0 lg:sticky lg:top-24 lg:block">
+					<div className="rounded-xl border bg-card/80 p-3 shadow-sm backdrop-blur">
+						<nav className="space-y-1">
 							{tabs.map((tab) => {
 								const Icon = tab.icon;
 
 								return (
-									<Link
+									<button
 										key={tab.value}
-										to={tab.path}
-										activeProps={{
-											className: "bg-primary text-primary-foreground shadow-sm",
-										}}
-										inactiveProps={{
-											className:
-												"text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-										}}
-										className="group flex items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors active:scale-[0.98]"
+										type="button"
+										onClick={() => setSearch(tab.value)}
+										className={cn(
+											"group flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors active:scale-[0.98]",
+											currentTab === tab.value
+												? "bg-primary text-primary-foreground shadow-sm"
+												: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+										)}
 									>
 										<Icon className="size-4 shrink-0" />
 										<span className="min-w-0 flex-1 font-medium">
 											{tab.label}
 										</span>
 										<ChevronRight className="size-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5" />
-									</Link>
+									</button>
 								);
 							})}
 						</nav>
 					</div>
 				</aside>
 
-				<div className="min-w-0 flex-1">
-					<Outlet />
+				<div className="min-w-0 flex-1 space-y-6">
+					<header>
+						<h1 className="text-3xl mt-4 font-semibold tracking-tight sm:text-4xl">
+							{currentTabDetails?.label}
+						</h1>
+					</header>
+
+					{currentTab === "mybangs" && (
+						<MyBangsPanel openBangId={bang} onOpenBang={handleOpenBang} />
+					)}
+					{currentTab === "configs" && <ConfigsPanel />}
+					{currentTab === "setup" && <SetupPanel />}
+					{currentTab === "about" && <AboutPanel />}
 				</div>
 			</div>
 		</div>

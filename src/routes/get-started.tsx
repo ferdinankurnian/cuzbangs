@@ -216,7 +216,7 @@ function GetStartedPage() {
 								</div>
 								<div className="grid gap-2 sm:grid-cols-2">
 									<Button variant="outline" asChild>
-										<Link to="/settings/about">
+										<Link to="/settings" search={{ tab: "setup" }}>
 											View later
 											<SlidersHorizontal />
 										</Link>
@@ -237,7 +237,7 @@ function GetStartedPage() {
 					{isWorking
 						? "Keep this tab open until setup finishes."
 						: isFinished
-							? "You can revisit these URLs from Settings -> About."
+							? "You can revisit these URLs from Settings -> Setup."
 							: "Nothing downloads until you agree."}
 				</div>
 			</section>

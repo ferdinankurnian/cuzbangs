@@ -1,25 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import {
-	ArrowRight,
-	ArrowRightIcon,
-	Check,
-	Copy,
-	Download,
-	Github,
-	MousePointerClick,
-	RouteIcon,
-	Search,
-	Settings2,
-	SlidersHorizontal,
-	Store,
-	Twitter,
-} from "lucide-react";
+import { ArrowRight, ArrowRightIcon, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
 import { StoreBangsDisabledAlert } from "@/components/store-bangs-disabled-alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	InputGroup,
@@ -116,11 +101,12 @@ function App() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-28 px-4 space-y-10 pb-20">
+		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-28 px-4 space-y-5 pb-20">
 			{isConsented && showStoreBangsAlert && (
 				<StoreBangsDisabledAlert className="max-w-5xl" />
 			)}
 
+			{/* HERO */}
 			<section className="relative px-6 py-16 md:p-16 text-center min-h-[31rem] overflow-hidden flex flex-col justify-center border rounded-2xl">
 				<div className="absolute inset-0 bg-black bg-[radial-gradient(#1B1B1C_1px,transparent_1px)] [background-size:16px_16px]" />
 				<div className="absolute inset-x-0 top-0 mx-auto h-56 max-w-3xl bg-primary/10 blur-3xl" />
@@ -226,135 +212,6 @@ function App() {
 					</div>
 				</div>
 			</section>
-
-			<section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				{[
-					{ icon: RouteIcon, title: "Redirect", text: "Bang → website" },
-					{ icon: Search, title: "Search", text: "Your fallback" },
-					{
-						icon: SlidersHorizontal,
-						title: "Customize",
-						text: "Prefix + bangs",
-					},
-				].map((feature) => (
-					<div
-						key={feature.title}
-						className="rounded-2xl border bg-card/50 p-6"
-					>
-						<feature.icon className="mb-6 size-8 text-primary" />
-						<h2 className="text-xl font-semibold tracking-tight">
-							{feature.title}
-						</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{feature.text}</p>
-					</div>
-				))}
-			</section>
-
-			<section className="rounded-2xl border p-6 md:p-10 space-y-8">
-				<div className="space-y-3">
-					<Badge variant="outline" className="rounded-full">
-						3 pages
-					</Badge>
-					<h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
-						Tiny app. Clear flow.
-					</h2>
-				</div>
-				<div className="grid gap-4 md:grid-cols-3">
-					{[
-						{
-							icon: MousePointerClick,
-							name: "Landing",
-							items: ["Hero", "Setup", "Search"],
-						},
-						{ icon: Store, name: "Store", items: ["Bangs", "Search", "FYI"] },
-						{
-							icon: Settings2,
-							name: "Config",
-							items: ["Engine", "Prefix", "Custom"],
-						},
-					].map((section) => (
-						<div key={section.name} className="rounded-2xl bg-muted/20 p-5">
-							<section.icon className="mb-5 size-7 text-primary" />
-							<h3 className="text-xl font-semibold tracking-tight">
-								{section.name}
-							</h3>
-							<div className="mt-4 flex flex-wrap gap-2">
-								{section.items.map((item) => (
-									<Badge
-										key={item}
-										variant="secondary"
-										className="rounded-full"
-									>
-										{item}
-									</Badge>
-								))}
-							</div>
-						</div>
-					))}
-				</div>
-			</section>
-
-			<section className="relative min-h-[31rem] overflow-hidden rounded-2xl border px-6 py-16 md:p-16 flex flex-col justify-center">
-				<div className="absolute inset-0 bg-black bg-[radial-gradient(#1B1B1C_1px,transparent_1px)] [background-size:16px_16px]" />
-				<div className="absolute inset-x-0 bottom-0 mx-auto h-56 max-w-3xl bg-primary/10 blur-3xl" />
-				<div className="relative grid gap-10 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-					<div className="space-y-5">
-						<h2 className="text-4xl md:text-6xl font-semibold text-white [letter-spacing:-0.04em]">
-							No sneaky sync.
-						</h2>
-						<p className="max-w-2xl text-lg text-gray-400 leading-8">
-							Consent → download → copy URL. that's it.
-						</p>
-						<Button size="lg" disabled={isConsented} asChild={!isConsented}>
-							{isConsented ? (
-								<>
-									You're set
-									<Download />
-								</>
-							) : (
-								<Link to="/get-started">
-									Start setup
-									<Download />
-								</Link>
-							)}
-						</Button>
-					</div>
-					<div className="relative grid grid-cols-2 gap-4 rounded-2xl border bg-background/90 p-5">
-						{[
-							{ icon: MousePointerClick, step: "Start" },
-							{ icon: Check, step: "Consent" },
-							{ icon: Download, step: "Download" },
-							{ icon: Copy, step: "Copy URL" },
-						].map((item) => (
-							<div
-								key={item.step}
-								className="flex min-h-28 flex-col justify-between rounded-xl bg-muted/30 p-4"
-							>
-								<item.icon className="size-6 text-primary" />
-								<span className="text-sm font-medium">{item.step}</span>
-							</div>
-						))}
-					</div>
-				</div>
-			</section>
-
-			<footer className="flex flex-col gap-4 border-t pt-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
-				<p>© {new Date().getFullYear()} cuzbangs.</p>
-				<div className="flex items-center gap-4">
-					<a
-						href="https://github.com/iydheko/cuzbangs"
-						className="inline-flex items-center gap-2 hover:text-foreground"
-					>
-						<Github className="size-4" /> GitHub
-					</a>
-					<a
-						href="https://twitter.com/iydheko"
-						className="inline-flex items-center gap-2 hover:text-foreground"
-					>
-						<Twitter className="size-4" /> Twitter
-					</a>
-				</div>
-			</footer>
 		</div>
 	);
 }

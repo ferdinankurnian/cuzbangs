@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowDownAZ, Search } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,13 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { Item, ItemGroup } from "@/components/ui/item";
+import {
+	bangHasTrigger,
+	getPrimaryTrigger,
+	normalizeBangEntryTriggers,
+	normalizeBangTriggers,
+	normalizeTrigger,
+} from "@/lib/bangs";
 import { type BangEntry, BangEntrySchema, db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +39,11 @@ async function fetchFallbackBangs(): Promise<BangEntry[]> {
 		const response = await fetch(DATA_URL);
 		if (!response.ok) return [];
 		const rawData = await response.json();
-		return z.array(BangEntrySchema).parse(rawData);
+		return z
+			.array(BangEntrySchema)
+			.parse(rawData)
+			.map(normalizeBangEntryTriggers)
+			.filter((entry) => entry.t.length > 0);
 	} catch (err) {
 		console.error("Fallback fetch failed:", err);
 		return [];
@@ -64,7 +76,10 @@ function RouteComponent() {
 	const [allBangs, setAllBangs] = useState<BangEntry[]>([]);
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
+	const userBangs = useLiveQuery(() => db.userBangs.toArray()) || [];
 	const loadMoreRef = useRef<HTMLDivElement>(null);
+	const isSearching = debouncedQuery.trim().length > 0;
+	const resultsLabel = `"${debouncedQuery.trim()}" Results`;
 
 	// Debounce search query
 	useEffect(() => {
@@ -92,19 +107,18 @@ function RouteComponent() {
 		queryKey: ["storeBang", openBangTrigger],
 		queryFn: async () => {
 			if (!openBangTrigger) return null;
+			const normalizedTrigger = normalizeTrigger(openBangTrigger);
 			const fromDb = await db.storeBangs
 				.where("t")
-				.equals(openBangTrigger)
+				.equals(normalizedTrigger)
 				.first();
 			if (fromDb) return fromDb;
 
 			// Fallback to fetch from JSON
 			const fallback = await fetchFallbackBangs();
 			return (
-				fallback.find((b) => b.t.includes(openBangTrigger)) ||
-				fallback.find(
-					(b) => b.s.toLowerCase() === openBangTrigger.toLowerCase(),
-				) ||
+				fallback.find((b) => bangHasTrigger(b, normalizedTrigger)) ||
+				fallback.find((b) => b.s.toLowerCase() === normalizedTrigger) ||
 				null
 			);
 		},
@@ -132,7 +146,39 @@ function RouteComponent() {
 		});
 	};
 
-	const { data: initialBangs, isLoading } = useQuery({
+	const activeOverride = useMemo(() => {
+		if (!activeBang) return null;
+
+		const storeTriggers = new Set(normalizeBangTriggers(activeBang.t));
+		return (
+			userBangs.find((bang) =>
+				normalizeBangTriggers(bang.t).some((trigger) =>
+					storeTriggers.has(trigger),
+				),
+			) ?? null
+		);
+	}, [activeBang, userBangs]);
+
+	const resetActiveOverride = async () => {
+		if (!activeBang || activeOverride?.id === undefined) return;
+
+		const storeTriggers = new Set(normalizeBangTriggers(activeBang.t));
+		const remainingTriggers = normalizeBangTriggers(activeOverride.t).filter(
+			(trigger) => !storeTriggers.has(trigger),
+		);
+
+		if (remainingTriggers.length === 0) {
+			await db.userBangs.delete(activeOverride.id);
+			return;
+		}
+
+		await db.userBangs.update(activeOverride.id, {
+			t: remainingTriggers,
+			s: remainingTriggers[0],
+		});
+	};
+
+	const { data: initialBangs, isFetching } = useQuery({
 		queryKey: [
 			"storeBangs",
 			debouncedQuery,
@@ -206,13 +252,15 @@ function RouteComponent() {
 			// Query is stale or pending debounce
 			return;
 		}
-		setAllBangs(initialBangs || []);
+		if (!initialBangs) return;
+
+		setAllBangs(initialBangs);
 		setOffset(BATCH_SIZE);
 		setHasMore(true);
 	}, [initialBangs, debouncedQuery, searchQuery]);
 
 	const loadMore = useCallback(async () => {
-		if (isLoadingMore || !hasMore || isLoading) return;
+		if (isLoadingMore || !hasMore || isFetching) return;
 
 		setIsLoadingMore(true);
 		try {
@@ -294,11 +342,10 @@ function RouteComponent() {
 	}, [
 		isLoadingMore,
 		hasMore,
-		isLoading,
+		isFetching,
 		searchQuery,
 		offset,
 		selectedCategory,
-		selectedSort,
 	]);
 
 	useEffect(() => {
@@ -308,7 +355,7 @@ function RouteComponent() {
 					entries[0].isIntersecting &&
 					hasMore &&
 					!isLoadingMore &&
-					!isLoading
+					!isFetching
 				) {
 					loadMore();
 				}
@@ -321,7 +368,7 @@ function RouteComponent() {
 		}
 
 		return () => observer.disconnect();
-	}, [loadMore, hasMore, isLoadingMore, isLoading]);
+	}, [loadMore, hasMore, isLoadingMore, isFetching]);
 
 	return (
 		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-32 space-y-16 px-4 pb-24">
@@ -330,7 +377,7 @@ function RouteComponent() {
 					<div className="flex flex-col items-center gap-2">
 						<h1 className="text-4xl font-semibold text-white">Store</h1>
 						<p className="text-lg text-primary/50">
-							List all community bangs. You can submit yours too.
+							10.000++ ways to skip straight to what you need.
 						</p>
 					</div>
 
@@ -347,21 +394,20 @@ function RouteComponent() {
 						</InputGroup>
 
 						<div className="flex flex-wrap items-center justify-center gap-2">
-							<Badge variant="secondary" className="px-3 py-3">
-								<ArrowDownAZ />
-							</Badge>
-
 							{categories?.map((cat) => (
 								<Badge
 									key={cat}
 									variant={selectedCategory === cat ? "default" : "outline"}
 									className={cn(
-										"px-4 py-1.5 text-sm transition-all active:scale-95 capitalize",
+										"cursor-default px-4 py-1.5 text-sm transition-all active:scale-95 capitalize",
+										isSearching &&
+											cat === "all" &&
+											"max-w-48 truncate normal-case",
 										selectedCategory !== cat && "hover:bg-secondary/80",
 									)}
 									onClick={() => handleCategoryChange(cat)}
 								>
-									{cat}
+									{isSearching && cat === "all" ? resultsLabel : cat}
 								</Badge>
 							))}
 						</div>
@@ -371,26 +417,29 @@ function RouteComponent() {
 				<ItemGroup
 					className={cn(
 						"grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 transition-opacity",
-						(isLoading || searchQuery !== debouncedQuery) &&
+						(isFetching || searchQuery !== debouncedQuery) &&
 							"opacity-50 pointer-events-none",
 					)}
 				>
 					{allBangs.map((bang) => {
-						const primaryTrigger = bang.t[0];
+						const triggers = normalizeBangTriggers(bang.t);
+						const primaryTrigger = getPrimaryTrigger(bang);
+						const visibleTriggers = triggers.slice(0, 3);
+						const hiddenTriggerCount = triggers.length - visibleTriggers.length;
 						const favicon = `https://www.google.com/s2/favicons?sz=128&domain=${bang.d}`;
 
 						return (
 							<Item
 								key={bang.id}
 								variant="outline"
-								className="hover:bg-secondary/50 active:scale-[0.99] transition-all outline-0 p-3 min-h-20 flex-row flex-nowrap items-center text-left gap-3 rounded-xl overflow-hidden"
+								className="hover:bg-secondary/50 active:scale-[0.99] transition-[background-color,scale] outline-0 p-3 min-h-20 flex-row flex-nowrap items-start text-left gap-3 rounded-xl overflow-hidden"
 								onClick={() => handleOpenBang(primaryTrigger)}
 							>
-								<div className="size-8 shrink-0 overflow-hidden rounded-md flex items-center justify-center">
+								<div className="size-8 shrink-0 overflow-hidden rounded-[3px] flex items-start justify-start">
 									<img
 										src={favicon}
 										alt={bang.s}
-										className="size-8 object-contain rounded-sm"
+										className="size-8 object-contain rounded-[4px]"
 										onError={(e) => {
 											(e.target as HTMLImageElement).src =
 												`https://ui-avatars.com/api/?name=${encodeURIComponent(bang.s)}&background=random`;
@@ -406,18 +455,31 @@ function RouteComponent() {
 											{bang.d}
 										</p>
 									</div>
-									<Badge
-										variant="secondary"
-										className="max-w-full truncate px-1 py-0 font-mono text-[10px] leading-3"
-									>
-										{primaryTrigger}
-									</Badge>
+									<div className="flex max-w-full flex-wrap gap-1">
+										{visibleTriggers.map((trigger) => (
+											<Badge
+												key={trigger}
+												variant="secondary"
+												className="max-w-24 truncate px-1 py-0 font-mono text-[10px] leading-3"
+											>
+												{trigger}
+											</Badge>
+										))}
+										{hiddenTriggerCount > 0 && (
+											<Badge
+												variant="outline"
+												className="px-1 py-0 font-mono text-[10px] leading-3 text-muted-foreground"
+											>
+												+{hiddenTriggerCount}
+											</Badge>
+										)}
+									</div>
 								</div>
 							</Item>
 						);
 					})}
 
-					{allBangs.length === 0 && !isLoading && (
+					{allBangs.length === 0 && !isFetching && (
 						<div className="col-span-full">
 							<Empty>
 								<EmptyHeader>
@@ -453,7 +515,7 @@ function RouteComponent() {
 											variant="outline"
 											onClick={() => handleCategoryChange("all")}
 										>
-											Show all categories
+											{isSearching ? "Show results" : "Show all categories"}
 										</Button>
 									)}
 								</div>
@@ -464,7 +526,7 @@ function RouteComponent() {
 
 				<div ref={loadMoreRef} className="min-h-20">
 					{(isLoadingMore || (!hasMore && allBangs.length > 0)) && (
-						<div className="rounded-xl border border-border px-4 py-3 text-center text-xs text-muted-foreground">
+						<div className="px-4 py-3 text-center text-xs text-muted-foreground">
 							{isLoadingMore && "Loading more..."}
 							{!hasMore && allBangs.length > 0 && "You've reached the end"}
 						</div>
@@ -480,72 +542,60 @@ function RouteComponent() {
 			>
 				<BangDetailsDialogContent
 					mode="store"
-					isModified={false}
+					isModified={!!activeOverride}
 					isLoading={isActiveBangLoading}
 					bang={
 						activeBang
 							? {
 									name: activeBang.s,
-									trigger: activeBang.t[0],
+									trigger: getPrimaryTrigger(activeBang),
+									triggers: activeBang.t,
 									url: activeBang.u,
-									description:
-										activeBang.desc || `Access ${activeBang.s} quickly.`,
+									domain: activeBang.d,
 									image: `https://www.google.com/s2/favicons?sz=128&domain=${activeBang.d}`,
 								}
 							: { name: "", trigger: "", url: "", image: "" }
 					}
-					subRoutes={
-						activeBang?.sr?.map((sr) => ({
-							id: sr.t[0],
-							call: sr.t[0],
-							url: sr.u,
-							desc: sr.desc || "",
-							suggestionUrl: sr.su,
-						})) || []
-					}
 					onOpenSettings={() =>
 						navigate({
-							to: "/settings/mybangs",
-							search: (prev) => ({
-								...prev,
-								bang: openBangTrigger,
-							}),
+							to: "/settings",
+							search: {
+								bang: activeOverride
+									? getPrimaryTrigger(activeOverride)
+									: openBangTrigger,
+							},
 						})
 					}
 					onCustomize={async () => {
 						if (!activeBang) return;
-						const primaryTrigger = activeBang.t[0];
-						const existing = await db.userBangs
-							.where("t")
-							.equals(primaryTrigger)
-							.first();
+						const primaryTrigger = getPrimaryTrigger(activeBang);
 
-						if (existing) {
+						if (activeOverride) {
 							navigate({
-								to: "/settings/mybangs",
-								search: (prev: Record<string, unknown>) => ({
-									...prev,
-									bang: primaryTrigger,
-								}),
+								to: "/settings",
+								search: { bang: getPrimaryTrigger(activeOverride) },
 							});
 							return;
 						}
 
-						const { id: _, ...bangData } = activeBang;
 						const newId = await db.userBangs.add({
-							...bangData,
+							t: normalizeBangTriggers(activeBang.t),
+							s: activeBang.s,
+							u: activeBang.u,
+							d: activeBang.d,
+							c: activeBang.c,
+							sc: activeBang.sc,
+							su: activeBang.su,
+							desc: activeBang.desc,
 							isCustom: true,
 						});
 
 						navigate({
-							to: "/settings/mybangs",
-							search: (prev: Record<string, unknown>) => ({
-								...prev,
-								bang: primaryTrigger || `new-${newId}`,
-							}),
+							to: "/settings",
+							search: { bang: primaryTrigger || `new-${newId}` },
 						});
 					}}
-					onOpenInStore={() => {}}
+					onResetStoreOverride={resetActiveOverride}
 					onDeleteMainBang={() => {}}
 				/>
 			</Dialog>

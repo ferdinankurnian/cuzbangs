@@ -15,9 +15,6 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as GoRouteImport } from './routes/go'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsMybangsRouteImport } from './routes/settings.mybangs'
-import { Route as SettingsConfigsRouteImport } from './routes/settings.configs'
-import { Route as SettingsAboutRouteImport } from './routes/settings.about'
 
 const TestModalRoute = TestModalRouteImport.update({
   id: '/test-modal',
@@ -49,55 +46,31 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsMybangsRoute = SettingsMybangsRouteImport.update({
-  id: '/mybangs',
-  path: '/mybangs',
-  getParentRoute: () => SettingsRoute,
-} as any)
-const SettingsConfigsRoute = SettingsConfigsRouteImport.update({
-  id: '/configs',
-  path: '/configs',
-  getParentRoute: () => SettingsRoute,
-} as any)
-const SettingsAboutRoute = SettingsAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => SettingsRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/get-started': typeof GetStartedRoute
   '/go': typeof GoRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/store': typeof StoreRoute
   '/test-modal': typeof TestModalRoute
-  '/settings/about': typeof SettingsAboutRoute
-  '/settings/configs': typeof SettingsConfigsRoute
-  '/settings/mybangs': typeof SettingsMybangsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/get-started': typeof GetStartedRoute
   '/go': typeof GoRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/store': typeof StoreRoute
   '/test-modal': typeof TestModalRoute
-  '/settings/about': typeof SettingsAboutRoute
-  '/settings/configs': typeof SettingsConfigsRoute
-  '/settings/mybangs': typeof SettingsMybangsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/get-started': typeof GetStartedRoute
   '/go': typeof GoRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/store': typeof StoreRoute
   '/test-modal': typeof TestModalRoute
-  '/settings/about': typeof SettingsAboutRoute
-  '/settings/configs': typeof SettingsConfigsRoute
-  '/settings/mybangs': typeof SettingsMybangsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,20 +81,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/store'
     | '/test-modal'
-    | '/settings/about'
-    | '/settings/configs'
-    | '/settings/mybangs'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/get-started'
-    | '/go'
-    | '/settings'
-    | '/store'
-    | '/test-modal'
-    | '/settings/about'
-    | '/settings/configs'
-    | '/settings/mybangs'
+  to: '/' | '/get-started' | '/go' | '/settings' | '/store' | '/test-modal'
   id:
     | '__root__'
     | '/'
@@ -130,16 +91,13 @@ export interface FileRouteTypes {
     | '/settings'
     | '/store'
     | '/test-modal'
-    | '/settings/about'
-    | '/settings/configs'
-    | '/settings/mybangs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GetStartedRoute: typeof GetStartedRoute
   GoRoute: typeof GoRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   StoreRoute: typeof StoreRoute
   TestModalRoute: typeof TestModalRoute
 }
@@ -188,51 +146,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/mybangs': {
-      id: '/settings/mybangs'
-      path: '/mybangs'
-      fullPath: '/settings/mybangs'
-      preLoaderRoute: typeof SettingsMybangsRouteImport
-      parentRoute: typeof SettingsRoute
-    }
-    '/settings/configs': {
-      id: '/settings/configs'
-      path: '/configs'
-      fullPath: '/settings/configs'
-      preLoaderRoute: typeof SettingsConfigsRouteImport
-      parentRoute: typeof SettingsRoute
-    }
-    '/settings/about': {
-      id: '/settings/about'
-      path: '/about'
-      fullPath: '/settings/about'
-      preLoaderRoute: typeof SettingsAboutRouteImport
-      parentRoute: typeof SettingsRoute
-    }
   }
 }
-
-interface SettingsRouteChildren {
-  SettingsAboutRoute: typeof SettingsAboutRoute
-  SettingsConfigsRoute: typeof SettingsConfigsRoute
-  SettingsMybangsRoute: typeof SettingsMybangsRoute
-}
-
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsAboutRoute: SettingsAboutRoute,
-  SettingsConfigsRoute: SettingsConfigsRoute,
-  SettingsMybangsRoute: SettingsMybangsRoute,
-}
-
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GetStartedRoute: GetStartedRoute,
   GoRoute: GoRoute,
-  SettingsRoute: SettingsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   StoreRoute: StoreRoute,
   TestModalRoute: TestModalRoute,
 }

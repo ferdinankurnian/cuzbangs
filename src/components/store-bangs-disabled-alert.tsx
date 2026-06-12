@@ -21,7 +21,7 @@ export function StoreBangsDisabledAlert({
 						config settings.
 					</span>
 				</div>
-				<Link to="/settings/configs">
+				<Link to="/settings" search={{ tab: "configs" }}>
 					<Button size="sm" className="ml-4 shrink-0">
 						Go to Config <ArrowRight />
 					</Button>

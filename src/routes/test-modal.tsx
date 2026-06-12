@@ -75,13 +75,10 @@ function RouteComponent() {
 								name: item.name,
 								trigger: item.id,
 								url: `https://example.com/${item.id}`,
-								description: `Description for ${item.name}`,
 								image: `https://ui-avatars.com/api/?name=${item.name}`,
 							}}
-							subRoutes={[]}
 							onOpenSettings={() => {}}
 							onCustomize={() => {}}
-							onOpenInStore={() => {}}
 							onDeleteMainBang={() => {}}
 						/>
 					</Dialog>

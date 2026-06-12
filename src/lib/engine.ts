@@ -1,5 +1,11 @@
 import { z } from "zod";
 import {
+	bangHasTrigger,
+	normalizeBangEntryTriggers,
+	normalizeBangTriggers,
+	normalizeTrigger,
+} from "./bangs";
+import {
 	type AppConfig,
 	type BangEntry,
 	BangEntrySchema,
@@ -16,7 +22,11 @@ async function fetchFallbackBangs() {
 		const response = await fetch(DATA_URL);
 		if (!response.ok) return [];
 		const rawData = await response.json();
-		cachedFallback = z.array(BangEntrySchema).parse(rawData);
+		cachedFallback = z
+			.array(BangEntrySchema)
+			.parse(rawData)
+			.map(normalizeBangEntryTriggers)
+			.filter((entry) => entry.t.length > 0);
 		return cachedFallback;
 	} catch (err) {
 		console.error("Fallback fetch failed:", err);
@@ -185,14 +195,16 @@ export async function parseInput(input: string) {
 		if (!trimmedInput.startsWith(symbol)) {
 			return { trigger: null, query: trimmedInput, config };
 		}
-		triggerPart = parts[0].substring(symbol.length).toLowerCase();
+		triggerPart = normalizeTrigger(parts[0].substring(symbol.length));
 		queryPart = parts.slice(1).join(" ");
 	} else {
 		const triggerIndex = parts.findIndex((p) => p.startsWith(symbol));
 		if (triggerIndex === -1) {
 			return { trigger: null, query: trimmedInput, config };
 		}
-		triggerPart = parts[triggerIndex].substring(symbol.length).toLowerCase();
+		triggerPart = normalizeTrigger(
+			parts[triggerIndex].substring(symbol.length),
+		);
 		const remaining = [...parts];
 		remaining.splice(triggerIndex, 1);
 		queryPart = remaining.join(" ");
@@ -205,18 +217,33 @@ export async function parseInput(input: string) {
  * Finds a bang entry by trigger.
  */
 export async function findBang(trigger: string, useStore = true) {
-	let bang = await db.userBangs.where("t").equals(trigger).first();
+	const normalizedTrigger = normalizeTrigger(trigger);
+	if (!normalizedTrigger) return null;
+
+	let bang = await db.userBangs.where("t").equals(normalizedTrigger).first();
+	if (!bang) {
+		bang = await db.userBangs
+			.filter((entry) => bangHasTrigger(entry, normalizedTrigger))
+			.first();
+	}
 	if (bang) return bang;
 
 	if (useStore) {
-		bang = await db.storeBangs.where("t").equals(trigger).first();
+		bang = await db.storeBangs.where("t").equals(normalizedTrigger).first();
+		if (!bang) {
+			bang = await db.storeBangs
+				.filter((entry) => bangHasTrigger(entry, normalizedTrigger))
+				.first();
+		}
 		if (bang) return bang;
 
 		// Last resort: check if DB is empty and fallback to JSON
 		const dbCount = await db.storeBangs.count();
 		if (dbCount === 0) {
 			const fallback = await fetchFallbackBangs();
-			return fallback?.find((b) => b.t.includes(trigger)) || null;
+			return (
+				fallback?.find((b) => bangHasTrigger(b, normalizedTrigger)) || null
+			);
 		}
 	}
 
@@ -239,27 +266,12 @@ export async function getRedirectUrl(input: string): Promise<string> {
 		return getEngineUrl(config.selectedEngine, config.customUrl, input);
 	}
 
-	// Check for sub-routes
-	let targetUrl = bang.u;
-	let finalQuery = query;
-
-	if (bang.sr && query) {
-		const subParts = query.split(/\s+/);
-		const subTrigger = subParts[0].toLowerCase();
-		const subRoute = bang.sr.find((sr) => sr.t.includes(subTrigger));
-
-		if (subRoute) {
-			targetUrl = subRoute.u;
-			finalQuery = subParts.slice(1).join(" ");
-		}
-	}
-
 	// Handle placeholder replacement
 	// DuckDuckGo uses {{{s}}}, but some custom ones might use %s
-	const placeholder = targetUrl.includes("{{{s}}}") ? "{{{s}}}" : "%s";
+	const placeholder = bang.u.includes("{{{s}}}") ? "{{{s}}}" : "%s";
 
-	const processedUrl = finalQuery
-		? targetUrl.replace(placeholder, encodeURIComponent(finalQuery))
+	const processedUrl = query
+		? bang.u.replace(placeholder, encodeURIComponent(query))
 		: `https://${bang.d}`;
 
 	return processedUrl;
@@ -276,38 +288,53 @@ export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
 	// Only suggest if it starts with the user's selected symbol
 	if (!trimmed.startsWith(symbol)) return [];
 
-	const query = trimmed.substring(symbol.length).toLowerCase();
+	const query = normalizeTrigger(trimmed.substring(symbol.length));
 	if (!query) return [];
 
-	// Search in both userBangs and storeBangs
+	// Search in both layers, but hide store triggers claimed by user bangs.
 	const [userBangs, storeBangs] = await Promise.all([
 		db.userBangs
 			.filter(
 				(b) =>
-					b.t.some((t) => t.toLowerCase().startsWith(query)) ||
+					normalizeBangTriggers(b.t).some((t) => t.startsWith(query)) ||
 					b.s.toLowerCase().includes(query),
 			)
 			.toArray(),
-		db.storeBangs
-			.filter(
-				(b) =>
-					b.t.some((t) => t.toLowerCase().startsWith(query)) ||
-					b.s.toLowerCase().includes(query),
-			)
-			.toArray(),
+		config.useStoreBangs
+			? db.storeBangs.toArray()
+			: Promise.resolve([] as BangEntry[]),
 	]);
+	const userTriggers = new Set(
+		userBangs.flatMap((bang) => normalizeBangTriggers(bang.t)),
+	);
+	const visibleStoreBangs = storeBangs
+		.map((bang) => ({
+			...bang,
+			t: normalizeBangTriggers(bang.t).filter(
+				(trigger) => !userTriggers.has(trigger),
+			),
+		}))
+		.filter(
+			(bang) =>
+				bang.t.length > 0 &&
+				(bang.t.some((trigger) => trigger.startsWith(query)) ||
+					bang.s.toLowerCase().includes(query)),
+		);
 
-	const all = [...userBangs, ...storeBangs];
+	const all = [...userBangs, ...visibleStoreBangs];
 
-	// Unique by primary trigger and limit to 10
-	const seen = new Set();
+	// Unique by trigger and limit to 10.
+	const seen = new Set<string>();
 	const unique: BangEntry[] = [];
 	for (const b of all) {
-		const primary = b.t[0];
-		if (!seen.has(primary)) {
-			seen.add(primary);
-			unique.push(b);
+		const triggers = normalizeBangTriggers(b.t).filter(
+			(trigger) => !seen.has(trigger),
+		);
+		if (triggers.length === 0) continue;
+		for (const trigger of triggers) {
+			seen.add(trigger);
 		}
+		unique.push({ ...b, t: triggers });
 		if (unique.length >= 10) break;
 	}
 
@@ -323,11 +350,20 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 	if (!trigger) {
 		switch (config.selectedEngine) {
 			case "google":
-				return "https://www.google.com/complete/search?client=chrome&q=%s".replace("%s", encodeURIComponent(query));
+				return "https://www.google.com/complete/search?client=chrome&q=%s".replace(
+					"%s",
+					encodeURIComponent(query),
+				);
 			case "bing":
-				return "https://api.bing.com/osjson.aspx?query=%s".replace("%s", encodeURIComponent(query));
+				return "https://api.bing.com/osjson.aspx?query=%s".replace(
+					"%s",
+					encodeURIComponent(query),
+				);
 			case "duckduckgo":
-				return "https://duckduckgo.com/ac/?q=%s&type=list".replace("%s", encodeURIComponent(query));
+				return "https://duckduckgo.com/ac/?q=%s&type=list".replace(
+					"%s",
+					encodeURIComponent(query),
+				);
 			case "kagi":
 				return config.useKagiPrivacy
 					? "https://kagisuggest.com/api/autosuggest?q=%s".replace(
@@ -339,10 +375,16 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 							encodeURIComponent(query),
 						);
 			case "custom":
-				if (!config.customSuggestionUrl || config.customSuggestionUrl.trim() === "") {
+				if (
+					!config.customSuggestionUrl ||
+					config.customSuggestionUrl.trim() === ""
+				) {
 					return null;
 				}
-				return config.customSuggestionUrl.replace("%s", encodeURIComponent(query));
+				return config.customSuggestionUrl.replace(
+					"%s",
+					encodeURIComponent(query),
+				);
 			default:
 				return null;
 		}
@@ -351,21 +393,9 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 	const bang = await findBang(trigger, config.useStoreBangs);
 	if (!bang) return null;
 
-	let suggestionUrl = bang.su;
+	if (!bang.su) return null;
 
-	if (bang.sr && query) {
-		const subParts = query.split(/\s+/);
-		const subTrigger = subParts[0].toLowerCase();
-		const subRoute = bang.sr.find((sr) => sr.t.includes(subTrigger));
-
-		if (subRoute?.su) {
-			suggestionUrl = subRoute.su;
-		}
-	}
-
-	if (!suggestionUrl) return null;
-
-	return suggestionUrl.replace("%s", encodeURIComponent(query));
+	return bang.su.replace("%s", encodeURIComponent(query));
 }
 
 /**

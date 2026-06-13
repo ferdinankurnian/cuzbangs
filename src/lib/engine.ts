@@ -1,32 +1,17 @@
-import { z } from "zod";
 import {
 	bangHasTrigger,
-	normalizeBangEntryTriggers,
 	normalizeBangTriggers,
 	normalizeTrigger,
 } from "./bangs";
-import {
-	type AppConfig,
-	type BangEntry,
-	BangEntrySchema,
-	db,
-	SETTING_KEYS,
-} from "./db";
+import { type AppConfig, type BangEntry, db, SETTING_KEYS } from "./db";
+import { fetchStoreBangs } from "./store-bangs";
 
-const DATA_URL = "/data/bangs.json";
 let cachedFallback: BangEntry[] | null = null;
 
 async function fetchFallbackBangs() {
 	if (cachedFallback) return cachedFallback;
 	try {
-		const response = await fetch(DATA_URL);
-		if (!response.ok) return [];
-		const rawData = await response.json();
-		cachedFallback = z
-			.array(BangEntrySchema)
-			.parse(rawData)
-			.map(normalizeBangEntryTriggers)
-			.filter((entry) => entry.t.length > 0);
+		cachedFallback = await fetchStoreBangs();
 		return cachedFallback;
 	} catch (err) {
 		console.error("Fallback fetch failed:", err);

@@ -1,13 +1,10 @@
-import { z } from "zod";
-import { normalizeBangEntryTriggers } from "./bangs";
-import { BangEntrySchema, db } from "./db";
-
-const DATA_URL = "/data/bangs.json";
+import { db } from "./db";
+import { fetchStoreBangs } from "./store-bangs";
 
 let isSyncing = false;
 
 export async function syncBangs(options: { force?: boolean } = {}) {
-	if (isSyncing) return;
+	if (isSyncing) return false;
 
 	const now = new Date();
 	const hours = now.getHours();
@@ -16,34 +13,19 @@ export async function syncBangs(options: { force?: boolean } = {}) {
 
 	const lastSyncWindow = localStorage.getItem("last-sync-window");
 	if (!options.force && lastSyncWindow === currentWindowKey) {
-		return;
+		return true;
 	}
 
 	isSyncing = true;
 
 	try {
 		console.log("Starting bangs sync...");
-		const response = await fetch(DATA_URL);
-		if (!response.ok) throw new Error("Failed to fetch bangs.json");
-
-		const lastModified = response.headers.get("last-modified");
-		const storedLastModified = localStorage.getItem("bangs-last-modified");
 		const dbCount = await db.storeBangs.count();
-
-		const shouldFetch =
-			!lastModified ||
-			!storedLastModified ||
-			lastModified !== storedLastModified ||
-			dbCount === 0;
+		const shouldFetch = options.force || dbCount === 0;
 
 		if (shouldFetch) {
-			console.log("Fetching fresh bangs.json...");
-			const rawData = await response.json();
-			const entries = z
-				.array(BangEntrySchema)
-				.parse(rawData)
-				.map(normalizeBangEntryTriggers)
-				.filter((entry) => entry.t.length > 0);
+			console.log("Fetching fresh store bangs...");
+			const entries = await fetchStoreBangs({ force: options.force });
 			await db.storeBangs.clear();
 			await db.storeBangs.bulkAdd(entries);
 			console.log(`Synced ${entries.length} bangs.`);
@@ -51,13 +33,11 @@ export async function syncBangs(options: { force?: boolean } = {}) {
 			console.log("Bangs data is up to date.");
 		}
 
-		if (lastModified && shouldFetch) {
-			localStorage.setItem("bangs-last-modified", lastModified);
-		}
-
 		localStorage.setItem("last-sync-window", currentWindowKey);
+		return true;
 	} catch (error) {
 		console.error("Error syncing bangs:", error);
+		return false;
 	} finally {
 		isSyncing = false;
 	}

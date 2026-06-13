@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { z } from "zod";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,26 +23,18 @@ import { Item, ItemGroup } from "@/components/ui/item";
 import {
 	bangHasTrigger,
 	getPrimaryTrigger,
-	normalizeBangEntryTriggers,
 	normalizeBangTriggers,
 	normalizeTrigger,
 } from "@/lib/bangs";
-import { type BangEntry, BangEntrySchema, db } from "@/lib/db";
+import { type BangEntry, db } from "@/lib/db";
+import { fetchStoreBangs } from "@/lib/store-bangs";
 import { cn } from "@/lib/utils";
 
 const BATCH_SIZE = 30;
-const DATA_URL = "/data/bangs.json";
 
 async function fetchFallbackBangs(): Promise<BangEntry[]> {
 	try {
-		const response = await fetch(DATA_URL);
-		if (!response.ok) return [];
-		const rawData = await response.json();
-		return z
-			.array(BangEntrySchema)
-			.parse(rawData)
-			.map(normalizeBangEntryTriggers)
-			.filter((entry) => entry.t.length > 0);
+		return await fetchStoreBangs();
 	} catch (err) {
 		console.error("Fallback fetch failed:", err);
 		return [];

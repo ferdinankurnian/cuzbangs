@@ -1,0 +1,10 @@
+[
+	{
+		"t": ["gpt", "chatgpt"],
+		"s": "ChatGPT",
+		"d": "chatgpt.com",
+		"u": "https://chatgpt.com/?q={{{s}}}",
+		"c": "Tech",
+		"sc": "AI"
+	}
+]

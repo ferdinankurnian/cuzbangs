@@ -10,7 +10,8 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "download-bangs": "echo 'TODO: fetch from kagisearch/bangs releases'"
+    "download-bangs": "echo 'TODO: fetch from kagisearch/bangs releases'",
+    "validate-bangs": "bun scripts/validate-bangs.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

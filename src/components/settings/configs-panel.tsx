@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { AlertTriangle, Download, Upload } from "lucide-react";
+import { AlertTriangle, Download, RefreshCcw, Upload } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,10 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { syncBangs } from "@/lib/bangs-sync";
 import { type AppConfig, db, SETTING_KEYS } from "@/lib/db";
 import { updateConfig } from "@/lib/engine";
+import { cn } from "@/lib/utils";
 
 const SYMBOLS = ["!", "@", "#", "$", "."] as const;
 
@@ -82,6 +84,10 @@ export function ConfigsPanel() {
 		: null;
 
 	const customUrlId = useId();
+	const [isGrabbingBangs, setIsGrabbingBangs] = useState(false);
+	const [grabStatus, setGrabStatus] = useState<"idle" | "success" | "error">(
+		"idle",
+	);
 	const [showResetDialog, setShowResetDialog] = useState(false);
 	const [confirmText, setConfirmText] = useState("");
 	const CONFIRMATION_STRING = "i understand, i want to delete my data now";
@@ -147,6 +153,21 @@ export function ConfigsPanel() {
 			}
 		};
 		input.click();
+	};
+
+	const handleGrabBangs = async () => {
+		setIsGrabbingBangs(true);
+		setGrabStatus("idle");
+
+		try {
+			const didSync = await syncBangs({ force: true });
+			setGrabStatus(didSync ? "success" : "error");
+		} catch (err) {
+			console.error("Grab bangs error:", err);
+			setGrabStatus("error");
+		} finally {
+			setIsGrabbingBangs(false);
+		}
 	};
 
 	if (!config) return null;
@@ -303,11 +324,44 @@ export function ConfigsPanel() {
 				<CardHeader>
 					<CardTitle>Store & Privacy</CardTitle>
 					<CardDescription>
-						Manage store bangs and usage tracking preferences.
+						Manage store bangs and local bang data.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex flex-col gap-4">
+						<div className="flex items-center justify-between gap-4">
+							<div className="space-y-1 text-left">
+								<p className="text-sm font-medium">Grab latest bangs</p>
+								<p className="text-xs text-muted-foreground">
+									Refresh local store data from Kagi and cuzbangs.json.
+								</p>
+								{grabStatus !== "idle" && (
+									<p
+										className={cn(
+											"text-xs",
+											grabStatus === "success"
+												? "text-green-500"
+												: "text-destructive",
+										)}
+									>
+										{grabStatus === "success"
+											? "Bangs refreshed."
+											: "Failed to refresh bangs."}
+									</p>
+								)}
+							</div>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleGrabBangs}
+								disabled={isGrabbingBangs}
+							>
+								<RefreshCcw
+									className={cn("size-4", isGrabbingBangs && "animate-spin")}
+								/>
+								{isGrabbingBangs ? "Grabbing..." : "Grab Bangs"}
+							</Button>
+						</div>
 						<div className="flex items-center justify-between">
 							<div className="space-y-1 text-left">
 								<p className="text-sm font-medium">Use store bangs</p>

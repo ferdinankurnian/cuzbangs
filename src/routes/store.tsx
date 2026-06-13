@@ -21,6 +21,13 @@ import {
 } from "@/components/ui/input-group";
 import { Item, ItemGroup } from "@/components/ui/item";
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
 	bangHasTrigger,
 	getPrimaryTrigger,
 	normalizeBangTriggers,
@@ -32,6 +39,14 @@ import { cn } from "@/lib/utils";
 
 const BATCH_SIZE = 30;
 
+type SearchMode = "all" | "title" | "trigger";
+
+const searchModes: { value: SearchMode; label: string }[] = [
+	{ value: "all", label: "All" },
+	{ value: "title", label: "Title" },
+	{ value: "trigger", label: "Trigger" },
+];
+
 async function fetchFallbackBangs(): Promise<BangEntry[]> {
 	try {
 		return await fetchStoreBangs();
@@ -39,6 +54,61 @@ async function fetchFallbackBangs(): Promise<BangEntry[]> {
 		console.error("Fallback fetch failed:", err);
 		return [];
 	}
+}
+
+function bangMatchesSearch(bang: BangEntry, query: string, mode: SearchMode) {
+	if (!query) return true;
+
+	const title = bang.s.toLowerCase();
+	const triggers = normalizeBangTriggers(bang.t);
+
+	if (mode === "title") return title.includes(query);
+	if (mode === "trigger") {
+		return triggers.some((trigger) => trigger.includes(query));
+	}
+
+	return (
+		title.includes(query) ||
+		bang.d.toLowerCase().includes(query) ||
+		triggers.some((trigger) => trigger.includes(query))
+	);
+}
+
+function getBangSearchScore(bang: BangEntry, query: string) {
+	if (!query) return 0;
+
+	const title = bang.s.toLowerCase();
+	const domain = bang.d.toLowerCase();
+	const triggers = normalizeBangTriggers(bang.t);
+	const primaryTrigger = getPrimaryTrigger(bang);
+	let score = 0;
+
+	if (title === query) score += 1000;
+	if (primaryTrigger === query) score += 950;
+	if (triggers.some((trigger) => trigger === query)) score += 900;
+	if (domain === query || domain === `www.${query}.com`) score += 850;
+	if (title.startsWith(query)) score += 700;
+	if (primaryTrigger.startsWith(query)) score += 650;
+	if (triggers.some((trigger) => trigger.startsWith(query))) score += 600;
+	if (domain.startsWith(query) || domain.startsWith(`www.${query}`))
+		score += 550;
+	if (title.includes(query)) score += 300;
+	if (domain.includes(query)) score += 250;
+	if (triggers.some((trigger) => trigger.includes(query))) score += 200;
+
+	return score;
+}
+
+function sortBangs(bangs: BangEntry[], query: string) {
+	return [...bangs].sort((a, b) => {
+		if (query) {
+			const scoreDiff =
+				getBangSearchScore(b, query) - getBangSearchScore(a, query);
+			if (scoreDiff !== 0) return scoreDiff;
+		}
+
+		return a.s.localeCompare(b.s);
+	});
 }
 
 export const Route = createFileRoute("/store")({
@@ -63,6 +133,7 @@ function RouteComponent() {
 	} = Route.useSearch();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
+	const [searchMode, setSearchMode] = useState<SearchMode>("all");
 	const [offset, setOffset] = useState(BATCH_SIZE);
 	const [allBangs, setAllBangs] = useState<BangEntry[]>([]);
 	const [hasMore, setHasMore] = useState(true);
@@ -173,12 +244,13 @@ function RouteComponent() {
 		queryKey: [
 			"storeBangs",
 			debouncedQuery,
+			searchMode,
 			selectedCategory,
 			selectedSort,
 			"initial",
 		],
 		queryFn: async () => {
-			const query = debouncedQuery.toLowerCase();
+			const query = debouncedQuery.trim().toLowerCase();
 			const dbCount = await db.storeBangs.count();
 
 			if (dbCount === 0) {
@@ -190,47 +262,33 @@ function RouteComponent() {
 				}
 
 				if (query) {
-					filtered = filtered.filter(
-						(bang) =>
-							bang.t.some((t) => t.toLowerCase().includes(query)) ||
-							bang.s.toLowerCase().includes(query),
+					filtered = filtered.filter((bang) =>
+						bangMatchesSearch(bang, query, searchMode),
 					);
 				}
 
-				filtered.sort((a, b) => a.s.localeCompare(b.s));
+				return sortBangs(filtered, query).slice(0, BATCH_SIZE);
+			}
 
-				return filtered.slice(0, BATCH_SIZE);
+			if (selectedCategory === "all" && query) {
+				const results = await db.storeBangs
+					.filter((bang) => bangMatchesSearch(bang, query, searchMode))
+					.toArray();
+
+				return sortBangs(results, query).slice(0, BATCH_SIZE);
 			}
 
 			if (selectedCategory === "all") {
-				const collection = db.storeBangs.orderBy("s");
-
-				if (query) {
-					return await collection
-						.filter(
-							(bang) =>
-								bang.t.some((t) => t.toLowerCase().includes(query)) ||
-								bang.s.toLowerCase().includes(query),
-						)
-						.limit(BATCH_SIZE)
-						.toArray();
-				}
-				return await collection.limit(BATCH_SIZE).toArray();
+				return await db.storeBangs.orderBy("s").limit(BATCH_SIZE).toArray();
 			}
 
 			const collection = db.storeBangs.where("c").equals(selectedCategory);
 			if (query) {
 				const results = await collection
-					.filter(
-						(bang) =>
-							bang.t.some((t) => t.toLowerCase().includes(query)) ||
-							bang.s.toLowerCase().includes(query),
-					)
+					.filter((bang) => bangMatchesSearch(bang, query, searchMode))
 					.toArray();
 
-				return results
-					.sort((a, b) => a.s.localeCompare(b.s))
-					.slice(0, BATCH_SIZE);
+				return sortBangs(results, query).slice(0, BATCH_SIZE);
 			}
 
 			const results = await collection.sortBy("s");
@@ -255,7 +313,7 @@ function RouteComponent() {
 
 		setIsLoadingMore(true);
 		try {
-			const query = searchQuery.toLowerCase();
+			const query = searchQuery.trim().toLowerCase();
 			const dbCount = await db.storeBangs.count();
 
 			if (dbCount === 0) {
@@ -267,14 +325,12 @@ function RouteComponent() {
 				}
 
 				if (query) {
-					filtered = filtered.filter(
-						(bang) =>
-							bang.t.some((t) => t.toLowerCase().includes(query)) ||
-							bang.s.toLowerCase().includes(query),
+					filtered = filtered.filter((bang) =>
+						bangMatchesSearch(bang, query, searchMode),
 					);
 				}
 
-				filtered.sort((a, b) => a.s.localeCompare(b.s));
+				filtered = sortBangs(filtered, query);
 
 				const nextBangs = filtered.slice(offset, offset + BATCH_SIZE);
 				if (nextBangs.length < BATCH_SIZE) setHasMore(false);
@@ -286,19 +342,17 @@ function RouteComponent() {
 			let newBangs: BangEntry[];
 
 			if (selectedCategory === "all") {
-				const collection = db.storeBangs.orderBy("s");
-
 				if (query) {
-					newBangs = await collection
-						.filter(
-							(bang) =>
-								bang.t.some((t) => t.toLowerCase().includes(query)) ||
-								bang.s.toLowerCase().includes(query),
-						)
-						.offset(offset)
-						.limit(BATCH_SIZE)
+					const results = await db.storeBangs
+						.filter((bang) => bangMatchesSearch(bang, query, searchMode))
 						.toArray();
+
+					newBangs = sortBangs(results, query).slice(
+						offset,
+						offset + BATCH_SIZE,
+					);
 				} else {
+					const collection = db.storeBangs.orderBy("s");
 					newBangs = await collection
 						.offset(offset)
 						.limit(BATCH_SIZE)
@@ -308,17 +362,11 @@ function RouteComponent() {
 				const collection = db.storeBangs.where("c").equals(selectedCategory);
 				const results = await (query
 					? collection
-							.filter(
-								(bang) =>
-									bang.t.some((t) => t.toLowerCase().includes(query)) ||
-									bang.s.toLowerCase().includes(query),
-							)
+							.filter((bang) => bangMatchesSearch(bang, query, searchMode))
 							.toArray()
 					: collection.toArray());
 
-				newBangs = results
-					.sort((a, b) => a.s.localeCompare(b.s))
-					.slice(offset, offset + BATCH_SIZE);
+				newBangs = sortBangs(results, query).slice(offset, offset + BATCH_SIZE);
 			}
 
 			if (newBangs.length < BATCH_SIZE) {
@@ -335,6 +383,7 @@ function RouteComponent() {
 		hasMore,
 		isFetching,
 		searchQuery,
+		searchMode,
 		offset,
 		selectedCategory,
 	]);
@@ -374,13 +423,33 @@ function RouteComponent() {
 
 					<div className="flex flex-col items-center gap-6 w-full max-w-2xl">
 						<InputGroup size="lg" className="w-full">
+							<InputGroupAddon>
+								<Search className="mb-[1px]" />
+							</InputGroupAddon>
 							<InputGroupInput
 								placeholder="Search for bangs..."
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 							/>
-							<InputGroupAddon className="mr-[-8px]">
-								<Search className="mb-[1px]" />
+							<InputGroupAddon align="inline-end" className="pr-1">
+								<Select
+									value={searchMode}
+									onValueChange={(value) => setSearchMode(value as SearchMode)}
+								>
+									<SelectTrigger
+										size="sm"
+										className="h-8 border-0 bg-secondary/70 px-2 text-xs shadow-none hover:bg-secondary"
+									>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent align="end">
+										{searchModes.map((mode) => (
+											<SelectItem key={mode.value} value={mode.value}>
+												{mode.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</InputGroupAddon>
 						</InputGroup>
 

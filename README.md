@@ -3,7 +3,7 @@
 
 Tired with being forced? Search for anything you want with your chosen search engine. Don't like "!" mark? change it. Add this to your browser as default search engine. Don't forget, cuzbangs, cuz it bangs.
 
-[cuzbangs.vercel.app](https://cuzbangs.vercel.app)
+[cuzbangs.iydheko.dev](https://cuzbangs.iydheko.dev)
 
 ## Search with your search engine preferences
 ![Logo](docs/1.png)

@@ -29,7 +29,7 @@ function App() {
       >
         The new <span className="font-semibold">cuzbangs v2</span> is here →
       </a>
-      <h1 className="md:text-4xl text-2xl font-bold">cuzbangs v1. cuz it bangs.</h1>
+      <h1 className="md:text-4xl text-2xl font-bold">cuzbangs. cuz it bangs.</h1>
       <div className="max-w-xl text-center opacity-75">
         <p className="md:text-[1rem] text-sm">
           Tired with being forced? Search for anything you want with your

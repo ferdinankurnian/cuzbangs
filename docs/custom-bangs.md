@@ -25,6 +25,51 @@ Fields:
 - `u`: target URL. Use `{{{s}}}` where the search query should go.
 - `c`: category.
 - `sc`: subcategory.
+- `sr`: optional subroutes owned by this bang.
+
+## Subroutes
+
+Use `sr` when a bang has scoped child destinations.
+
+```json
+[
+	{
+		"t": ["cloudflare", "cf"],
+		"s": "Cloudflare",
+		"d": "developers.cloudflare.com",
+		"u": "https://developers.cloudflare.com/search/?q={{{s}}}",
+		"c": "Tech",
+		"sc": "Docs",
+		"sr": [
+			{
+				"t": ["workers", "w"],
+				"s": "Cloudflare Workers & Pages",
+				"b": "https://dash.cloudflare.com/?to=/:account/workers-and-pages",
+				"u": "https://dash.cloudflare.com/?to=/:account/workers-and-pages%3Fname%3D{{{s}}}"
+			}
+		]
+	}
+]
+```
+
+Usage:
+
+```txt
+!cf search term              -> Cloudflare parent bang
+!cf                          -> https://developers.cloudflare.com
+!cf/workers search term      -> Cloudflare Workers subroute
+!cf/workers                  -> Cloudflare Workers base URL, if set
+!cloudflare/w search term    -> parent alias + subroute alias
+!cf/unknown search term      -> fallback search engine with the full input
+```
+
+Subroute fields:
+
+- `t`: child trigger list. These are scoped to the parent and are not global bangs.
+- `s`: display name.
+- `u`: target URL. Use `{{{s}}}` where the search query should go.
+- `b`: required base URL used when the subroute has no search query.
+- `d`, `c`, `sc`, `su`, `desc`: optional. Missing values inherit from the parent at runtime where needed.
 
 ## Merge Rules
 
@@ -67,6 +112,7 @@ This checks:
 
 - JSON shape.
 - Duplicate triggers inside `cuzbangs.json`.
+- Duplicate subroute triggers inside the same parent bang.
 - Trigger collisions with Kagi.
 - Same-bang merges by matching `s` and `d`.
 

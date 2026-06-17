@@ -113,7 +113,7 @@ function App() {
 				<div className="relative space-y-8">
 					<div className="space-y-5">
 						<h1 className="text-5xl md:text-7xl font-semibold text-white [letter-spacing:-0.05em]">
-							The new cuzbangs. cuz it bangs
+							cuzbangs. cuz it bangs
 						</h1>
 						<p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
 							Type <span className="text-white font-mono">!yt lo-fi</span>. Go

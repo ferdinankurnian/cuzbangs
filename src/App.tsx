@@ -8,7 +8,7 @@ import { useEffect } from "react";
 function App() {
 
   useEffect(() => {
-    document.title = "cuzbangs. cuz it bangs";
+    document.title = "cuzbangs v1. cuz it bangs";
   }, []);
 
   const handleXIydheko = () => {
@@ -21,7 +21,15 @@ function App() {
 
   return (
     <div className="flex flex-col gap-3 items-center justify-center h-svh px-4">
-      <h1 className="md:text-4xl text-2xl font-bold">cuzbangs. cuz it bangs.</h1>
+      <a
+        href="https://cuzbangs.iydheko.dev"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/10 hover:bg-white/20 text-sm px-4 py-2 rounded-full transition-colors"
+      >
+        The new <span className="font-semibold">cuzbangs v2</span> is here →
+      </a>
+      <h1 className="md:text-4xl text-2xl font-bold">cuzbangs v1. cuz it bangs.</h1>
       <div className="max-w-xl text-center opacity-75">
         <p className="md:text-[1rem] text-sm">
           Tired with being forced? Search for anything you want with your

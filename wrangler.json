@@ -1,5 +1,5 @@
 {
-	"name": "cuzbangs",
+	"name": "cuzbangs-v2",
 	"main": "src/worker.ts",
 	"compatibility_date": "2026-01-04",
 	"assets": {

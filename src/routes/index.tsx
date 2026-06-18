@@ -116,8 +116,7 @@ function App() {
 							cuzbangs. cuz it bangs
 						</h1>
 						<p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-							Type <span className="text-white font-mono">!yt lo-fi</span>. Go
-							straight there. Pick your own defaults.
+							The fastest way to go anywhere on the internet
 						</p>
 					</div>
 

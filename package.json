@@ -47,6 +47,9 @@
     "workbox-window": "^7.4.0",
     "zod": "^4.2.1"
   },
+  "overrides": {
+    "yallist": "^4.0.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@tanstack/devtools-vite": "^0.3.11",

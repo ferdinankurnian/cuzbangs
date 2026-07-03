@@ -8,12 +8,9 @@ import {
   Globe,
   Loader2,
   Lock,
-  Settings,
-  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,

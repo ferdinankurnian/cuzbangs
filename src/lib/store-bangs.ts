@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-	normalizeBangEntryTriggers,
-	normalizeBangTriggers,
-} from "./bangs";
+import { normalizeBangEntryTriggers, normalizeBangTriggers } from "./bangs";
 import { type BangEntry, BangEntrySchema } from "./db";
 
 const KAGI_DATA_URL = "/data/bangs.json";

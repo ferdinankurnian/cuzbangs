@@ -1,20 +1,21 @@
 import { Check, Edit2, Link, Plus, Trash2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { useApp } from "@/components/providers/app-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	ResponsiveDialogContent,
+	ResponsiveDialogDescription,
+	ResponsiveDialogHeader,
+	ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Separator } from "@/components/ui/separator";
 import {
 	Tooltip,
@@ -197,7 +198,7 @@ function EditableBangCall({
 								placeholder="Target URL (use %s for query)..."
 								value={editUrl}
 								onChange={(e) => setEditUrl(e.target.value)}
-								className="h-9 text-sm pl-8 font-mono text-xs"
+								className="h-9 text-sm pl-8 text-xs"
 								onKeyDown={(e) => {
 									if (e.key === "Enter") handleSave();
 									if (e.key === "Escape") handleCancel();
@@ -323,20 +324,21 @@ export function BangDetailsDialogContent({
 	onDeleteMainBang,
 	onResetStoreOverride,
 }: BangDetailsDialogProps) {
+	const { isConsented } = useApp();
 	const isReadOnly = mode === "store";
 	const subroutes = bang.subroutes ?? [];
 
 	if (isLoading) {
 		return (
-			<DialogContent className="overflow-hidden">
+			<ResponsiveDialogContent>
 				<div className="flex flex-col gap-4 animate-pulse">
-					<DialogHeader className="flex flex-row gap-4">
+					<ResponsiveDialogHeader className="flex flex-row gap-4">
 						<div className="size-16 rounded-sm bg-muted" />
 						<div className="flex flex-col justify-center gap-2 flex-1">
 							<div className="h-6 w-3/4 bg-muted rounded" />
 							<div className="h-4 w-1/2 bg-muted rounded" />
 						</div>
-					</DialogHeader>
+					</ResponsiveDialogHeader>
 
 					<div className="flex flex-row justify-between items-center">
 						<div className="h-8 w-32 bg-muted rounded" />
@@ -350,12 +352,12 @@ export function BangDetailsDialogContent({
 						<div className="h-20 w-full bg-muted rounded-xl" />
 					</div>
 				</div>
-			</DialogContent>
+			</ResponsiveDialogContent>
 		);
 	}
 
 	return (
-		<DialogContent
+		<ResponsiveDialogContent
 			onPointerDownOutside={(e) => {
 				if (!isReadOnly && editingCount > 0) e.preventDefault();
 			}}
@@ -363,25 +365,26 @@ export function BangDetailsDialogContent({
 				if (!isReadOnly && editingCount > 0) e.preventDefault();
 			}}
 			showCloseButton={isReadOnly || editingCount === 0}
-			className="overflow-hidden"
 		>
 			<div className="flex flex-col gap-4">
-				<DialogHeader className="flex flex-row gap-4">
+				<ResponsiveDialogHeader className="flex flex-row gap-4">
 					<img src={bang.image} alt="" className="size-16 rounded-sm" />
 					<div className="flex flex-col justify-center gap-2">
-						<DialogTitle>{bang.name}</DialogTitle>
-						<DialogDescription>{bang.domain ?? bang.url}</DialogDescription>
+						<ResponsiveDialogTitle>{bang.name}</ResponsiveDialogTitle>
+						<ResponsiveDialogDescription>
+							{bang.domain ?? bang.url}
+						</ResponsiveDialogDescription>
 					</div>
-				</DialogHeader>
+				</ResponsiveDialogHeader>
 
 				<div className="flex flex-row justify-between items-center">
 					<div className="h-full flex flex-row gap-2 items-center">
 						{isModified ? (
-							<div className="border rounded-sm px-3 h-full flex items-center">
+							<div className="border rounded-md px-3 py-1.5 flex items-center">
 								<span className="text-green-500">Modified by You</span>
 							</div>
 						) : mode === "store" ? (
-							<div className="border rounded-sm px-3 h-full flex items-center">
+							<div className="border rounded-md px-3 py-1.5 flex items-center">
 								<span className="text-muted-foreground text-xs">
 									{bang.presetSource === "cuzbangs"
 										? "cuzbangs Preset"
@@ -389,7 +392,7 @@ export function BangDetailsDialogContent({
 								</span>
 							</div>
 						) : (
-							<div className="border rounded-sm px-3 h-full flex items-center">
+							<div className="border rounded-md px-3 py-1.5 flex items-center">
 								<span className="text-green-500">Modified by You</span>
 							</div>
 						)}
@@ -424,11 +427,11 @@ export function BangDetailsDialogContent({
 									<Edit2 /> Open in Settings
 								</Button>
 							</>
-						) : (
+						) : isConsented ? (
 							<Button onClick={onCustomize}>
 								<Plus /> Customize this bang
 							</Button>
-						)}
+						) : null}
 					</div>
 				</div>
 
@@ -488,6 +491,6 @@ export function BangDetailsDialogContent({
 					)}
 				</div>
 			</div>
-		</DialogContent>
+		</ResponsiveDialogContent>
 	);
 }

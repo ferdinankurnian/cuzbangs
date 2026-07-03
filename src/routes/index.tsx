@@ -3,9 +3,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowRight, ArrowRightIcon, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { useApp } from "@/components/providers/app-provider";
 import { Footer } from "@/components/footer";
 import { HowItWorks } from "@/components/how-it-works";
+import { useApp } from "@/components/providers/app-provider";
 import { SearchEngineSelect } from "@/components/search-engine-select";
 import { StoreBangsDisabledAlert } from "@/components/store-bangs-disabled-alert";
 import { SubRoutes } from "@/components/sub-routes";
@@ -107,7 +107,7 @@ function App() {
 
 	return (
 		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-28 px-4 space-y-5 pb-8">
-		{isConsented && showStoreBangsAlert && (
+			{isConsented && showStoreBangsAlert && (
 				<StoreBangsDisabledAlert className="max-w-5xl" />
 			)}
 

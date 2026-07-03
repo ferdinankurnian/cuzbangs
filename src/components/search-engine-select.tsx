@@ -28,8 +28,8 @@ export function SearchEngineSelect() {
 					Select your default search engine preference
 				</h2>
 				<p className="text-neutral-400 leading-relaxed">
-					Choose from Google, Bing, Kagi, and DuckDuckGo. You can also bring your own
-					search engine.
+					Choose from Google, Bing, Kagi, and DuckDuckGo. You can also bring
+					your own search engine.
 				</p>
 			</div>
 		</section>

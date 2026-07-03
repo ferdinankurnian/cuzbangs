@@ -29,20 +29,23 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
 	if (url.pathname === "/suggestions") {
 		const query = url.searchParams.get("q");
-		
+
 		if (query && !url.searchParams.has("sw-internal")) {
 			event.respondWith(
 				(async () => {
 					try {
 						const targetUrl = await getSuggestionUrl(query);
-						
+
 						if (!targetUrl) {
 							return new Response(JSON.stringify([query, []]), {
 								headers: { "Content-Type": "application/json" },
 							});
 						}
 
-						const proxyRequestUrl = new URL("/suggestions", self.location.origin);
+						const proxyRequestUrl = new URL(
+							"/suggestions",
+							self.location.origin,
+						);
 						proxyRequestUrl.searchParams.set("q", query);
 						proxyRequestUrl.searchParams.set("proxy_target", targetUrl);
 						proxyRequestUrl.searchParams.set("sw-internal", "true");

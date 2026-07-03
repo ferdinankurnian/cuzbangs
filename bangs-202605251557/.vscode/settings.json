@@ -1,11 +1,8 @@
 {
-  "json.schemas": [
-    {
-      "fileMatch": [
-        "/data/bangs.json",
-        "/data/kagi_bangs.json"
-      ],
-      "url": "./data/bangs.schema.json"
-    }
-  ]
+	"json.schemas": [
+		{
+			"fileMatch": ["/data/bangs.json", "/data/kagi_bangs.json"],
+			"url": "./data/bangs.schema.json"
+		}
+	]
 }

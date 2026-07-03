@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
-import { useApp } from "@/components/providers/app-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import {
 	Empty,
 	EmptyDescription,
@@ -21,6 +19,7 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { Item, ItemGroup } from "@/components/ui/item";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
 	Select,
 	SelectContent,
@@ -122,17 +121,11 @@ export const Route = createFileRoute("/store")({
 			sort: (search.sort as "name") || "name",
 		};
 	},
-	beforeLoad: () => {
-		if (localStorage.getItem("cuzbangs-consent") !== "true") {
-			throw redirect({ to: "/get-started" });
-		}
-	},
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const navigate = useNavigate({ from: Route.fullPath });
-	const { isConsented } = useApp();
 	const {
 		bang: openBangTrigger,
 		category: selectedCategory = "all",
@@ -171,6 +164,40 @@ function RouteComponent() {
 			return ["all", ...keys.filter((c) => c && c !== "all")] as string[];
 		},
 	});
+
+	const { data: popularBangs = [] } = useQuery({
+		queryKey: ["popularBangs"],
+		queryFn: async () => {
+			const triggers: string[] = await fetch("/data/popular-bangs.json").then(
+				(r) => r.json(),
+			);
+			const dbCount = await db.storeBangs.count();
+
+			const found = await Promise.all(
+				triggers.map(async (trigger) => {
+					const normalized = normalizeTrigger(trigger);
+					if (dbCount > 0) {
+						return db.storeBangs.where("t").equals(normalized).first();
+					}
+					const fallback = await fetchFallbackBangs();
+					return fallback.find((b) => bangHasTrigger(b, normalized)) ?? null;
+				}),
+			);
+
+			const missing = triggers.filter((_, i) => !found[i]);
+			if (missing.length > 0) {
+				console.warn("popular-bangs.json: trigger(s) not found ->", missing);
+			}
+
+			return found.filter((b): b is BangEntry => !!b);
+		},
+	});
+
+	const popularTriggerSet = useMemo(
+		() =>
+			new Set(popularBangs.flatMap((bang) => normalizeBangTriggers(bang.t))),
+		[popularBangs],
+	);
 
 	const { data: activeBang, isLoading: isActiveBangLoading } = useQuery({
 		queryKey: ["storeBang", openBangTrigger],
@@ -254,6 +281,7 @@ function RouteComponent() {
 			searchMode,
 			selectedCategory,
 			selectedSort,
+			popularBangs.length,
 			"initial",
 		],
 		queryFn: async () => {
@@ -274,7 +302,17 @@ function RouteComponent() {
 					);
 				}
 
-				return sortBangs(filtered, query).slice(0, BATCH_SIZE);
+				const sorted = sortBangs(filtered, query);
+
+				if (selectedCategory === "all" && !query) {
+					const rest = sorted.filter(
+						(b) =>
+							!normalizeBangTriggers(b.t).some((t) => popularTriggerSet.has(t)),
+					);
+					return [...popularBangs, ...rest.slice(0, BATCH_SIZE)];
+				}
+
+				return sorted.slice(0, BATCH_SIZE);
 			}
 
 			if (selectedCategory === "all" && query) {
@@ -286,7 +324,17 @@ function RouteComponent() {
 			}
 
 			if (selectedCategory === "all") {
-				return await db.storeBangs.orderBy("s").limit(BATCH_SIZE).toArray();
+				const rest = await db.storeBangs
+					.orderBy("s")
+					.filter(
+						(bang) =>
+							!normalizeBangTriggers(bang.t).some((t) =>
+								popularTriggerSet.has(t),
+							),
+					)
+					.limit(BATCH_SIZE)
+					.toArray();
+				return [...popularBangs, ...rest];
 			}
 
 			const collection = db.storeBangs.where("c").equals(selectedCategory);
@@ -335,6 +383,11 @@ function RouteComponent() {
 					filtered = filtered.filter((bang) =>
 						bangMatchesSearch(bang, query, searchMode),
 					);
+				} else if (selectedCategory === "all") {
+					filtered = filtered.filter(
+						(b) =>
+							!normalizeBangTriggers(b.t).some((t) => popularTriggerSet.has(t)),
+					);
 				}
 
 				filtered = sortBangs(filtered, query);
@@ -359,8 +412,14 @@ function RouteComponent() {
 						offset + BATCH_SIZE,
 					);
 				} else {
-					const collection = db.storeBangs.orderBy("s");
-					newBangs = await collection
+					newBangs = await db.storeBangs
+						.orderBy("s")
+						.filter(
+							(bang) =>
+								!normalizeBangTriggers(bang.t).some((t) =>
+									popularTriggerSet.has(t),
+								),
+						)
 						.offset(offset)
 						.limit(BATCH_SIZE)
 						.toArray();
@@ -393,6 +452,7 @@ function RouteComponent() {
 		searchMode,
 		offset,
 		selectedCategory,
+		popularTriggerSet,
 	]);
 
 	useEffect(() => {
@@ -601,7 +661,7 @@ function RouteComponent() {
 				</div>
 			</section>
 
-			<Dialog
+			<ResponsiveDialog
 				open={!!openBangTrigger}
 				onOpenChange={(open) => {
 					if (!open) handleCloseBang();
@@ -614,27 +674,23 @@ function RouteComponent() {
 					bang={
 						activeBang
 							? {
-						name: activeBang.s,
-						trigger: getPrimaryTrigger(activeBang),
-						triggers: activeBang.t,
-						url: activeBang.u,
-						domain: activeBang.d,
-						image: `https://www.google.com/s2/favicons?sz=128&domain=${activeBang.d}`,
-						presetSource: activeBang.presetSource,
-						subroutes: activeBang.sr?.map((subroute) => ({
-							name: subroute.s,
-							triggers: subroute.t,
-							url: subroute.u,
-							baseUrl: subroute.b,
-						})),
+									name: activeBang.s,
+									trigger: getPrimaryTrigger(activeBang),
+									triggers: activeBang.t,
+									url: activeBang.u,
+									domain: activeBang.d,
+									image: `https://www.google.com/s2/favicons?sz=128&domain=${activeBang.d}`,
+									presetSource: activeBang.presetSource,
+									subroutes: activeBang.sr?.map((subroute) => ({
+										name: subroute.s,
+										triggers: subroute.t,
+										url: subroute.u,
+										baseUrl: subroute.b,
+									})),
 								}
 							: { name: "", trigger: "", url: "", image: "" }
 					}
 					onOpenSettings={() => {
-						if (!isConsented) {
-							navigate({ to: "/get-started" });
-							return;
-						}
 						navigate({
 							to: "/settings",
 							search: {
@@ -646,10 +702,6 @@ function RouteComponent() {
 					}}
 					onCustomize={async () => {
 						if (!activeBang) return;
-						if (!isConsented) {
-							navigate({ to: "/get-started" });
-							return;
-						}
 						const primaryTrigger = getPrimaryTrigger(activeBang);
 
 						if (activeOverride) {
@@ -660,18 +712,18 @@ function RouteComponent() {
 							return;
 						}
 
-					const newId = await db.userBangs.add({
-						t: normalizeBangTriggers(activeBang.t),
-						s: activeBang.s,
-						u: activeBang.u,
-						d: activeBang.d,
-						c: activeBang.c,
-						sc: activeBang.sc,
-						su: activeBang.su,
-						desc: activeBang.desc,
-						sr: activeBang.sr,
-						isCustom: true,
-					});
+						const newId = await db.userBangs.add({
+							t: normalizeBangTriggers(activeBang.t),
+							s: activeBang.s,
+							u: activeBang.u,
+							d: activeBang.d,
+							c: activeBang.c,
+							sc: activeBang.sc,
+							su: activeBang.su,
+							desc: activeBang.desc,
+							sr: activeBang.sr,
+							isCustom: true,
+						});
 
 						navigate({
 							to: "/settings",
@@ -681,7 +733,7 @@ function RouteComponent() {
 					onResetStoreOverride={resetActiveOverride}
 					onDeleteMainBang={() => {}}
 				/>
-			</Dialog>
+			</ResponsiveDialog>
 		</div>
 	);
 }

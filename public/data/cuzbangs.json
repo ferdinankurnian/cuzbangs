@@ -110,5 +110,13 @@
 				"u": "https://developers.cloudflare.com/search/?q={{{s}}}"
 			}
 		]
+	},
+	{
+		"t": ["e621", "e6"],
+		"s": "e621",
+		"d": "e621.net",
+		"u": "https://e621.net/posts?tags={{{s}}}",
+		"c": "Multimedia",
+		"sc": "Images"
 	}
 ]

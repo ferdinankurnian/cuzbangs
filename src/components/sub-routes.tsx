@@ -27,8 +27,8 @@ export function SubRoutes() {
 					Sub-routes
 				</h2>
 				<p className="text-neutral-400 leading-relaxed">
-					Sub-routes bring more pages within reach — redirect and search
-					deeper pages of a site, not just the homepage.
+					Sub-routes bring more pages within reach — redirect and search deeper
+					pages of a site, not just the homepage.
 				</p>
 			</div>
 		</section>

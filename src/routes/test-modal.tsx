@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import {
+	ResponsiveDialog,
+	ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 
 export const Route = createFileRoute("/test-modal")({
 	component: RouteComponent,
@@ -45,14 +48,14 @@ function RouteComponent() {
 
 			<div className="grid grid-cols-1 gap-4">
 				{items.map((item) => (
-					<Dialog
+					<ResponsiveDialog
 						key={item.id}
 						open={openItemId === item.id}
 						onOpenChange={(open) => {
 							if (!open) handleClose();
 						}}
 					>
-						<DialogTrigger asChild>
+						<ResponsiveDialogTrigger asChild>
 							<button
 								type="button"
 								onClick={() => handleOpen(item.id)}
@@ -68,7 +71,7 @@ function RouteComponent() {
 									Click me (Manual History API)
 								</p>
 							</button>
-						</DialogTrigger>
+						</ResponsiveDialogTrigger>
 						<BangDetailsDialogContent
 							mode="store"
 							bang={{
@@ -81,7 +84,7 @@ function RouteComponent() {
 							onCustomize={() => {}}
 							onDeleteMainBang={() => {}}
 						/>
-					</Dialog>
+					</ResponsiveDialog>
 				))}
 			</div>
 		</div>

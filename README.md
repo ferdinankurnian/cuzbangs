@@ -36,7 +36,7 @@ Access over 10,000 bangs from the [Kagi](https://kagi.com) bang catalog ([source
 ## Custom bangs
 ![Logo](docs/5.png)
 
-Need something niche? Create your own bangs to hit any site. Your custom definitions always take priority over the store list when a clash happens.
+Need something niche? Create your own bangs to hit any site. Your custom definitions always take priority over the store list when a clash happens. See [custom-bangs.md](docs/custom-bangs.md) for the format and sub-routes documentation.
 
 ## Tech Stack
 

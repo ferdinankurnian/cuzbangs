@@ -8,6 +8,82 @@
 		"sc": "AI"
 	},
 	{
+		"t": ["gh", "git", "github"],
+		"s": "GitHub",
+		"d": "github.com",
+		"u": "https://github.com/search?q={{{s}}}",
+		"c": "Tech",
+		"sc": "Programming",
+		"sr": [
+			{
+				"t": ["code"],
+				"s": "GitHub Code Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=code"
+			},
+			{
+				"t": ["repo", "repos", "repositories"],
+				"s": "GitHub Repository Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=repositories"
+			},
+			{
+				"t": ["issues"],
+				"s": "GitHub Issues Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=issues"
+			},
+			{
+				"t": ["pr", "pullrequest", "pull-request", "pullrequests"],
+				"s": "GitHub Pull Requests Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=pullrequest"
+			},
+			{
+				"t": ["discussion", "discussions"],
+				"s": "GitHub Discussions Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=discussions"
+			},
+			{
+				"t": ["users", "user"],
+				"s": "GitHub Users Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=users"
+			},
+			{
+				"t": ["commits"],
+				"s": "GitHub Commits Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=commits"
+			},
+			{
+				"t": ["packages"],
+				"s": "GitHub Packages Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=registrypackages"
+			},
+			{
+				"t": ["wikis"],
+				"s": "GitHub Wikis Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=wikis"
+			},
+			{
+				"t": ["topics"],
+				"s": "GitHub Topics Search",
+				"b": "https://github.com/search",
+				"u": "https://github.com/search?q={{{s}}}&type=topics"
+			},
+			{
+				"t": ["marketplace"],
+				"s": "GitHub Marketplace",
+				"b": "https://github.com/marketplace",
+				"u": "https://github.com/marketplace"
+			}
+		]
+	},
+	{
 		"t": ["cloudflare", "cf"],
 		"s": "Cloudflare",
 		"d": "developers.cloudflare.com",

@@ -318,7 +318,7 @@ function CreateBangDialog({
 							{triggers.map((trigger) => (
 								<Badge
 									key={trigger}
-									variant="blue"
+									variant="secondary"
 									className="h-6 gap-1 rounded-md px-2 font-medium"
 								>
 									{trigger}

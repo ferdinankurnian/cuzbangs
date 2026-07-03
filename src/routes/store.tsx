@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
+import { useApp } from "@/components/providers/app-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -126,6 +127,7 @@ export const Route = createFileRoute("/store")({
 
 function RouteComponent() {
 	const navigate = useNavigate({ from: Route.fullPath });
+	const { isConsented } = useApp();
 	const {
 		bang: openBangTrigger,
 		category: selectedCategory = "all",
@@ -613,6 +615,7 @@ function RouteComponent() {
 						url: activeBang.u,
 						domain: activeBang.d,
 						image: `https://www.google.com/s2/favicons?sz=128&domain=${activeBang.d}`,
+						presetSource: activeBang.presetSource,
 						subroutes: activeBang.sr?.map((subroute) => ({
 							name: subroute.s,
 							triggers: subroute.t,
@@ -622,7 +625,11 @@ function RouteComponent() {
 								}
 							: { name: "", trigger: "", url: "", image: "" }
 					}
-					onOpenSettings={() =>
+					onOpenSettings={() => {
+						if (!isConsented) {
+							navigate({ to: "/get-started" });
+							return;
+						}
 						navigate({
 							to: "/settings",
 							search: {
@@ -630,10 +637,14 @@ function RouteComponent() {
 									? getPrimaryTrigger(activeOverride)
 									: openBangTrigger,
 							},
-						})
-					}
+						});
+					}}
 					onCustomize={async () => {
 						if (!activeBang) return;
+						if (!isConsented) {
+							navigate({ to: "/get-started" });
+							return;
+						}
 						const primaryTrigger = getPrimaryTrigger(activeBang);
 
 						if (activeOverride) {

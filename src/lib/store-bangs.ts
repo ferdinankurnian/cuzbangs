@@ -10,7 +10,11 @@ const CUSTOM_DATA_URL = "/data/cuzbangs.json";
 
 let cachedStoreBangs: BangEntry[] | null = null;
 
-async function fetchBangFile(url: string, required: boolean) {
+async function fetchBangFile(
+	url: string,
+	required: boolean,
+	presetSource: "kagi" | "cuzbangs",
+) {
 	const response = await fetch(url);
 	if (!response.ok) {
 		if (required) throw new Error(`Failed to fetch ${url}`);
@@ -22,6 +26,7 @@ async function fetchBangFile(url: string, required: boolean) {
 		.array(BangEntrySchema)
 		.parse(rawData)
 		.map(normalizeBangEntryTriggers)
+		.map((entry) => ({ ...entry, presetSource }))
 		.filter((entry) => entry.t.length > 0);
 }
 
@@ -67,8 +72,8 @@ export async function fetchStoreBangs(options: { force?: boolean } = {}) {
 	if (cachedStoreBangs && !options.force) return cachedStoreBangs;
 
 	const [kagiBangs, customBangs] = await Promise.all([
-		fetchBangFile(KAGI_DATA_URL, true),
-		fetchBangFile(CUSTOM_DATA_URL, false),
+		fetchBangFile(KAGI_DATA_URL, true, "kagi"),
+		fetchBangFile(CUSTOM_DATA_URL, false, "cuzbangs"),
 	]);
 
 	cachedStoreBangs = mergeStoreBangs(kagiBangs, customBangs);

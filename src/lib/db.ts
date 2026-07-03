@@ -30,6 +30,7 @@ export const BangEntrySchema = z.object({
 	desc: z.string().optional(),
 	sr: z.array(SubrouteSchema).optional(),
 	isCustom: z.boolean().default(false),
+	presetSource: z.enum(["kagi", "cuzbangs"]).optional(),
 });
 
 export type BangEntry = z.infer<typeof BangEntrySchema>;

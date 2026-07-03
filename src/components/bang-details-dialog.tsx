@@ -285,6 +285,7 @@ interface BangDetailsDialogProps {
 		url: string;
 		domain?: string;
 		image: string;
+		presetSource?: "kagi" | "cuzbangs";
 		subroutes?: {
 			name: string;
 			triggers: string[];
@@ -324,8 +325,6 @@ export function BangDetailsDialogContent({
 }: BangDetailsDialogProps) {
 	const isReadOnly = mode === "store";
 	const subroutes = bang.subroutes ?? [];
-	const isSearchUrl = (url: string) =>
-		url.includes("{{{s}}}") || url.includes("%s");
 
 	if (isLoading) {
 		return (
@@ -384,7 +383,9 @@ export function BangDetailsDialogContent({
 						) : mode === "store" ? (
 							<div className="border rounded-sm px-3 h-full flex items-center">
 								<span className="text-muted-foreground text-xs">
-									Official Preset
+									{bang.presetSource === "cuzbangs"
+										? "cuzbangs Preset"
+										: "Official Preset"}
 								</span>
 							</div>
 						) : (
@@ -441,7 +442,7 @@ export function BangDetailsDialogContent({
 								value={bang.trigger}
 								triggers={bang.triggers}
 								url={bang.url}
-								variant={isSearchUrl(bang.url) ? "green" : "blue"}
+								variant="secondary"
 								onEditingChange={handleEditingChange}
 								onSave={
 									handleUpdateBang

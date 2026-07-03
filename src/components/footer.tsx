@@ -32,7 +32,7 @@ export function Footer() {
 							</svg>
 						</a>
 						<a
-							href="https://x.com/ferdinankurnian"
+							href="https://twitter.com/iydheko"
 							target="_blank"
 							rel="noopener noreferrer"
 							aria-label="Twitter / X"

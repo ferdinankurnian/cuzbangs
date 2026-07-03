@@ -1,28 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const SYMBOLS = ["!", "@", "#", "$", "."] as const;
 const QUERY_SUFFIX = "gi calico cat";
+const CYCLE_INTERVAL_MS = 1500;
 
 export function SymbolSelect() {
-	const [symbol, setSymbol] = useState<(typeof SYMBOLS)[number]>("!");
+	const [symbolIndex, setSymbolIndex] = useState(0);
+	const [isHovered, setIsHovered] = useState(false);
+
+	useEffect(() => {
+		if (isHovered) return;
+		const id = setInterval(() => {
+			setSymbolIndex((i) => (i + 1) % SYMBOLS.length);
+		}, CYCLE_INTERVAL_MS);
+		return () => clearInterval(id);
+	}, [isHovered]);
 
 	return (
 		<section className="px-6 py-16 md:py-20 grid grid-cols-1 md:grid-cols-2 items-center gap-10 md:gap-16">
-			<div className="w-full max-w-sm mx-auto rounded-2xl border bg-black/40 px-6 py-6 space-y-6 rotate-2 transition-transform duration-300 hover:rotate-0 hover:scale-[1.02]">
-				<p className="py-12 text-2xl md:text-3xl font-semibold text-white text-center [letter-spacing:-0.03em]">
-					{symbol}
-					{QUERY_SUFFIX}
-				</p>
+			<div
+				onMouseEnter={() => setIsHovered(true)}
+				onMouseLeave={() => setIsHovered(false)}
+				className="w-full max-w-sm mx-auto rounded-2xl border bg-black/40 px-6 py-6 space-y-6 rotate-2 transition-transform duration-300 hover:rotate-0 hover:scale-[1.02]"
+			>
+				<div className="py-12 text-2xl md:text-3xl font-semibold text-white text-center [letter-spacing:-0.03em]">
+					<div key={symbolIndex} className="inline-grid">
+						{SYMBOLS.map((s, i) => (
+							<div
+								key={s}
+								className={cn(
+									"[grid-area:1/-1] animate-[fadeIn_0.3s_ease-in-out]",
+									symbolIndex !== i && "invisible",
+								)}
+							>
+								{s}{QUERY_SUFFIX}
+							</div>
+						))}
+					</div>
+				</div>
 				<div className="flex justify-center gap-2">
 					{SYMBOLS.map((s) => (
 						<button
 							key={s}
 							type="button"
-							onClick={() => setSymbol(s)}
+							onClick={() => setSymbolIndex(SYMBOLS.indexOf(s))}
 							className={cn(
 								"flex items-center justify-center size-11 rounded-lg border text-sm font-medium transition-colors",
-								symbol === s
+								SYMBOLS[symbolIndex] === s
 									? "bg-white text-black border-white"
 									: "bg-black/40 text-neutral-400 hover:border-white/25 hover:text-white",
 							)}

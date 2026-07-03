@@ -319,66 +319,41 @@ export function ConfigsPanel() {
         </CardHeader>
       </Card>
 
-      {/* Store & Privacy */}
+      {/* Grab latest bangs */}
       <Card>
-        <CardHeader>
-          <CardTitle>Store & Privacy</CardTitle>
-          <CardDescription>
-            Manage store bangs and local bang data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1 text-left">
-                <p className="text-sm font-medium">Grab latest bangs</p>
-                <p className="text-xs text-muted-foreground">
-                  Refresh local store data from Kagi and cuzbangs.json.
-                </p>
-                {grabStatus !== "idle" && (
-                  <p
-                    className={cn(
-                      "text-xs",
-                      grabStatus === "success"
-                        ? "text-green-500"
-                        : "text-destructive",
-                    )}
-                  >
-                    {grabStatus === "success"
-                      ? "Bangs refreshed."
-                      : "Failed to refresh bangs."}
-                  </p>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div className="space-y-1.5">
+            <CardTitle>Grab latest bangs</CardTitle>
+            <CardDescription>
+              Refresh local store data from Kagi and cuzbangs.json.
+            </CardDescription>
+            {grabStatus !== "idle" && (
+              <p
+                className={cn(
+                  "text-xs",
+                  grabStatus === "success"
+                    ? "text-green-500"
+                    : "text-destructive",
                 )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGrabBangs}
-                disabled={isGrabbingBangs}
               >
-                <RefreshCcw
-                  className={cn("size-4", isGrabbingBangs && "animate-spin")}
-                />
-                {isGrabbingBangs ? "Grabbing..." : "Grab Bangs"}
-              </Button>
-            </div>
-            {/*<div className="flex items-center justify-between">
-							<div className="space-y-1 text-left">
-								<p className="text-sm font-medium">Use store bangs</p>
-								<p className="text-xs text-muted-foreground">
-									Use store bangs preset lists to bangs.
-								</p>
-							</div>
-							<Switch
-								size="lg"
-								checked={config.useStoreBangs}
-								onCheckedChange={(val) =>
-									handleUpdateConfig({ useStoreBangs: val })
-								}
-							/>
-						</div>*/}
+                {grabStatus === "success"
+                  ? "Bangs refreshed."
+                  : "Failed to refresh bangs."}
+              </p>
+            )}
           </div>
-        </CardContent>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGrabBangs}
+            disabled={isGrabbingBangs}
+          >
+            <RefreshCcw
+              className={cn("size-4", isGrabbingBangs && "animate-spin")}
+            />
+            {isGrabbingBangs ? "Grabbing..." : "Grab Bangs"}
+          </Button>
+        </CardHeader>
       </Card>
 
       {/* Danger Zone */}

@@ -38,10 +38,72 @@ import {
 	normalizeBangTriggers,
 	normalizeTrigger,
 } from "@/lib/bangs";
-import { BangEntrySchema, db } from "@/lib/db";
+import { type BangEntry, BangEntrySchema, db } from "@/lib/db";
 
 function formatTriggerList(triggers: string[]) {
 	return triggers.map((trigger) => `"${trigger}"`).join(", ");
+}
+
+type BangSubroute = NonNullable<BangEntry["sr"]>[number];
+
+type SubrouteDraft = {
+	id: string;
+	triggers: string[];
+	triggerDraft: string;
+	url: string;
+	baseUrl: string;
+};
+
+function createSubrouteDraft(): SubrouteDraft {
+	return {
+		id:
+			globalThis.crypto?.randomUUID?.() ??
+			`subroute-${Date.now()}-${Math.random()}`,
+		triggers: [],
+		triggerDraft: "",
+		url: "",
+		baseUrl: "",
+	};
+}
+
+function hasSearchPlaceholder(url: string) {
+	return url.includes("%s") || url.includes("{{{s}}}");
+}
+
+function normalizeSubrouteDrafts(drafts: SubrouteDraft[]): BangSubroute[] {
+	return drafts.map((draft) => {
+		const triggers = normalizeBangTriggers(draft.triggers);
+		return {
+			t: triggers,
+			s: triggers[0] ?? "subroute",
+			u: draft.url.trim(),
+			b: draft.baseUrl.trim(),
+		};
+	});
+}
+
+function getSubrouteDraftError(drafts: SubrouteDraft[]) {
+	const seen = new Set<string>();
+
+	for (const draft of drafts) {
+		if (draft.triggerDraft.trim()) {
+			return "Finish subroute trigger drafts before saving.";
+		}
+
+		const triggers = normalizeBangTriggers(draft.triggers);
+		if (triggers.length === 0 || !draft.url.trim() || !draft.baseUrl.trim()) {
+			return "Every subroute needs at least one trigger, a search URL, and a base URL.";
+		}
+
+		for (const trigger of triggers) {
+			if (seen.has(trigger)) {
+				return `Subroute trigger "${trigger}" is already used.`;
+			}
+			seen.add(trigger);
+		}
+	}
+
+	return "";
 }
 
 interface MyBangsPanelProps {
@@ -58,6 +120,7 @@ function CreateBangDialog({
 	onSave: (data: {
 		triggers: string[];
 		url: string;
+		subroutes?: BangSubroute[];
 	}) => boolean | undefined | Promise<boolean | undefined>;
 	onDirtyChange: (isDirty: boolean) => void;
 	error?: string;
@@ -66,6 +129,7 @@ function CreateBangDialog({
 	const [triggers, setTriggers] = useState<string[]>([]);
 	const [triggerDraft, setTriggerDraft] = useState("");
 	const [url, setUrl] = useState("");
+	const [subrouteDrafts, setSubrouteDrafts] = useState<SubrouteDraft[]>([]);
 	const [isUrlWarningOpen, setIsUrlWarningOpen] = useState(false);
 	let domain = "";
 	try {
@@ -82,12 +146,18 @@ function CreateBangDialog({
 	const previewIcon = domain
 		? `https://www.google.com/s2/favicons?sz=128&domain=${domain}`
 		: undefined;
-	const isDirty = triggers.length > 0 || !!triggerDraft.trim() || !!url.trim();
+	const subrouteDraftError = getSubrouteDraftError(subrouteDrafts);
+	const isDirty =
+		triggers.length > 0 ||
+		!!triggerDraft.trim() ||
+		!!url.trim() ||
+		subrouteDrafts.length > 0;
 	const canSave =
 		normalizeBangTriggers(triggers).length > 0 &&
 		!!url.trim() &&
-		!triggerDraft.trim();
-	const urlHasQueryPlaceholder = url.includes("%s");
+		!triggerDraft.trim() &&
+		!subrouteDraftError;
+	const urlHasQueryPlaceholder = hasSearchPlaceholder(url);
 
 	useEffect(() => {
 		onDirtyChange(isDirty);
@@ -106,17 +176,56 @@ function CreateBangDialog({
 		setTriggers((prev) => prev.filter((item) => item !== trigger));
 	};
 
+	const updateSubrouteDraft = (
+		id: string,
+		updater: (draft: SubrouteDraft) => SubrouteDraft,
+	) => {
+		onErrorClear?.();
+		setSubrouteDrafts((prev) =>
+			prev.map((draft) => (draft.id === id ? updater(draft) : draft)),
+		);
+	};
+
+	const commitSubrouteTriggerDraft = (id: string) => {
+		const existingTriggers = new Set(
+			subrouteDrafts.flatMap((draft) => normalizeBangTriggers(draft.triggers)),
+		);
+
+		updateSubrouteDraft(id, (draft) => {
+			const nextTrigger = normalizeTrigger(draft.triggerDraft);
+			if (!nextTrigger || existingTriggers.has(nextTrigger)) return draft;
+
+			return {
+				...draft,
+				triggers: [...draft.triggers, nextTrigger],
+				triggerDraft: "",
+			};
+		});
+	};
+
+	const removeSubrouteTrigger = (id: string, trigger: string) => {
+		updateSubrouteDraft(id, (draft) => ({
+			...draft,
+			triggers: draft.triggers.filter((item) => item !== trigger),
+		}));
+	};
+
 	const handleSave = async () => {
 		const uniqueTriggers = normalizeBangTriggers(triggers);
 
 		if (!canSave) return;
-		const result = await onSave({ triggers: uniqueTriggers, url: url.trim() });
+		const result = await onSave({
+			triggers: uniqueTriggers,
+			url: url.trim(),
+			subroutes: normalizeSubrouteDrafts(subrouteDrafts),
+		});
 		if (result === false) return;
 
 		onDirtyChange(false);
 		setTriggers([]);
 		setTriggerDraft("");
 		setUrl("");
+		setSubrouteDrafts([]);
 		setIsUrlWarningOpen(false);
 	};
 
@@ -202,57 +311,181 @@ function CreateBangDialog({
 
 				<div className="h-px bg-border" />
 
-				<div className="flex flex-col gap-3">
-					<h2 className="text-xl font-semibold">Shortcut</h2>
-					<div className="placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 flex-wrap items-center gap-2 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
-						{triggers.map((trigger) => (
-							<Badge
-								key={trigger}
-								variant="blue"
-								className="h-6 gap-1 rounded-md px-2 font-medium"
-							>
-								{trigger}
-								<button
-									type="button"
-									className="-mr-1 grid size-4 place-items-center rounded-sm opacity-70 transition-opacity hover:opacity-100"
-									onClick={() => removeTrigger(trigger)}
+				<div className="flex max-h-[58vh] flex-col gap-5 overflow-y-auto pr-1">
+					<div className="flex flex-col gap-3">
+						<h2 className="text-xl font-semibold">Shortcut</h2>
+						<div className="placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 flex-wrap items-center gap-2 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+							{triggers.map((trigger) => (
+								<Badge
+									key={trigger}
+									variant="blue"
+									className="h-6 gap-1 rounded-md px-2 font-medium"
 								>
-									<X className="size-3" aria-hidden />
-								</button>
-							</Badge>
-						))}
-						<input
-							value={triggerDraft}
-							onChange={(e) => {
-								onErrorClear?.();
-								setTriggerDraft(e.target.value.replace(/\s+/g, " "));
-							}}
-							placeholder="Trigger, press space"
-							className="min-w-32 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-							onKeyDown={(e) => {
-								if (e.key === " ") {
-									e.preventDefault();
-									commitTriggerDraft();
-								}
-								if (e.key === "Enter") handleSave();
-							}}
-						/>
+									{trigger}
+									<button
+										type="button"
+										className="-mr-1 grid size-4 place-items-center rounded-sm opacity-70 transition-opacity hover:opacity-100"
+										onClick={() => removeTrigger(trigger)}
+									>
+										<X className="size-3" aria-hidden />
+									</button>
+								</Badge>
+							))}
+							<input
+								value={triggerDraft}
+								onChange={(e) => {
+									onErrorClear?.();
+									setTriggerDraft(e.target.value.replace(/\s+/g, " "));
+								}}
+								placeholder="Trigger, press space"
+								className="min-w-32 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+								onKeyDown={(e) => {
+									if (e.key === " ") {
+										e.preventDefault();
+										commitTriggerDraft();
+									}
+									if (e.key === "Enter") handleSave();
+								}}
+							/>
+						</div>
+						{error && <p className="text-xs text-destructive">{error}</p>}
+						<div className="relative">
+							<Link className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+							<Input
+								value={url}
+								onChange={(e) => {
+									onErrorClear?.();
+									setUrl(e.target.value);
+								}}
+								placeholder="https://example.com/search?q=%s"
+								className="h-9 rounded-md pl-9 font-mono text-sm"
+								onKeyDown={(e) => {
+									if (e.key === "Enter") handleSave();
+								}}
+							/>
+						</div>
 					</div>
-					{error && <p className="text-xs text-destructive">{error}</p>}
-					<div className="relative">
-						<Link className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-						<Input
-							value={url}
-							onChange={(e) => {
-								onErrorClear?.();
-								setUrl(e.target.value);
-							}}
-							placeholder="https://example.com/search?q=%s"
-							className="h-9 rounded-md pl-9 font-mono text-sm"
-							onKeyDown={(e) => {
-								if (e.key === "Enter") handleSave();
-							}}
-						/>
+
+					<div className="flex flex-col gap-3">
+						<div className="flex items-center justify-between gap-3">
+							<h2 className="text-xl font-semibold">Sub Routes</h2>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="active:scale-[0.96]"
+								onClick={() =>
+									setSubrouteDrafts((prev) => [...prev, createSubrouteDraft()])
+								}
+							>
+								<Plus /> Add subroute
+							</Button>
+						</div>
+
+						{subrouteDraftError && subrouteDrafts.length > 0 && (
+							<p className="text-xs text-destructive">{subrouteDraftError}</p>
+						)}
+
+						{subrouteDrafts.map((subroute) => (
+							<div
+								key={subroute.id}
+								className="flex flex-col gap-2 rounded-lg border bg-muted/10 p-3"
+							>
+								<div className="flex items-center justify-between gap-2">
+									<span className="text-xs font-medium text-muted-foreground">
+										Subroute
+									</span>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="size-7 active:scale-[0.96]"
+										onClick={() =>
+											setSubrouteDrafts((prev) =>
+												prev.filter((draft) => draft.id !== subroute.id),
+											)
+										}
+									>
+										<X className="size-4" />
+									</Button>
+								</div>
+
+								<div className="placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex min-h-9 w-full min-w-0 flex-wrap items-center gap-2 rounded-md border bg-background px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+									{subroute.triggers.map((trigger) => (
+										<Badge
+											key={trigger}
+											variant="secondary"
+											className="h-6 gap-1 rounded-md px-2 font-medium"
+										>
+											/{trigger}
+											<button
+												type="button"
+												className="-mr-1 grid size-4 place-items-center rounded-sm opacity-70 transition-opacity hover:opacity-100"
+												onClick={() =>
+													removeSubrouteTrigger(subroute.id, trigger)
+												}
+											>
+												<X className="size-3" aria-hidden />
+											</button>
+										</Badge>
+									))}
+									<input
+										value={subroute.triggerDraft}
+										onChange={(e) =>
+											updateSubrouteDraft(subroute.id, (draft) => ({
+												...draft,
+												triggerDraft: e.target.value.replace(/\s+/g, " "),
+											}))
+										}
+										placeholder="Route, press space"
+										className="min-w-28 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+										onKeyDown={(e) => {
+											if (e.key === " ") {
+												e.preventDefault();
+												commitSubrouteTriggerDraft(subroute.id);
+											}
+											if (e.key === "Enter") handleSave();
+										}}
+									/>
+								</div>
+
+								<div className="relative">
+									<Link className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+									<Input
+										value={subroute.url}
+										onChange={(e) =>
+											updateSubrouteDraft(subroute.id, (draft) => ({
+												...draft,
+												url: e.target.value,
+											}))
+										}
+										placeholder="Search URL, e.g. https://example.com/search?q=%s"
+										className="h-9 rounded-md pl-9 font-mono text-sm"
+										onKeyDown={(e) => {
+											if (e.key === "Enter") handleSave();
+										}}
+									/>
+								</div>
+
+								<div className="relative">
+									<Link className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+									<Input
+										value={subroute.baseUrl}
+										onChange={(e) =>
+											updateSubrouteDraft(subroute.id, (draft) => ({
+												...draft,
+												baseUrl: e.target.value,
+											}))
+										}
+										placeholder="Base URL without query"
+										className="h-9 rounded-md pl-9 font-mono text-sm"
+										onKeyDown={(e) => {
+											if (e.key === "Enter") handleSave();
+										}}
+									/>
+								</div>
+							</div>
+						))}
 					</div>
 				</div>
 			</div>
@@ -292,7 +525,11 @@ export function MyBangsPanel({ openBangId, onOpenBang }: MyBangsPanelProps) {
 	// Use real database data
 	const userBangs = useLiveQuery(() => db.userBangs.toArray()) || [];
 
-	const handleAddBang = async (data: { triggers: string[]; url: string }) => {
+	const handleAddBang = async (data: {
+		triggers: string[];
+		url: string;
+		subroutes?: BangSubroute[];
+	}) => {
 		const normalizedTriggers = normalizeBangTriggers(data.triggers);
 		const primaryTrigger = normalizedTriggers[0];
 		if (!primaryTrigger) return false;
@@ -319,6 +556,7 @@ export function MyBangsPanel({ openBangId, onOpenBang }: MyBangsPanelProps) {
 			t: normalizedTriggers,
 			s: primaryTrigger,
 			u: data.url,
+			sr: data.subroutes?.length ? data.subroutes : undefined,
 			r: 0,
 			d: domain,
 			isCustom: true,
@@ -393,7 +631,14 @@ export function MyBangsPanel({ openBangId, onOpenBang }: MyBangsPanelProps) {
 			(bang) =>
 				bang.s.toLowerCase().includes(query) ||
 				bang.u.toLowerCase().includes(query) ||
-				normalizeBangTriggers(bang.t).some((t) => t.includes(query)),
+				normalizeBangTriggers(bang.t).some((t) => t.includes(query)) ||
+				bang.sr?.some(
+					(subroute) =>
+						subroute.s.toLowerCase().includes(query) ||
+						subroute.u.toLowerCase().includes(query) ||
+						subroute.b?.toLowerCase().includes(query) ||
+						normalizeBangTriggers(subroute.t).some((t) => t.includes(query)),
+				),
 		);
 	}, [userBangs, searchQuery]);
 
@@ -490,6 +735,12 @@ export function MyBangsPanel({ openBangId, onOpenBang }: MyBangsPanelProps) {
 									url: bang.u,
 									domain: bang.d,
 									image: favicon,
+									subroutes: bang.sr?.map((subroute) => ({
+										name: subroute.s,
+										triggers: subroute.t,
+										url: subroute.u,
+										baseUrl: subroute.b,
+									})),
 								}}
 								editingCount={editingCount}
 								handleEditingChange={handleEditingChange}

@@ -607,12 +607,18 @@ function RouteComponent() {
 					bang={
 						activeBang
 							? {
-									name: activeBang.s,
-									trigger: getPrimaryTrigger(activeBang),
-									triggers: activeBang.t,
-									url: activeBang.u,
-									domain: activeBang.d,
-									image: `https://www.google.com/s2/favicons?sz=128&domain=${activeBang.d}`,
+						name: activeBang.s,
+						trigger: getPrimaryTrigger(activeBang),
+						triggers: activeBang.t,
+						url: activeBang.u,
+						domain: activeBang.d,
+						image: `https://www.google.com/s2/favicons?sz=128&domain=${activeBang.d}`,
+						subroutes: activeBang.sr?.map((subroute) => ({
+							name: subroute.s,
+							triggers: subroute.t,
+							url: subroute.u,
+							baseUrl: subroute.b,
+						})),
 								}
 							: { name: "", trigger: "", url: "", image: "" }
 					}
@@ -638,17 +644,18 @@ function RouteComponent() {
 							return;
 						}
 
-						const newId = await db.userBangs.add({
-							t: normalizeBangTriggers(activeBang.t),
-							s: activeBang.s,
-							u: activeBang.u,
-							d: activeBang.d,
-							c: activeBang.c,
-							sc: activeBang.sc,
-							su: activeBang.su,
-							desc: activeBang.desc,
-							isCustom: true,
-						});
+					const newId = await db.userBangs.add({
+						t: normalizeBangTriggers(activeBang.t),
+						s: activeBang.s,
+						u: activeBang.u,
+						d: activeBang.d,
+						c: activeBang.c,
+						sc: activeBang.sc,
+						su: activeBang.su,
+						desc: activeBang.desc,
+						sr: activeBang.sr,
+						isCustom: true,
+					});
 
 						navigate({
 							to: "/settings",

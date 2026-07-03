@@ -6,6 +6,18 @@ const TriggerSchema = z.preprocess(
 	z.array(z.string()),
 );
 
+const SubrouteSchema = z.object({
+	t: TriggerSchema,
+	s: z.string(),
+	u: z.string(),
+	b: z.string(),
+	d: z.string().optional(),
+	c: z.string().optional(),
+	sc: z.string().optional(),
+	su: z.string().optional(),
+	desc: z.string().optional(),
+});
+
 export const BangEntrySchema = z.object({
 	id: z.number().optional(),
 	t: TriggerSchema,
@@ -16,6 +28,7 @@ export const BangEntrySchema = z.object({
 	sc: z.string().optional(),
 	su: z.string().optional(),
 	desc: z.string().optional(),
+	sr: z.array(SubrouteSchema).optional(),
 	isCustom: z.boolean().default(false),
 });
 

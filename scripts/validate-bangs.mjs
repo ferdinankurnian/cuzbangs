@@ -47,12 +47,70 @@ function normalizeBang(rawBang, source, index) {
 	if (typeof rawBang.u !== "string" || rawBang.u.trim() === "") {
 		throw new Error(`${location} needs a non-empty u/url`);
 	}
+	if (rawBang.b !== undefined) {
+		throw new Error(`${location}.b is only supported inside sr subroutes`);
+	}
+
+	const subroutes = normalizeSubroutes(rawBang.sr, location);
 
 	return {
 		triggers,
 		name: rawBang.s,
 		domain: rawBang.d,
+		subroutes,
 	};
+}
+
+function normalizeSubroutes(rawSubroutes, parentLocation) {
+	if (rawSubroutes === undefined) return [];
+	if (!Array.isArray(rawSubroutes)) {
+		throw new Error(`${parentLocation}.sr must be an array`);
+	}
+
+	const subroutes = [];
+	const seen = new Map();
+
+	for (const [index, rawSubroute] of rawSubroutes.entries()) {
+		const location = `${parentLocation}.sr[${index}]`;
+		if (
+			!rawSubroute ||
+			typeof rawSubroute !== "object" ||
+			Array.isArray(rawSubroute)
+		) {
+			throw new Error(`${location} must be an object`);
+		}
+
+		const rawTriggers = Array.isArray(rawSubroute.t)
+			? rawSubroute.t
+			: [rawSubroute.t];
+		const triggers = normalizeTriggers(rawTriggers);
+		if (triggers.length === 0) {
+			throw new Error(`${location} needs at least one trigger`);
+		}
+		if (typeof rawSubroute.s !== "string" || rawSubroute.s.trim() === "") {
+			throw new Error(`${location} needs a non-empty s/name`);
+		}
+		if (typeof rawSubroute.u !== "string" || rawSubroute.u.trim() === "") {
+			throw new Error(`${location} needs a non-empty u/url`);
+		}
+		if (typeof rawSubroute.b !== "string" || rawSubroute.b.trim() === "") {
+			throw new Error(`${location} needs a non-empty b/base url`);
+		}
+
+		for (const trigger of triggers) {
+			const previous = seen.get(trigger);
+			if (previous) {
+				throw new Error(
+					`${location} duplicate subroute trigger "${trigger}" also used by ${previous}`,
+				);
+			}
+			seen.set(trigger, location);
+		}
+
+		subroutes.push({ triggers, name: rawSubroute.s });
+	}
+
+	return subroutes;
 }
 
 function isSameBang(left, right) {
@@ -99,6 +157,14 @@ for (const customBang of customBangs) {
 
 console.log(`Kagi bangs: ${kagiBangs.length}`);
 console.log(`Custom bangs: ${customBangs.length}`);
+
+const customSubroutesCount = customBangs.reduce(
+	(count, bang) => count + bang.subroutes.length,
+	0,
+);
+if (customSubroutesCount > 0) {
+	console.log(`Custom subroutes: ${customSubroutesCount}`);
+}
 
 if (duplicateTriggers.length > 0) {
 	console.warn(

@@ -24,6 +24,14 @@ export function normalizeBangEntryTriggers<T extends { t: string[] }>(
 	return {
 		...bang,
 		t: normalizeBangTriggers(bang.t),
+		...(Array.isArray((bang as T & { sr?: { t: string[] }[] }).sr)
+			? {
+					sr: (bang as T & { sr: { t: string[] }[] }).sr.map((subroute) => ({
+						...subroute,
+						t: normalizeBangTriggers(subroute.t),
+					})),
+				}
+			: {}),
 	};
 }
 

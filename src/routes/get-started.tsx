@@ -52,7 +52,7 @@ const infoFeatures = [
   {
     icon: Database,
     title: "Stored locally",
-    desc: "Bang data lives in your browser.",
+    desc: "Bangs data lives in your browser.",
   },
   {
     icon: Lock,
@@ -173,7 +173,7 @@ function GetStartedPage() {
             <CardHeader>
               <CardTitle>Before we download</CardTitle>
               <CardDescription>
-                cuzbangs syncs bang data into this browser once.
+                cuzbangs need to sync bangs data into this browser once.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

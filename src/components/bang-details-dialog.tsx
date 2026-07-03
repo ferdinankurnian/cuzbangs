@@ -285,6 +285,12 @@ interface BangDetailsDialogProps {
 		url: string;
 		domain?: string;
 		image: string;
+		subroutes?: {
+			name: string;
+			triggers: string[];
+			url: string;
+			baseUrl: string;
+		}[];
 	};
 	isModified?: boolean;
 	editingCount?: number;
@@ -317,6 +323,9 @@ export function BangDetailsDialogContent({
 	onResetStoreOverride,
 }: BangDetailsDialogProps) {
 	const isReadOnly = mode === "store";
+	const subroutes = bang.subroutes ?? [];
+	const isSearchUrl = (url: string) =>
+		url.includes("{{{s}}}") || url.includes("%s");
 
 	if (isLoading) {
 		return (
@@ -424,23 +433,58 @@ export function BangDetailsDialogContent({
 
 				<Separator />
 
-				<div className="flex flex-col gap-2 mb-2">
-					<h1 className="text-xl font-semibold">Shortcut</h1>
+				<div className="flex flex-col gap-4 mb-2">
 					<div className="flex flex-col gap-2">
-						<EditableBangCall
-							value={bang.trigger}
-							triggers={bang.triggers}
-							url={bang.url}
-							variant={bang.url.includes("%s") ? "green" : "blue"}
-							onEditingChange={handleEditingChange}
-							onSave={
-								handleUpdateBang
-									? (data) => handleUpdateBang(bang.trigger, data)
-									: undefined
-							}
-							readOnly={isReadOnly}
-						/>
+						<h1 className="text-xl font-semibold">Main Route</h1>
+						<div className="flex flex-col gap-2">
+							<EditableBangCall
+								value={bang.trigger}
+								triggers={bang.triggers}
+								url={bang.url}
+								variant={isSearchUrl(bang.url) ? "green" : "blue"}
+								onEditingChange={handleEditingChange}
+								onSave={
+									handleUpdateBang
+										? (data) => handleUpdateBang(bang.trigger, data)
+										: undefined
+								}
+								readOnly={isReadOnly}
+							/>
+						</div>
 					</div>
+
+					{subroutes.length > 0 && (
+						<div className="flex flex-col gap-3">
+							<h1 className="text-xl font-semibold">Sub Routes</h1>
+							<div className="flex flex-col gap-5">
+								{subroutes.map((subroute) => (
+									<div
+										key={`${subroute.name}-${subroute.triggers.join("-")}`}
+										className="flex flex-col gap-2"
+									>
+										<h2 className="text-sm font-medium text-muted-foreground">
+											{subroute.name}
+										</h2>
+										<EditableBangCall
+											value={subroute.triggers[0] ?? subroute.name}
+											triggers={subroute.triggers}
+											prefix="/"
+											url={subroute.url}
+											variant="secondary"
+											readOnly
+										/>
+										<Input
+											type="text"
+											value={subroute.baseUrl}
+											readOnly
+											onClick={(e) => e.currentTarget.select()}
+											className="text-muted-foreground"
+										/>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 		</DialogContent>

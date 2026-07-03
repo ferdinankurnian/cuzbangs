@@ -6,5 +6,33 @@
 		"u": "https://chatgpt.com/?q={{{s}}}",
 		"c": "Tech",
 		"sc": "AI"
+	},
+	{
+		"t": ["cloudflare", "cf"],
+		"s": "Cloudflare",
+		"d": "developers.cloudflare.com",
+		"u": "https://developers.cloudflare.com/search/?q={{{s}}}",
+		"c": "Tech",
+		"sc": "Docs",
+		"sr": [
+			{
+				"t": ["workers", "w", "pages", "p"],
+				"s": "Cloudflare Workers & Pages",
+				"b": "https://dash.cloudflare.com/?to=/:account/workers-and-pages",
+				"u": "https://dash.cloudflare.com/?to=/:account/workers-and-pages%3Fname%3D{{{s}}}"
+			},
+			{
+				"t": ["dns"],
+				"s": "Cloudflare DNS",
+				"b": "https://developers.cloudflare.com/dns/",
+				"u": "https://developers.cloudflare.com/search/?q={{{s}}}"
+			},
+			{
+				"t": ["docs", "doc"],
+				"s": "Cloudflare Docs",
+				"b": "https://developers.cloudflare.com/",
+				"u": "https://developers.cloudflare.com/search/?q={{{s}}}"
+			}
+		]
 	}
 ]

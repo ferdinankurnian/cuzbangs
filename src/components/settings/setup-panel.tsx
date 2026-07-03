@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
-const searchUrl = "https://cuzbangs.iydheko.site/go?q=%s";
-const suggestionUrl = "https://cuzbangs.iydheko.site/suggestions?q=%s";
+const searchUrl = "https://cuzbangs.iydheko.dev/go?q=%s";
+const suggestionUrl = "https://cuzbangs.iydheko.dev/suggestions?q=%s";
 
 export function SetupPanel() {
 	const [copiedField, setCopiedField] = useState<string | null>(null);

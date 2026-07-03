@@ -4,7 +4,12 @@ import { ArrowRight, ArrowRightIcon, Search } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/components/providers/app-provider";
+import { Footer } from "@/components/footer";
+import { HowItWorks } from "@/components/how-it-works";
+import { SearchEngineSelect } from "@/components/search-engine-select";
 import { StoreBangsDisabledAlert } from "@/components/store-bangs-disabled-alert";
+import { SubRoutes } from "@/components/sub-routes";
+import { SymbolSelect } from "@/components/symbol-select";
 import { Button } from "@/components/ui/button";
 import {
 	InputGroup,
@@ -101,8 +106,8 @@ function App() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-28 px-4 space-y-5 pb-20">
-			{isConsented && showStoreBangsAlert && (
+		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-28 px-4 space-y-5 pb-8">
+		{isConsented && showStoreBangsAlert && (
 				<StoreBangsDisabledAlert className="max-w-5xl" />
 			)}
 
@@ -115,7 +120,7 @@ function App() {
 						<h1 className="text-5xl md:text-7xl font-semibold text-white [letter-spacing:-0.05em]">
 							cuzbangs. cuz it bangs
 						</h1>
-						<p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+						<p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">
 							The fastest way to go anywhere on the internet
 						</p>
 					</div>
@@ -160,15 +165,27 @@ function App() {
 										<InputGroupAddon className="mr-[-8px]">
 											<Search className="mb-[1px]" />
 										</InputGroupAddon>
-										<InputGroupButton
-											type="submit"
-											variant="default"
-											className="rounded-sm mr-2 w-11 h-8"
-											size="icon-lg"
-										>
-											<ArrowRightIcon />
-											<span className="sr-only">Send</span>
-										</InputGroupButton>
+										<AnimatePresence>
+											{query.trim() && (
+												<motion.div
+													initial={{ opacity: 0, scale: 0.9, width: 0 }}
+													animate={{ opacity: 1, scale: 1, width: "auto" }}
+													exit={{ opacity: 0, scale: 0.9, width: 0 }}
+													transition={{ duration: 0.15, ease: "easeInOut" }}
+													className="flex items-center shrink-0 overflow-hidden"
+												>
+													<InputGroupButton
+														type="submit"
+														variant="default"
+														className="rounded-sm mr-2 w-11 h-8"
+														size="icon-lg"
+													>
+														<ArrowRightIcon />
+														<span className="sr-only">Send</span>
+													</InputGroupButton>
+												</motion.div>
+											)}
+										</AnimatePresence>
 									</InputGroup>
 								</form>
 								{showSuggestions && suggestions.length > 0 && (
@@ -211,6 +228,12 @@ function App() {
 					</div>
 				</div>
 			</section>
+
+			<HowItWorks />
+			<SearchEngineSelect />
+			<SymbolSelect />
+			<SubRoutes />
+			<Footer />
 		</div>
 	);
 }

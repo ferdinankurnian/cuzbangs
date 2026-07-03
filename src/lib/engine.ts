@@ -235,6 +235,44 @@ export async function findBang(trigger: string, useStore = true) {
 	return null;
 }
 
+type ResolvedBangRoute = Pick<BangEntry, "u" | "d"> & { b?: string };
+
+function resolveBangUrl(bang: ResolvedBangRoute, query: string) {
+	const placeholder = bang.u.includes("{{{s}}}") ? "{{{s}}}" : "%s";
+
+	return query
+		? bang.u.replace(placeholder, encodeURIComponent(query))
+		: (bang.b ?? `https://${bang.d}`);
+}
+
+async function findBangRoute(trigger: string, useStore = true) {
+	const [parentTrigger, subrouteTrigger, ...rest] = trigger.split("/");
+	if (!subrouteTrigger || rest.length > 0) {
+		return { bang: await findBang(trigger, useStore), isSubrouteMiss: false };
+	}
+
+	const parent = await findBang(parentTrigger, useStore);
+	if (!parent) return { bang: null, isSubrouteMiss: true };
+
+	const normalizedSubroute = normalizeTrigger(subrouteTrigger);
+	const subroute = parent.sr?.find((route) =>
+		bangHasTrigger(route, normalizedSubroute),
+	);
+	if (!subroute) return { bang: null, isSubrouteMiss: true };
+
+	return {
+		bang: {
+			...parent,
+			...subroute,
+			d: subroute.d ?? parent.d,
+			c: subroute.c ?? parent.c,
+			sc: subroute.sc ?? parent.sc,
+			su: subroute.su ?? parent.su,
+		},
+		isSubrouteMiss: false,
+	};
+}
+
 /**
  * Parses a query string and returns the target redirect URL.
  */
@@ -245,21 +283,13 @@ export async function getRedirectUrl(input: string): Promise<string> {
 		return getEngineUrl(config.selectedEngine, config.customUrl, query);
 	}
 
-	const bang = await findBang(trigger, config.useStoreBangs);
+	const { bang } = await findBangRoute(trigger, config.useStoreBangs);
 
 	if (!bang) {
 		return getEngineUrl(config.selectedEngine, config.customUrl, input);
 	}
 
-	// Handle placeholder replacement
-	// DuckDuckGo uses {{{s}}}, but some custom ones might use %s
-	const placeholder = bang.u.includes("{{{s}}}") ? "{{{s}}}" : "%s";
-
-	const processedUrl = query
-		? bang.u.replace(placeholder, encodeURIComponent(query))
-		: `https://${bang.d}`;
-
-	return processedUrl;
+	return resolveBangUrl(bang, query);
 }
 
 /**
@@ -375,7 +405,7 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 		}
 	}
 
-	const bang = await findBang(trigger, config.useStoreBangs);
+	const { bang } = await findBangRoute(trigger, config.useStoreBangs);
 	if (!bang) return null;
 
 	if (!bang.su) return null;

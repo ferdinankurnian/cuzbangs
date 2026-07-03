@@ -82,7 +82,7 @@ function SettingsPage() {
 
 	return (
 		<div className="min-h-screen px-4 pb-24 pt-28 sm:px-6 lg:px-8">
-			<div className="mx-auto flex w-full max-w-6xl flex-col gap-6 lg:flex-row lg:items-start">
+			<div className="mx-auto flex w-full max-w-6xl flex-col gap-6 lg:flex-row lg:items-start lg:gap-16">
 				<div className="lg:hidden">
 					<Tabs
 						value={currentTab}
@@ -103,34 +103,32 @@ function SettingsPage() {
 					</Tabs>
 				</div>
 
-				<aside className="hidden w-full max-w-xs shrink-0 lg:sticky lg:top-24 lg:block">
-					<div className="rounded-xl border bg-card/80 p-3 shadow-sm backdrop-blur">
-						<nav className="space-y-1">
-							{tabs.map((tab) => {
-								const Icon = tab.icon;
+				<aside className="hidden w-full max-w-56 shrink-0 lg:sticky lg:top-28 lg:block">
+					<nav className="space-y-1">
+						{tabs.map((tab) => {
+							const Icon = tab.icon;
 
-								return (
-									<button
-										key={tab.value}
-										type="button"
-										onClick={() => setSearch(tab.value)}
-										className={cn(
-											"group flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors active:scale-[0.98]",
-											currentTab === tab.value
-												? "bg-primary text-primary-foreground shadow-sm"
-												: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-										)}
-									>
-										<Icon className="size-4 shrink-0" />
-										<span className="min-w-0 flex-1 font-medium">
-											{tab.label}
-										</span>
-										<ChevronRight className="size-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5" />
-									</button>
-								);
-							})}
-						</nav>
-					</div>
+							return (
+								<button
+									key={tab.value}
+									type="button"
+									onClick={() => setSearch(tab.value)}
+									className={cn(
+										"group flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors active:scale-[0.98]",
+										currentTab === tab.value
+											? "bg-primary text-primary-foreground shadow-sm"
+											: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+									)}
+								>
+									<Icon className="size-4 shrink-0" />
+									<span className="min-w-0 flex-1 font-medium">
+										{tab.label}
+									</span>
+									<ChevronRight className="size-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5" />
+								</button>
+							);
+						})}
+					</nav>
 				</aside>
 
 				<div className="min-w-0 flex-1 space-y-6">

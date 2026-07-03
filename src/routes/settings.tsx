@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
 	ChevronRight,
 	CircleHelp,
@@ -28,6 +28,11 @@ export const Route = createFileRoute("/settings")({
 			tab: isSettingsTab(search.tab) ? search.tab : undefined,
 			bang: typeof search.bang === "string" ? search.bang : undefined,
 		};
+	},
+	beforeLoad: () => {
+		if (localStorage.getItem("cuzbangs-consent") !== "true") {
+			throw redirect({ to: "/get-started" });
+		}
 	},
 	component: SettingsPage,
 });

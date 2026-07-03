@@ -10,6 +10,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useState } from "react";
+import { registerSW } from "virtual:pwa-register";
 import { useApp } from "@/components/providers/app-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -135,6 +136,7 @@ function GetStartedPage() {
     setCurrentStep("Applying");
     await new Promise((resolve) => setTimeout(resolve, 500));
     acceptConsent();
+    registerSW({ immediate: true });
     setCurrentStep("Done");
   };
 

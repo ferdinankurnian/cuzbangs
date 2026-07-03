@@ -9,6 +9,10 @@ export const Route = createFileRoute("/go")({
 		};
 	},
 	beforeLoad: async ({ search }) => {
+		if (localStorage.getItem("cuzbangs-consent") !== "true") {
+			throw redirect({ to: "/get-started" });
+		}
+
 		const query = search.q;
 		if (!query) {
 			throw redirect({ to: "/" });

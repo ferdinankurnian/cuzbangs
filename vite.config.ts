@@ -18,10 +18,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      injectRegister: null,
       devOptions: {
-        enabled: true,
-        type: 'module',
+        enabled: false,
       },
       manifest: {
         name: 'cuzbangs',

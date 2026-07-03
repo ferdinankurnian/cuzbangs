@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -121,6 +121,11 @@ export const Route = createFileRoute("/store")({
 			category: (search.category as string) || "all",
 			sort: (search.sort as "name") || "name",
 		};
+	},
+	beforeLoad: () => {
+		if (localStorage.getItem("cuzbangs-consent") !== "true") {
+			throw redirect({ to: "/get-started" });
+		}
 	},
 	component: RouteComponent,
 });

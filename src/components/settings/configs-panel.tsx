@@ -55,13 +55,13 @@ export function ConfigsPanel() {
 		? {
 				selectedEngine:
 					(settings.find((s) => s.key === SETTING_KEYS.ENGINE)
-						?.value as string) || DEFAULT_CONFIG.selectedEngine,
+						?.value as string) ?? DEFAULT_CONFIG.selectedEngine,
 				customUrl:
 					(settings.find((s) => s.key === SETTING_KEYS.CUSTOM_URL)
-						?.value as string) || DEFAULT_CONFIG.customUrl,
+						?.value as string) ?? DEFAULT_CONFIG.customUrl,
 				selectedSymbol:
 					(settings.find((s) => s.key === SETTING_KEYS.SYMBOL)
-						?.value as string) || DEFAULT_CONFIG.selectedSymbol,
+						?.value as string) ?? DEFAULT_CONFIG.selectedSymbol,
 				forceBangsFirst:
 					settings.find((s) => s.key === SETTING_KEYS.FORCE_FIRST)?.value ===
 						"true" ||
@@ -79,7 +79,7 @@ export function ConfigsPanel() {
 						true,
 				customSuggestionUrl:
 					(settings.find((s) => s.key === SETTING_KEYS.CUSTOM_SUGGESTION_URL)
-						?.value as string) || DEFAULT_CONFIG.customSuggestionUrl,
+						?.value as string) ?? DEFAULT_CONFIG.customSuggestionUrl,
 			}
 		: null;
 
@@ -233,7 +233,7 @@ export function ConfigsPanel() {
 										onChange={(e) =>
 											handleUpdateConfig({ customUrl: e.target.value })
 										}
-										placeholder="https://example.com/search?q=%s"
+										placeholder="https://www.google.com/search?q=%s"
 									/>
 								</div>
 								<div className="space-y-2">
@@ -247,6 +247,9 @@ export function ConfigsPanel() {
 										}
 										placeholder="https://example.com/suggestions?q=%s"
 									/>
+									<p className="text-xs text-muted-foreground">
+										Search engine fallback to Google.
+									</p>
 								</div>
 							</div>
 						) : (

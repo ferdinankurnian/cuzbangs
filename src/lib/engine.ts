@@ -40,13 +40,13 @@ async function getConfig(): Promise<AppConfig> {
 
 	return {
 		selectedEngine:
-			(configMap.get(SETTING_KEYS.ENGINE) as string) ||
+			(configMap.get(SETTING_KEYS.ENGINE) as string) ??
 			DEFAULT_CONFIG.selectedEngine,
 		customUrl:
-			(configMap.get(SETTING_KEYS.CUSTOM_URL) as string) ||
+			(configMap.get(SETTING_KEYS.CUSTOM_URL) as string) ??
 			DEFAULT_CONFIG.customUrl,
 		selectedSymbol:
-			(configMap.get(SETTING_KEYS.SYMBOL) as string) ||
+			(configMap.get(SETTING_KEYS.SYMBOL) as string) ??
 			DEFAULT_CONFIG.selectedSymbol,
 		forceBangsFirst:
 			configMap.get(SETTING_KEYS.FORCE_FIRST) === "true" ||
@@ -58,7 +58,7 @@ async function getConfig(): Promise<AppConfig> {
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === "true" ||
 			configMap.get(SETTING_KEYS.KAGI_PRIVACY) === true,
 		customSuggestionUrl:
-			(configMap.get(SETTING_KEYS.CUSTOM_SUGGESTION_URL) as string) ||
+			(configMap.get(SETTING_KEYS.CUSTOM_SUGGESTION_URL) as string) ??
 			DEFAULT_CONFIG.customSuggestionUrl,
 	};
 }
@@ -149,7 +149,10 @@ function getEngineUrl(
 			baseUrl = "https://kagi.com/search?q=%s";
 			break;
 		case "custom":
-			baseUrl = customUrl;
+			baseUrl =
+				customUrl && customUrl.trim() !== ""
+					? customUrl
+					: "https://www.google.com/search?q=%s";
 			break;
 		default:
 			baseUrl = "https://www.google.com/search?q=%s";

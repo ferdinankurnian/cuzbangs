@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 type AppContextType = {
 	isConsented: boolean;
 	acceptConsent: () => void;
-	resetData: () => Promise<void>;
+	nukeCuzbangs: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -29,18 +29,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 		localStorage.setItem("cuzbangs-consent", "true");
 	};
 
-	const resetData = async () => {
+	const nukeCuzbangs = async () => {
 		setIsConsented(false);
-		localStorage.removeItem("cuzbangs-consent");
+		localStorage.clear();
+		sessionStorage.clear();
+		document.cookie.split(";").forEach((cookie) => {
+			const [rawName] = cookie.split("=");
+			const name = rawName?.trim();
+			if (!name) return;
+			document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+		});
+
 		await Promise.all([
-			db.storeBangs.clear(),
-			db.userBangs.clear(),
-			db.settings.clear(),
+			db.delete(),
+			caches
+				.keys()
+				.then((keys) => Promise.all(keys.map((key) => caches.delete(key)))),
+			navigator.serviceWorker
+				.getRegistrations()
+				.then((registrations) =>
+					Promise.all(registrations.map((registration) => registration.unregister())),
+				),
 		]);
 	};
 
 	return (
-		<AppContext.Provider value={{ isConsented, acceptConsent, resetData }}>
+		<AppContext.Provider value={{ isConsented, acceptConsent, nukeCuzbangs }}>
 			{children}
 		</AppContext.Provider>
 	);

@@ -32,7 +32,6 @@
     "@tanstack/react-router-devtools": "^1.132.0",
     "@tanstack/react-virtual": "^3.13.14",
     "@tanstack/router-plugin": "^1.132.0",
-    "@upstash/redis": "^1.36.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",

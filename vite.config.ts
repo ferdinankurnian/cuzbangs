@@ -67,6 +67,9 @@ export default defineConfig({
       } as any,
     },
   },
+  esbuild: {
+    drop: ['console'],
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

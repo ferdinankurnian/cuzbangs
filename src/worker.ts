@@ -12,11 +12,16 @@ export default {
 
 		// 1. Route ke Suggestions
 		if (url.pathname === "/suggestions") {
-			// Kita panggil fungsi fetch dari suggestions.ts yang udah kita buat universal tadi
 			return (suggestionsHandler as any).fetch(request);
 		}
 
-		// 2. Fallback ke Static Assets
-		return env.ASSETS.fetch(request);
+		// 2. Serve static assets, fallback ke index.html buat SPA routing
+		const assetResponse = await env.ASSETS.fetch(request);
+		if (assetResponse.status === 200) {
+			return assetResponse;
+		}
+
+		// File gak ada → serve index.html supaya TanStack Router handle routing di client
+		return env.ASSETS.fetch(new Request(new URL("/", url.origin).toString(), request));
 	},
 };

@@ -21,6 +21,9 @@ function isSettingsTab(value: unknown): value is SettingsTab {
 }
 
 export const Route = createFileRoute("/settings")({
+	head: () => ({
+		meta: [{ name: "robots", content: "noindex, nofollow" }],
+	}),
 	validateSearch: (
 		search: Record<string, unknown>,
 	): { tab?: SettingsTab; bang?: string } => {

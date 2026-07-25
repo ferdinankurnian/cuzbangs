@@ -1,4 +1,4 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Disallow: /settings
 Sitemap: https://cuzbangs.iydheko.dev/sitemap.xml

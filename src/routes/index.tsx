@@ -18,7 +18,11 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { db, SETTING_KEYS } from "@/lib/db";
-import { fetchSuggestions, getSuggestionUrl } from "@/lib/engine";
+import {
+	appendGoogleAiOverviewSuffix,
+	fetchSuggestions,
+	getSuggestionUrl,
+} from "@/lib/engine";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({ component: App });
@@ -35,6 +39,19 @@ function App() {
 		db.settings.where("key").equals(SETTING_KEYS.SYMBOL).first(),
 	);
 	const symbol = (symbolSetting?.value as string) || "!";
+	const engineSetting = useLiveQuery(() =>
+		db.settings.where("key").equals(SETTING_KEYS.ENGINE).first(),
+	);
+	const hideGoogleAiOverviewSetting = useLiveQuery(() =>
+		db.settings
+			.where("key")
+			.equals(SETTING_KEYS.HIDE_GOOGLE_AI_OVERVIEW)
+			.first(),
+	);
+	const hideGoogleAiOverview =
+		hideGoogleAiOverviewSetting?.value === "true" ||
+		hideGoogleAiOverviewSetting?.value === true;
+	const selectedEngine = (engineSetting?.value as string) || "google";
 	const useStoreBangsSetting = useLiveQuery(() =>
 		db.settings.where("key").equals(SETTING_KEYS.USE_STORE).first(),
 	);
@@ -87,7 +104,15 @@ function App() {
 		if (typeof e !== "string") e.preventDefault();
 		const finalQuery = typeof e === "string" ? e : query;
 		if (!finalQuery.trim()) return;
-		window.location.href = `/go?q=${encodeURIComponent(finalQuery)}`;
+		const hasBang = finalQuery
+			.trim()
+			.split(/\s+/)
+			.some((part) => part.startsWith(symbol));
+		const queryToSearch =
+			selectedEngine === "google" && hideGoogleAiOverview && !hasBang
+				? appendGoogleAiOverviewSuffix(finalQuery)
+				: finalQuery;
+		window.location.href = `/go?q=${encodeURIComponent(queryToSearch)}`;
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {

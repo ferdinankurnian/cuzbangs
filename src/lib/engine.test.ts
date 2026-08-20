@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { getEngineUrl } from "./engine";
+import {
+	appendGoogleAiOverviewSuffix,
+	getEngineUrl,
+} from "./engine";
 
 describe("default search engine URLs", () => {
+	it("appends the suffix to the outgoing query", () => {
+		expect(appendGoogleAiOverviewSuffix("i think i am cat")).toBe(
+			"i think i am cat -ai",
+		);
+	});
+
 	it("appends -ai to Google searches when enabled", () => {
 		expect(getEngineUrl("google", "", "what is a cat", true)).toBe(
 			"https://www.google.com/search?q=what%20is%20a%20cat%20-ai",

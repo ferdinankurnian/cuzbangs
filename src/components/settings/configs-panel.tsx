@@ -38,6 +38,7 @@ const SYMBOLS = ["!", "@", "#", "$", "."] as const;
 const DEFAULT_CONFIG: AppConfig = {
   selectedEngine: "google",
   customUrl: "https://www.bing.com/search?go=Search&q=%s&qs=c",
+  hideGoogleAiOverview: false,
   selectedSymbol: "!",
   forceBangsFirst: false,
   useStoreBangs: true,
@@ -57,6 +58,13 @@ export function ConfigsPanel() {
         customUrl:
           (settings.find((s) => s.key === SETTING_KEYS.CUSTOM_URL)
             ?.value as string) ?? DEFAULT_CONFIG.customUrl,
+        hideGoogleAiOverview:
+          settings.find(
+            (s) => s.key === SETTING_KEYS.HIDE_GOOGLE_AI_OVERVIEW,
+          )?.value === "true" ||
+          settings.find(
+            (s) => s.key === SETTING_KEYS.HIDE_GOOGLE_AI_OVERVIEW,
+          )?.value === true,
         selectedSymbol:
           (settings.find((s) => s.key === SETTING_KEYS.SYMBOL)
             ?.value as string) ?? DEFAULT_CONFIG.selectedSymbol,
@@ -82,6 +90,7 @@ export function ConfigsPanel() {
     : null;
 
   const customUrlId = useId();
+  const googleAiOverviewId = useId();
   const [isGrabbingBangs, setIsGrabbingBangs] = useState(false);
   const [grabStatus, setGrabStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -288,6 +297,29 @@ export function ConfigsPanel() {
                 </div>
               </div>
             )}
+          </CardContent>
+        )}
+        {config.selectedEngine === "google" && (
+          <CardContent className="pt-0">
+            <div className="flex items-center justify-between gap-6 rounded-lg border bg-muted/30 p-4">
+              <div className="space-y-1">
+                <Label htmlFor={googleAiOverviewId} className="text-base">
+                  Hide Google AI Overviews
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Add <code className="font-mono text-xs">-ai</code> to Google
+                  searches to skip the AI Overview.
+                </p>
+              </div>
+              <Switch
+                id={googleAiOverviewId}
+                size="lg"
+                checked={config.hideGoogleAiOverview}
+                onCheckedChange={(val) =>
+                  handleUpdateConfig({ hideGoogleAiOverview: val })
+                }
+              />
+            </div>
           </CardContent>
         )}
       </Card>

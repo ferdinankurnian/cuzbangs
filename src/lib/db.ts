@@ -45,6 +45,7 @@ export type Setting = z.infer<typeof SettingSchema>;
 export type AppConfig = {
 	selectedEngine: string;
 	customUrl: string;
+	hideGoogleAiOverview: boolean;
 	selectedSymbol: string;
 	forceBangsFirst: boolean;
 	useStoreBangs: boolean;
@@ -55,6 +56,7 @@ export type AppConfig = {
 export const SETTING_KEYS = {
 	ENGINE: "cuzbangs.default_engine",
 	CUSTOM_URL: "cuzbangs.custom_url",
+	HIDE_GOOGLE_AI_OVERVIEW: "cuzbangs.hide_google_ai_overview",
 	SYMBOL: "cuzbangs.symbol_call",
 	FORCE_FIRST: "cuzbangs.first_position_call",
 	USE_STORE: "cuzbangs.use_storebangs",

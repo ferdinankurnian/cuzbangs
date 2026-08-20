@@ -28,6 +28,7 @@ export interface RedirectResult {
 const DEFAULT_CONFIG: AppConfig = {
 	selectedEngine: "google",
 	customUrl: "https://www.bing.com/search?go=Search&q=%s&qs=c",
+	hideGoogleAiOverview: false,
 	selectedSymbol: "!",
 	forceBangsFirst: false,
 	useStoreBangs: true,
@@ -46,6 +47,9 @@ async function getConfig(): Promise<AppConfig> {
 		customUrl:
 			(configMap.get(SETTING_KEYS.CUSTOM_URL) as string) ??
 			DEFAULT_CONFIG.customUrl,
+		hideGoogleAiOverview:
+			configMap.get(SETTING_KEYS.HIDE_GOOGLE_AI_OVERVIEW) === "true" ||
+			configMap.get(SETTING_KEYS.HIDE_GOOGLE_AI_OVERVIEW) === true,
 		selectedSymbol:
 			(configMap.get(SETTING_KEYS.SYMBOL) as string) ??
 			DEFAULT_CONFIG.selectedSymbol,
@@ -82,6 +86,14 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 			db.settings.put({
 				key: SETTING_KEYS.CUSTOM_URL,
 				value: updates.customUrl,
+			}),
+		);
+	}
+	if (updates.hideGoogleAiOverview !== undefined) {
+		promises.push(
+			db.settings.put({
+				key: SETTING_KEYS.HIDE_GOOGLE_AI_OVERVIEW,
+				value: String(updates.hideGoogleAiOverview),
 			}),
 		);
 	}
@@ -130,10 +142,11 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 	await Promise.all(promises);
 }
 
-function getEngineUrl(
+export function getEngineUrl(
 	engine: string,
 	customUrl: string,
 	query: string,
+	hideGoogleAiOverview = false,
 ): string {
 	let baseUrl = "";
 	switch (engine) {
@@ -158,7 +171,12 @@ function getEngineUrl(
 		default:
 			baseUrl = "https://www.google.com/search?q=%s";
 	}
-	return baseUrl.replace("%s", encodeURIComponent(query));
+	const trimmedQuery = query.trimEnd();
+	const finalQuery =
+		engine === "google" && hideGoogleAiOverview
+			? `${trimmedQuery}${/(^|\s)-ai$/i.test(trimmedQuery) ? "" : " -ai"}`
+			: query;
+	return baseUrl.replace("%s", encodeURIComponent(finalQuery));
 }
 
 /**
@@ -274,13 +292,23 @@ export async function getRedirectUrl(input: string): Promise<string> {
 	const { trigger, query, config } = await parseInput(input);
 
 	if (!trigger) {
-		return getEngineUrl(config.selectedEngine, config.customUrl, query);
+		return getEngineUrl(
+			config.selectedEngine,
+			config.customUrl,
+			query,
+			config.hideGoogleAiOverview,
+		);
 	}
 
 	const { bang } = await findBangRoute(trigger, config.useStoreBangs);
 
 	if (!bang) {
-		return getEngineUrl(config.selectedEngine, config.customUrl, input);
+		return getEngineUrl(
+			config.selectedEngine,
+			config.customUrl,
+			input,
+			config.hideGoogleAiOverview,
+		);
 	}
 
 	return resolveBangUrl(bang, query);

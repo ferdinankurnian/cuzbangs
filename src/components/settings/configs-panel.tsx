@@ -300,26 +300,24 @@ export function ConfigsPanel() {
           </CardContent>
         )}
         {config.selectedEngine === "google" && (
-          <CardContent className="pt-0">
-            <div className="flex items-center justify-between gap-6 rounded-lg border bg-muted/30 p-4">
-              <div className="space-y-1">
-                <Label htmlFor={googleAiOverviewId} className="text-base">
-                  Hide Google AI Overviews
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Add <code className="font-mono text-xs">-ai</code> to Google
-                  searches to skip the AI Overview.
-                </p>
-              </div>
-              <Switch
-                id={googleAiOverviewId}
-                size="lg"
-                checked={config.hideGoogleAiOverview}
-                onCheckedChange={(val) =>
-                  handleUpdateConfig({ hideGoogleAiOverview: val })
-                }
-              />
+          <CardContent className="flex items-center justify-between gap-6 pt-0">
+            <div className="space-y-1">
+              <Label htmlFor={googleAiOverviewId} className="text-base">
+                Hide Google AI Overviews
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Add <code className="font-mono text-xs">-ai</code> to Google
+                searches to skip the AI Overview.
+              </p>
             </div>
+            <Switch
+              id={googleAiOverviewId}
+              size="lg"
+              checked={config.hideGoogleAiOverview}
+              onCheckedChange={(val) =>
+                handleUpdateConfig({ hideGoogleAiOverview: val })
+              }
+            />
           </CardContent>
         )}
       </Card>

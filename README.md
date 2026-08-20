@@ -62,3 +62,11 @@ bun run build
 ### Store bangs data
 
 The store catalog is sourced from [Kagi](https://github.com/kagisearch/bangs) and merged with custom entries in `public/data/cuzbangs.json`. See [custom-bangs.md](docs/custom-bangs.md) for the format and merge rules.
+
+Update the catalog from the latest Kagi release with:
+
+```bash
+bun run download-bangs
+```
+
+To reproduce a specific release, pass its tag, for example `bun run download-bangs 202608171805`.

@@ -10,7 +10,7 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "download-bangs": "echo 'TODO: fetch from kagisearch/bangs releases'",
+    "download-bangs": "bun scripts/sync-bangs.mjs",
     "validate-bangs": "bun scripts/validate-bangs.mjs"
   },
   "dependencies": {

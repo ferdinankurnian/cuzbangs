@@ -2455,6 +2455,14 @@
     "sc": "International"
   },
   {
+    "s": "Amazon Ireland",
+    "d": "www.amazon.ie",
+    "t": "aie",
+    "u": "https://www.amazon.ie/s?k={{{s}}}",
+    "c": "Shopping",
+    "sc": "Online"
+  },
+  {
     "s": "Arlington Industries",
     "d": "www.aifittings.com",
     "t": "aifit",
@@ -7172,7 +7180,7 @@
       "b&n",
       "bn"
     ],
-    "u": "https://www.barnesandnoble.com/s/{{{s}}}",
+    "u": "https://www.barnesandnoble.com/search?q={{{s}}}",
     "c": "Shopping",
     "sc": "Big box/department"
   },
@@ -9432,14 +9440,6 @@
     "sc": "Blogs"
   },
   {
-    "s": "Blick am Abend",
-    "d": "www.blickamabend.ch",
-    "t": "blickaa",
-    "u": "https://www.blickamabend.ch/suche/?q={{{s}}}",
-    "c": "News",
-    "sc": "Newspaper"
-  },
-  {
     "s": "Blindekuh.de",
     "d": "www.blinde-kuh.de",
     "t": "blindekuh",
@@ -9569,9 +9569,9 @@
   },
   {
     "s": "Bloons Wiki",
-    "d": "bloons.wikia.com",
+    "d": "www.bloonswiki.com",
     "t": "bloonswiki",
-    "u": "https://bloons.wikia.com/search?query={{{s}}}",
+    "u": "https://www.bloonswiki.com/index.php?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Games (specific)"
   },
@@ -11432,6 +11432,14 @@
     "u": "https://www.chrono24.com/search/index.htm?watchTypes=&query={{{s}}}&dosearch=true&searchexplain=1&accessoryTypes=",
     "c": "Shopping",
     "sc": "Online (intl)"
+  },
+  {
+    "s": "CHZZK",
+    "d": "chzzk.naver.com",
+    "t": "chzzk",
+    "u": "https://chzzk.naver.com/search?query={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (general)"
   },
   {
     "s": "Camptocamp",
@@ -13311,6 +13319,9 @@
     "s": "OpenRouter",
     "d": "openrouter.ai",
     "t": "opr",
+    "ts": [
+      "openrouter"
+    ],
     "u": "https://openrouter.ai/models?q={{{s}}}",
     "c": "Online Services",
     "sc": "AI Chatbots"
@@ -15331,6 +15342,17 @@
     "sc": "Law"
   },
   {
+    "s": "Context7",
+    "d": "context7.com",
+    "t": "context7",
+    "ts": [
+      "ctx7"
+    ],
+    "u": "https://context7.com/?q={{{s}}}",
+    "c": "Tech",
+    "sc": "Libraries/Frameworks"
+  },
+  {
     "s": "Consumer Reports",
     "d": "www.consumerreports.org",
     "t": "consumer",
@@ -16035,6 +16057,27 @@
     "sc": "Health"
   },
   {
+    "s": "Canadian Public Transit Discussion Board",
+    "d": "cptdb.ca",
+    "t": "cptdb",
+    "u": "https://cptdb.ca/search/?q={{{s}}}&quick=1",
+    "c": "Entertainment",
+    "sc": "Forum"
+  },
+  {  
+    "s": "Canadian Public Transit Discussion Board Wiki",
+    "d": "cptdb.ca",
+    "ad": "cptdb.ca/wiki/index.php/Main_Page",
+    "t": "cptdbwiki",
+    "u": "https://cptdb.ca/wiki/index.php?search={{{s}}}&title=Special:Search&go=Go",
+    "c": "Research",
+    "sc": "Reference",
+    "fmt": [
+      "open_snap_domain",
+      "url_encode_space_to_plus"
+    ]
+  },
+  {
     "s": "Collins Dictionary (Portuguese - English)",
     "d": "www.collinsdictionary.com",
     "t": "cpten",
@@ -16304,10 +16347,10 @@
     "sc": "Music"
   },
   {
-    "s": "Critical Role Wikia",
-    "d": "criticalrole.wikia.com",
+    "s": "Critical Role Wiki",
+    "d": "criticalrole.miraheze.org",
     "t": "critrole",
-    "u": "https://criticalrole.wikia.com/wiki/Special:Search?query={{{s}}}",
+    "u": "https://criticalrole.miraheze.org/w/index.php?search={{{s}}}&title=Special:Search",
     "c": "Entertainment",
     "sc": "Misc"
   },
@@ -17261,14 +17304,6 @@
     "sc": "Games (specific)"
   },
   {
-    "s": "Dota2 Gamepedia",
-    "d": "dota2.gamepedia.com",
-    "t": "d2gp",
-    "u": "https://dota2.gamepedia.com/Special:Search/{{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (specific)"
-  },
-  {
     "s": "Light.gg",
     "d": "www.light.gg",
     "t": "d2",
@@ -18110,9 +18145,9 @@
   },
   {
     "s": "DEATH BATTLE Wiki",
-    "d": "deathbattle.wikia.com",
+    "d": "deathbattle.miraheze.org",
     "t": "dbwiki",
-    "u": "https://deathbattle.wikia.com/wiki/Special:Search?fulltext=Search&search={{{s}}}",
+    "u": "https://deathbattle.miraheze.org/w/index.php?title=Special:Search&search={{{s}}}",
     "c": "Entertainment",
     "sc": "Misc"
   },
@@ -19290,6 +19325,14 @@
     ]
   },
   {
+    "s": "Deltarune Wiki",
+    "d": "deltarune.wiki",
+    "t": "deltarune",
+    "u": "https://deltarune.wiki/index.php?search={{{s}}}&title=Special:Search",
+    "c": "Entertainment",
+    "sc": "Games (specific)"
+  },
+  {
     "s": "Dragen en Voeden Forum",
     "d": "forum.dragen-en-voeden.nl",
     "t": "denv",
@@ -19600,9 +19643,10 @@
     "t": "dfw",
     "ts": [
       "dfwiki",
-      "dorf"
+      "dorf",
+      "dwarf"
     ],
-    "u": "https://dwarffortresswiki.org/index.php?title=Special:Search&search={{{s}}}&go=Go",
+    "u": "https://dwarffortresswiki.org/index.php?title=Special:Search&search={{{s}}}",
     "c": "Entertainment",
     "sc": "Games (offline)"
   },
@@ -20350,10 +20394,13 @@
     "sc": "Programming"
   },
   {
-    "s": "discworld",
-    "d": "discworld.wikia.com",
+    "s": "Terry Pratchett Wiki",
+    "d": "wiki.lspace.org",
     "t": "discworld",
-    "u": "https://discworld.wikia.com/wiki/Special:Search?query={{{s}}}",
+    "ts": [
+      "pratchett"
+    ],
+    "u": "https://wiki.lspace.org/index.php?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Forum"
   },
@@ -21404,9 +21451,9 @@
   },
   {
     "s": "Downdetector",
-    "d": "downdetector.co.uk",
+    "d": "downdetector.com",
     "t": "downd",
-    "u": "https://downdetector.co.uk/search/?q={{{s}}}",
+    "u": "https://downdetector.com/status/{{{s}}}",
     "c": "Online Services",
     "sc": "Tools (URLs)"
   },
@@ -22426,14 +22473,6 @@
     "sc": "Games (general)"
   },
   {
-    "s": "dwarf fortress wiki",
-    "d": "dwarffortresswiki.org",
-    "t": "dwarf",
-    "u": "https://dwarffortresswiki.org/index.php?search={{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (specific)"
-  },
-  {
     "s": "Deutsches Wörterbuch von Jacob Grimm und Wilhelm Grimm",
     "d": "woerterbuchnetz.de",
     "t": "dwb",
@@ -22632,9 +22671,9 @@
   },
   {
     "s": "Earthbound Wiki",
-    "d": "earthbound.wikia.com",
+    "d": "wikibound.info",
     "t": "earthbound",
-    "u": "https://earthbound.wikia.com/wiki/Special:Search?search={{{s}}}",
+    "u": "https://wikibound.info/w/index.php?title=Special%3ASearch&search={{{s}}}",
     "c": "Entertainment",
     "sc": "Games (specific)"
   },
@@ -23920,14 +23959,6 @@
     "u": "https://www.elconjugador.com/conjugaison/verbe/espagnol/{{{s}}}.html",
     "c": "Research",
     "sc": "Academic"
-  },
-  {
-    "s": "Elder Scrolls Wiki (Page)",
-    "d": "elderscrolls.wikia.com",
-    "t": "elderwiki",
-    "u": "https://elderscrolls.wikia.com/wiki/index.php?search={{{s}}}&fulltext=Search",
-    "c": "Entertainment",
-    "sc": "Games (general)"
   },
   {
     "s": "electron.atom.io",
@@ -35037,9 +35068,9 @@
   },
   {
     "s": "GTA Wiki",
-    "d": "gta.fandom.com",
+    "d": "gta.wiki",
     "t": "gtawiki",
-    "u": "https://gta.fandom.com/search?query={{{s}}}",
+    "u": "https://gta.wiki/?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Games (general)"
   },
@@ -35623,6 +35654,19 @@
     "u": "https://translate.google.com/#auto/km/{{{s}}}",
     "c": "Translation",
     "sc": "Google"
+  },
+  {
+    "s": "GTK 4 Documentation",
+    "d": "docs.gtk.org",
+    "ad": "docs.gtk.org/gtk4/",
+    "t": "gtk4",
+    "u": "https://docs.gtk.org/gtk4/index.html?q={{{s}}}",
+    "c": "Tech",
+    "sc": "Programming",
+    "fmt": [
+      "open_snap_domain",
+      "url_encode_placeholder"
+    ]
   },
   {
     "s": "Google Translate (to Korean)",
@@ -39312,9 +39356,9 @@
   },
   {
     "s": "Hypixel Skyblock Wiki",
-    "d": "hypixel-skyblock.fandom.com",
+    "d": "hypixelskyblock.minecraft.wiki",
     "t": "hysb",
-    "u": "https://hypixel-skyblock.fandom.com/wiki/Special:Search?query={{{s}}}",
+    "u": "https://hypixelskyblock.minecraft.wiki/?search={{{s}}}&title=Special:Search",
     "c": "Entertainment",
     "sc": "Games (Minecraft)"
   },
@@ -39884,14 +39928,6 @@
     "u": "https://www.nv5geospatialsoftware.com/docs/SearchResults.aspx?q={{{s}}}",
     "c": "Tech",
     "sc": "Languages (other)"
-  },
-  {
-    "s": "THE IDOLM@STER Wiki",
-    "d": "idolmaster.wikia.com",
-    "t": "idolmawiki",
-    "u": "https://idolmaster.wikia.com/wiki/Special:Search?search={{{s}}}&fulltext=Search",
-    "c": "Entertainment",
-    "sc": "Games (specific)"
   },
   {
     "s": "Idos",
@@ -40501,19 +40537,15 @@
   },
   {
     "s": "Project iM@S Wiki",
-    "d": "www.project-imas.com",
+    "d": "project-imas.wiki",
     "t": "imas",
-    "u": "https://www.project-imas.com/w/index.php?search={{{s}}}&title=Special:Search&go=Go",
+    "ts": [
+      "idolmawiki",
+      "imaswiki"
+    ],
+    "u": "https://project-imas.wiki/index.php?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Games (specific)"
-  },
-  {
-    "s": "project-imas.com wiki",
-    "d": "www.project-imas.com",
-    "t": "imaswiki",
-    "u": "https://www.project-imas.com/w/index.php?search={{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (general)"
   },
   {
     "s": "Images des mathématiques",
@@ -42841,7 +42873,7 @@
     "ts": [
       "johnlewis"
     ],
-    "u": "https://www.johnlewis.com/Search/Search.aspx?SearchTerm={{{s}}}",
+    "u": "https://www.johnlewis.com/search?search-term={{{s}}}",
     "c": "Shopping",
     "sc": "Online"
   },
@@ -44599,6 +44631,14 @@
     "u": "https://kubekings.com/buscar?controller=search&orderby=position&orderway=desc&search_query={{{s}}}&submit_search=",
     "c": "Shopping",
     "sc": "Online"
+  },
+  {
+    "s": "KLIPY",
+    "d": "klipy.com",
+    "t": "klipy",
+    "u": "https://klipy.com/search/{{{s}}}",
+    "c": "Multimedia",
+    "sc": "Images"
   },
   {
     "s": "Konsolentreff.de",
@@ -46821,6 +46861,19 @@
     "sc": "Blogs"
   },
   {
+    "s": "libadwaita Documentation",
+    "d": "gnome.pages.gitlab.gnome.org",
+    "ad": "gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/",
+    "t": "libadwaita",
+    "u": "https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/index.html?q={{{s}}}",
+    "c": "Tech",
+    "sc": "Programming",
+    "fmt": [
+      "open_snap_domain",
+      "url_encode_placeholder"
+    ]
+  },
+  {
     "s": "Libby, By Overdrive",
     "d": "libbyapp.com",
     "t": "libby",
@@ -48208,14 +48261,6 @@
     "u": "https://lostpedia.wikia.com/wiki/Special:Search?search={{{s}}}",
     "c": "Entertainment",
     "sc": "TV"
-  },
-  {
-    "s": "One Wiki to Rule Them All:  The Lord of the Rings Wiki",
-    "d": "lotr.wikia.com",
-    "t": "lotr",
-    "u": "https://lotr.wikia.com/wiki/Special:Search?query={{{s}}}",
-    "c": "Research",
-    "sc": "Topical"
   },
   {
     "s": "LOTRO-Wiki",
@@ -50597,6 +50642,20 @@
     "sc": "Games (Minecraft)"
   },
   {
+    "s": "Modrinth (Project by slug)",
+    "d": "modrinth.com",
+    "t": "mdproject",
+    "ts": [
+      "mrproject"
+    ],
+    "u": "https://modrinth.com/project/{{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (Minecraft)",
+    "fmt": [
+      "open_base_path"
+    ]
+  },
+  {
     "s": "Modrinth (Mods)",
     "d": "modrinth.com",
     "t": "mdmods",
@@ -50727,14 +50786,6 @@
     "d": "mcpedl.com",
     "t": "mcpedl",
     "u": "https://mcpedl.com/?s={{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (Minecraft)"
-  },
-  {
-    "s": "Minecraft Pocket Edition Wiki",
-    "d": "minecraftpocketedition.wikia.com",
-    "t": "mcpew",
-    "u": "https://minecraftpocketedition.wikia.com/wiki/Special:Search?search={{{s}}}&fulltext=Search",
     "c": "Entertainment",
     "sc": "Games (Minecraft)"
   },
@@ -51229,20 +51280,15 @@
     "sc": "Games (specific)"
   },
   {
-    "s": "Megami Tensei Wikia",
-    "d": "megamitensei.wikia.com",
+    "s": "Megami Tensei Wiki",
+    "d": "megatenwiki.com",
     "t": "megamitensei",
-    "u": "https://megamitensei.wikia.com/wiki/Special:Search?search={{{s}}}&fulltext=Search",
+    "ts": [
+      "megatenw"
+    ],
+    "u": "https://megatenwiki.com/index.php?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Games (specific)"
-  },
-  {
-    "s": "Megami Tensei Wiki",
-    "d": "megamitensei.wikia.com",
-    "t": "megatenw",
-    "u": "https://megamitensei.wikia.com/wiki/Special:Search?search={{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (general)"
   },
   {
     "s": "Meijer",
@@ -52106,14 +52152,6 @@
     "sc": "Games (Minecraft)"
   },
   {
-    "s": "Minecraft Wiki",
-    "d": "minecraft.gamepedia.com",
-    "t": "minecratwiki",
-    "u": "https://minecraft.gamepedia.com/index.php?search={{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (Minecraft)"
-  },
-  {
     "s": "Ming Pao",
     "d": "news.mingpao.com",
     "t": "mingpao",
@@ -52497,10 +52535,10 @@
     "sc": "Games (general)"
   },
   {
-    "s": "My Little Pony: Friendship is Magic Wiki",
-    "d": "mlp.wikia.com",
+    "s": "Equestripedia",
+    "d": "equestripedia.org",
     "t": "mlp",
-    "u": "https://mlp.wikia.com/wiki/Special:Search?search={{{s}}}",
+    "u": "https://equestripedia.org/w/index.php?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "TV"
   },
@@ -55079,6 +55117,21 @@
     "sc": "Search"
   },
   {
+    "s": "nbarapm.com",
+    "d": "nbarapm.com",
+    "t": "nbarapm",
+    "ts": [
+      "rapm"
+    ],
+    "u": "https://nbarapm.com/player/{{{s}}}",
+    "c": "Entertainment",
+    "sc": "Sports",
+    "fmt": [
+      "open_base_path",
+      "url_encode_placeholder"
+    ]
+  },
+  {
     "s": "Notebookcheck(DE)",
     "d": "www.notebookcheck.com",
     "t": "nbcde",
@@ -57492,6 +57545,28 @@
     "u": "https://www.oxfordlearnersdictionaries.com/search/english/?q={{{s}}}",
     "c": "Research",
     "sc": "Learning (intl)"
+  },
+  {
+    "s": "Oxlint (Rule)",
+    "d": "oxc.rs",
+    "t": "oxlint",
+    "u": "https://oxc.rs/docs/guide/usage/linter/rules/{{{s}}}",
+    "c": "Tech",
+    "sc": "Languages (javascript)",
+    "fmt": []
+  },
+  {
+    "s": "Oxlint (ESLint Rule)",
+    "d": "oxc.rs",
+    "t": "oxlinte",
+    "ts": [
+      "oxlintes",
+      "oxlinteslint"
+    ],
+    "u": "https://oxc.rs/docs/guide/usage/linter/rules/eslint/{{{s}}}",
+    "c": "Tech",
+    "sc": "Languages (javascript)",
+    "fmt": []
   },
   {
     "s": "OverAPI Cheatsheet",
@@ -64309,7 +64384,7 @@
     "s": "Proton Mail",
     "d": "mail.proton.me",
     "t": "protonmail",
-    "u": "https://mail.proton.me/#keyword={{{s}}}",
+    "u": "https://mail.proton.me/u/0/all-mail#keyword={{{s}}}",
     "c": "Online Services",
     "sc": "Tools"
   },
@@ -64387,6 +64462,18 @@
     "u": "https://www.podcastscience.fm/?s={{{s}}}",
     "c": "Tech",
     "sc": "Blogs"
+  },
+  {
+    "s": "Podcast Index",
+    "d": "podcastindex.org",
+    "t": "podindex",
+    "ts": [
+      "poddex",
+      "podcastindex"
+    ],
+    "u": "https://podcastindex.org/search?q={{{s}}}&type=all",
+    "c": "Online Services",
+    "sc": "Search"
   },
   {
     "s": "PSDDude Photoshop Tutorials",
@@ -64833,9 +64920,9 @@
   },
   {
     "s": "Plants vs. Zombies Wiki",
-    "d": "plantsvszombies.wikia.com",
+    "d": "plantsvszombies.wiki.gg",
     "t": "pvz",
-    "u": "https://plantsvszombies.wikia.com/wiki/Special:Search?query={{{s}}}",
+    "u": "https://plantsvszombies.wiki.gg/wiki/Special:Search?search={{{s}}}",
     "c": "Entertainment",
     "sc": "Games (general)"
   },
@@ -65966,12 +66053,23 @@
     "d": "rateyourmusic.com",
     "t": "rym",
     "ts": [
-      "rymf",
       "rateyourmusic"
     ],
     "u": "https://rateyourmusic.com/search?searchterm={{{s}}}",
     "c": "Entertainment",
     "sc": "Audio"
+  },
+  {
+    "s": "Rate Your Music (films)",
+    "d": "rateyourmusic.com",
+    "t": "rymf",
+    "ts": [
+      "rymfilms",
+      "rateyourfilms"
+    ],
+    "u": "https://rateyourmusic.com/search?searchtype=F&searchterm={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Movies"
   },
   {
     "s": "TopRatgeber24",
@@ -66739,6 +66837,15 @@
     "u": "https://www.reddit.com/search?q={{{s}}}",
     "c": "News",
     "sc": "Aggregators"
+  },
+  {
+    "s": "Reddit: subreddit Defined Search",
+    "d": "reddit.com",
+    "t": "rsr",
+    "u": "https://reddit.com/r/$1/search?q=$2&restrict_sr=on",
+    "x": "(\\w+)\\s+(.*)",
+    "c": "Online Services",
+    "sc": "Social"
   },
   {
     "s": "Reddit subreddit",
@@ -67945,7 +68052,7 @@
     "sc": "Music"
   },
   {
-    "s": "Roblox Experiences",
+    "s": "Roblox Games",
     "d": "www.roblox.com",
     "t": "robloxg",
     "ts": [
@@ -68284,6 +68391,14 @@
     "u": "https://rpggeek.com/geeksearch.php?action=search&objecttype=rpgunified&q={{{s}}}&B1=Go",
     "c": "Entertainment",
     "sc": "Games (general)"
+  },
+  {
+    "s": "RPCS3 Wiki",
+    "d": "wiki.rpcs3.net",
+    "t": "rpcs3",
+    "u": "https://wiki.rpcs3.net/index.php?title=Special%3ASearch&search={{{s}}}",
+    "c": "Research",
+    "sc": "Reference"
   },
   {
     "s": "StackExchange RPG",
@@ -69394,14 +69509,6 @@
     "sc": "Sysadmin"
   },
   {
-    "s": "whosampled",
-    "d": "www.whosampled.com",
-    "t": "sampled",
-    "u": "https://www.whosampled.com/search/artists/?q={{{s}}}",
-    "c": "Multimedia",
-    "sc": "Music"
-  },
-  {
     "s": "Samsung",
     "d": "www.samsung.com",
     "t": "sam",
@@ -70309,14 +70416,6 @@
       "сцп"
     ],
     "u": "https://scpfoundation.net/search:site/q/{{{s}}}",
-    "c": "Entertainment",
-    "sc": "Misc"
-  },
-  {
-    "s": "SCP Foundation",
-    "d": "www.scp-wiki.net",
-    "t": "scp",
-    "u": "https://www.scp-wiki.net/search:site/a/p/q/{{{s}}}",
     "c": "Entertainment",
     "sc": "Misc"
   },
@@ -73018,6 +73117,14 @@
     "sc": "Online"
   },
   {
+    "s": "SOOP",
+    "d": "www.sooplive.com",
+    "t": "soop",
+    "u": "https://www.sooplive.com/search?szKeyword={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (general)"
+  },
+  {
     "s": "StackOverflow Companies",
     "d": "stackoverflow.com",
     "t": "socompanies",
@@ -73878,17 +73985,12 @@
     "sc": "Search (non-US)"
   },
   {
-    "s": "SpongeBob Wikia",
-    "d": "spongebob.wikia.com",
-    "t": "spongebob",
-    "u": "https://spongebob.wikia.com/wiki/Special:Search?search={{{s}}}&fulltext=Search",
-    "c": "Entertainment",
-    "sc": "TV"
-  },
-  {
     "s": "Encyclopedia SpongeBobia",
     "d": "spongebob.fandom.com",
     "t": "sponge",
+    "ts": [
+      "spongebob"
+    ],
     "u": "https://spongebob.fandom.com/wiki/Special:Search?search={{{s}}}",
     "c": "Research",
     "sc": "Reference (fun)"
@@ -75083,10 +75185,10 @@
     "sc": "Business"
   },
   {
-    "s": "Slay the spire Wiki | Fandom powered by Wikia",
-    "d": "slay-the-spire.fandom.com",
+    "s": "Slay the Spire Wiki",
+    "d": "slaythespire.wiki.gg",
     "t": "stsw",
-    "u": "https://slay-the-spire.fandom.com/wiki/Special:Search?query={{{s}}}",
+    "u": "https://slaythespire.wiki.gg/wiki/Special:Search?search={{{s}}}",
     "c": "Entertainment",
     "sc": "Games (specific)"
   },
@@ -75259,9 +75361,9 @@
   },
   {
     "s": "Subnautica Wiki",
-    "d": "subnautica.wikia.com",
+    "d": "wiki.subnautica.com",
     "t": "subnautica",
-    "u": "https://subnautica.wikia.com/wiki/Special:Search?search={{{s}}}",
+    "u": "https://wiki.subnautica.com/sn/?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Games (specific)"
   },
@@ -77459,14 +77561,6 @@
     "sc": "Blogs (intl)"
   },
   {
-    "s": "The Elder Scrolls WIki",
-    "d": "elderscrolls.wikia.com",
-    "t": "teswiki",
-    "u": "https://elderscrolls.wikia.com/wiki/Special:Search?search={{{s}}}",
-    "c": "Entertainment",
-    "sc": "Games (specific)"
-  },
-  {
     "s": "TEU",
     "d": "eur-lex.europa.eu",
     "t": "teu",
@@ -77646,7 +77740,8 @@
     "t": "tgate",
     "ts": [
       "tolkiengateway",
-      "tolkien"
+      "tolkien",
+      "lotr"
     ],
     "u": "https://tolkiengateway.net/wiki/Special:Search?search={{{s}}}&go=Go",
     "c": "Entertainment",
@@ -79183,7 +79278,7 @@
     "s": "Tori",
     "d": "www.tori.fi",
     "t": "tori",
-    "u": "https://www.tori.fi/koko_suomi?q={{{s}}}",
+    "u": "https://www.tori.fi/recommerce/forsale/search?q={{{s}}}",
     "c": "Shopping",
     "sc": "Online (marketplace)"
   },
@@ -79467,9 +79562,9 @@
   },
   {
     "s": "Trakt",
-    "d": "trakt.tv",
+    "d": "app.trakt.tv",
     "t": "trakt",
-    "u": "https://trakt.tv/search?utf8=%E2%9C%93&query={{{s}}}",
+    "u": "https://app.trakt.tv/search?m=media&q={{{s}}}",
     "c": "Entertainment",
     "sc": "TV"
   },
@@ -81191,7 +81286,11 @@
     "s": "The Unofficial Elder Scrolls Pages",
     "d": "en.uesp.net",
     "t": "uesp",
-    "u": "https://en.uesp.net/w/index.php?title=Special:Search&profile=default&search={{{s}}}&fulltext=Search",
+    "ts": [
+      "teswiki",
+      "elderwiki"
+    ],
+    "u": "https://en.uesp.net/w/index.php?title=Special%3ASearch&search={{{s}}}",
     "c": "Entertainment",
     "sc": "Games (specific)"
   },
@@ -81619,10 +81718,10 @@
     "sc": "Academic"
   },
   {
-    "s": "Undertale wiki",
-    "d": "undertale.wikia.com",
+    "s": "Undertale Wiki",
+    "d": "undertale.wiki",
     "t": "undertale",
-    "u": "https://undertale.wikia.com/wiki/Special:Search?search={{{s}}}&fulltext=Search",
+    "u": "https://undertale.wiki/index.php?search={{{s}}}&title=Special:Search",
     "c": "Entertainment",
     "sc": "Games (offline)"
   },
@@ -82340,6 +82439,15 @@
     "d": "www.xe.com",
     "t": "usd2gbp",
     "u": "https://www.xe.com/currencyconverter/convert/?Amount={{{s}}}&From=USD&To=GBP",
+    "c": "Online Services",
+    "sc": "Tools"
+  },
+  {
+    "s": "XE Currency Defined Search",
+    "d": "www.xe.com",
+    "t": "xec",
+    "u": "https://www.xe.com/currencyconverter/convert/?Amount=$3&From=$1&To=$2",
+    "x": "([A-Z]{3})\\s+([A-Z]{3})\\s+(\\d+(?:\\.\\d+)?)",
     "c": "Online Services",
     "sc": "Tools"
   },
@@ -83718,11 +83826,11 @@
   {
     "s": "VirusTotal",
     "d": "www.virustotal.com",
-    "t": "virustotalfilesearch",
+    "t": "virustotal",
     "ts": [
-      "virustotal"
+      "vt"
     ],
-    "u": "https://www.virustotal.com/en/search?query={{{s}}}",
+    "u": "https://www.virustotal.com/gui/search?query={{{s}}}",
     "c": "Tech",
     "sc": "Sysadmin"
   },
@@ -84264,10 +84372,29 @@
     "sc": "Reference (words intl)"
   },
   {
-    "s": "www.virustotal.com",
+    "s": "VirusTotal IP",
     "d": "www.virustotal.com",
     "t": "vtip",
-    "u": "https://www.virustotal.com/en/ip-address/{{{s}}}/information/",
+    "u": "https://www.virustotal.com/gui/ip-address/{{{s}}}",
+    "c": "Tech",
+    "sc": "Sysadmin"
+  },
+  {
+    "s": "VirusTotal Domain",
+    "d": "www.virustotal.com",
+    "t": "vtdomain",
+    "u": "https://www.virustotal.com/gui/domain/{{{s}}}",
+    "c": "Tech",
+    "sc": "Sysadmin"
+  },
+  {
+    "s": "VirusTotal File",
+    "d": "www.virustotal.com",
+    "t": "vtfile",
+    "ts": [
+      "vthash"
+    ],
+    "u": "https://www.virustotal.com/gui/file/{{{s}}}",
     "c": "Tech",
     "sc": "Sysadmin"
   },
@@ -84294,14 +84421,6 @@
     "u": "https://vtmb.wikia.com/wiki/Special:Search?query={{{s}}}",
     "c": "Entertainment",
     "sc": "Games (specific)"
-  },
-  {
-    "s": "Vulgum Techus",
-    "d": "www.vulgumtechus.com",
-    "t": "vt",
-    "u": "https://www.vulgumtechus.com/index.php?title=Spécial:Recherche&search={{{s}}}",
-    "c": "Tech",
-    "sc": "Blogs"
   },
   {
     "s": "Bibliotheek van de Vrije Univesiteit Brussel",
@@ -84720,6 +84839,17 @@
     "sc": "Games (specific)"
   },
   {
+    "s": "Avakot Wiki",
+    "d": "wiki.avakot.org",
+    "t": "avakotw",
+    "ts": [
+      "wavakot"
+    ],
+    "u": "https://wiki.avakot.org/?search={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (specific)"
+  },
+  {
     "s": "Total war Warhammer Wiki",
     "d": "totalwarwarhammer.gamepedia.com",
     "t": "warhammer",
@@ -84792,7 +84922,7 @@
     "s": "Watson",
     "d": "www.watson.ch",
     "t": "watson",
-    "u": "https://www.watson.ch/u/search?#{{{s}}}",
+    "u": "https://www.watson.ch/u/search?q={{{s}}}",
     "c": "News",
     "sc": "Aggregators"
   },
@@ -84811,6 +84941,18 @@
     "u": "https://wave.webaim.org/report#/{{{s}}}",
     "c": "Online Services",
     "sc": "Tools (URLs)"
+  },
+  {
+    "s": "Wavedash",
+    "d": "wavedash.com",
+    "t": "wavedash",
+    "ts": [
+      "wvd",
+      "wvdsh"
+    ],
+    "u": "https://wavedash.com/browse?q={{{s}}}",
+    "c": "Entertainment",
+    "sc": "Games (general)"
   },
   {
     "s": "Wolfram Alpha",
@@ -85887,10 +86029,39 @@
     "sc": "Sysadmin (network)"
   },
   {
-    "s": "Who Sampled",
+    "s": "WhoSampled",
     "d": "whosampled.com",
     "t": "whosampled",
+    "ts": [
+      "whosam"
+    ],
     "u": "https://whosampled.com/search/?q={{{s}}}",
+    "c": "Multimedia",
+    "sc": "Music"
+  },
+  {
+    "s": "WhoSampled (Artists)",
+    "d": "www.whosampled.com",
+    "t": "whosama",
+    "ts": [
+      "whosamart",
+      "whosamartist",
+      "whosamartists",
+      "sampled"
+    ],
+    "u": "https://www.whosampled.com/search/artists/?q={{{s}}}",
+    "c": "Multimedia",
+    "sc": "Music"
+  },
+  {
+    "s": "WhoSampled (Tracks)",
+    "d": "www.whosampled.com",
+    "t": "whosamt",
+    "ts": [
+      "whosamtrack",
+      "whosamtracks"
+    ],
+    "u": "https://www.whosampled.com/search/tracks/?q={{{s}}}",
     "c": "Multimedia",
     "sc": "Music"
   },
@@ -85915,6 +86086,14 @@
     "d": "www.who.is",
     "t": "who",
     "u": "https://www.who.is/whois/{{{s}}}",
+    "c": "Online Services",
+    "sc": "Search"
+  },
+  {
+    "s": "RDAP",
+    "d": "client.rdap.org",
+    "t": "rdap",
+    "u": "https://client.rdap.org/?object={{{s}}}",
     "c": "Online Services",
     "sc": "Search"
   },
@@ -88698,9 +88877,9 @@
   },
   {
     "s": "Xenoblade Wiki",
-    "d": "xenoblade.wikia.com",
+    "d": "www.xenoserieswiki.org",
     "t": "xenoblade",
-    "u": "https://xenoblade.wikia.com/wiki/Special:Search?search={{{s}}}",
+    "u": "https://www.xenoserieswiki.org/w/index.php?search={{{s}}}&title=Special%3ASearch",
     "c": "Entertainment",
     "sc": "Games (specific)"
   },
@@ -89677,7 +89856,7 @@
     "s": "YouTube Channel",
     "d": "www.youtube.com",
     "t": "ytc",
-    "u": "https://www.youtube.com/user/{{{s}}}",
+    "u": "https://www.youtube.com/results?search_query={{{s}}}&sp=EgIQAg%253D%253D",
     "c": "Entertainment",
     "sc": "Misc"
   },
@@ -90684,6 +90863,18 @@
     "d": "search.nixos.org",
     "t": "nixopt",
     "u": "https://search.nixos.org/options?query={{{s}}}",
+    "c": "Tech",
+    "sc": "Languages (nix)"
+  },
+  {
+    "s": "NixOS Home Manager Options Search",
+    "d": "search.nixos.org",
+    "t": "nixhopt",
+    "ts": [
+      "nixhmopt",
+      "nixhmo"
+    ],
+    "u": "https://search.nixos.org/options?query={{{s}}}&source=home_manager",
     "c": "Tech",
     "sc": "Languages (nix)"
   },
@@ -91863,6 +92054,14 @@
     "u": "https://sco.wikipedia.org/w/index.php?search={{{s}}}",
     "c": "Research",
     "sc": "Reference"
+  },
+  {
+    "s": "The Software Heritage Archive",
+    "d": "archive.softwareheritage.org",
+    "t": "swh",
+    "u": "https://archive.softwareheritage.org/browse/search/?q={{{s}}}",
+    "c": "Tech",
+    "sc": "Programming"
   },
   {
     "s": "Haitian Creole Wikipedia",
@@ -93315,6 +93514,17 @@
     ]
   },
   {
+    "s": "Resonite Wiki",
+    "d": "wiki.resonite.com",
+    "t": "resowiki",
+    "ts": [
+      "resow",
+      "resonitewiki"
+    ],
+    "u": "https://wiki.resonite.com/index.php?search={{{s}}}",
+    "c": "Online Services"
+  },
+  {  
     "s": "Orion Feedback (Discussions)",
     "d": "orionfeedback.org",
     "ad": "orionfeedback.org/d",

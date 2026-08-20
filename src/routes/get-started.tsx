@@ -1,4 +1,3 @@
-import { registerSW } from "virtual:pwa-register";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
 	ArrowRight,
@@ -136,7 +135,6 @@ function GetStartedPage() {
 		setCurrentStep("Applying");
 		await new Promise((resolve) => setTimeout(resolve, 500));
 		acceptConsent();
-		registerSW({ immediate: true });
 		setCurrentStep("Done");
 	};
 

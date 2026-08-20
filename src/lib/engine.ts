@@ -25,6 +25,11 @@ export interface RedirectResult {
 	isCustom?: boolean;
 }
 
+export function appendGoogleAiOverviewSuffix(query: string): string {
+	const trimmedQuery = query.trimEnd();
+	return `${trimmedQuery}${/(^|\s)-ai$/i.test(trimmedQuery) ? "" : " -ai"}`;
+}
+
 const DEFAULT_CONFIG: AppConfig = {
 	selectedEngine: "google",
 	customUrl: "https://www.bing.com/search?go=Search&q=%s&qs=c",
@@ -171,10 +176,9 @@ export function getEngineUrl(
 		default:
 			baseUrl = "https://www.google.com/search?q=%s";
 	}
-	const trimmedQuery = query.trimEnd();
 	const finalQuery =
 		engine === "google" && hideGoogleAiOverview
-			? `${trimmedQuery}${/(^|\s)-ai$/i.test(trimmedQuery) ? "" : " -ai"}`
+			? appendGoogleAiOverviewSuffix(query)
 			: query;
 	return baseUrl.replace("%s", encodeURIComponent(finalQuery));
 }

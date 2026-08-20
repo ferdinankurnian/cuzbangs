@@ -1,12 +1,15 @@
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { registerSW } from "virtual:pwa-register";
 
 // Import the generated route tree
 import { routeTree } from "@/routeTree.gen";
 
 import "./styles.css";
 import reportWebVitals from "./reportWebVitals.ts";
+
+registerSW({ immediate: true });
 
 // Create a new router instance
 const router = createRouter({

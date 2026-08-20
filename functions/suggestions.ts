@@ -1,3 +1,8 @@
+import {
+	getBuiltInSuggestionUrl,
+	isAllowedSuggestionTarget,
+} from "../src/lib/suggestion-providers";
+
 export async function handleSuggestion(request: Request) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -15,41 +20,27 @@ export async function handleSuggestion(request: Request) {
     
     // Cookie Parsing
     let selectedEngine = "google";
-    let customSuggestionUrl = "";
     
     const cookieHeader = request.headers.get("Cookie");
     if (cookieHeader) {
       for (const cookie of cookieHeader.split(';')) {
         const [name, ...value] = cookie.trim().split('=');
         if (name === "selected_engine") selectedEngine = value.join('=');
-        if (name === "custom_suggestion_url") customSuggestionUrl = decodeURIComponent(value.join('='));
       }
     }
 
-    // Determine Target URL
-    let targetUrl = urlObj.searchParams.get("proxy_target");
+	    // The target is intentionally constrained. This endpoint is public, so a
+	    // caller must never be able to turn it into an arbitrary fetch proxy.
+	    const requestedTarget = urlObj.searchParams.get("proxy_target");
+	    const targetUrl = requestedTarget && isAllowedSuggestionTarget(requestedTarget)
+	      ? requestedTarget
+	      : getBuiltInSuggestionUrl(selectedEngine, query);
 
-    if (!targetUrl) {
-      if (selectedEngine === "custom" && customSuggestionUrl) {
-        targetUrl = customSuggestionUrl.replace("%s", encodeURIComponent(query));
-      } else {
-        switch (selectedEngine) {
-          case "bing":
-            targetUrl = `https://api.bing.com/osjson.aspx?query=${encodeURIComponent(query)}`;
-            break;
-          case "duckduckgo":
-            targetUrl = `https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`;
-            break;
-          case "kagi":
-            targetUrl = `https://kagi.com/api/autosuggest?q=${encodeURIComponent(query)}`;
-            break;
-          default:
-            targetUrl = `https://www.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}`;
-        }
-      }
-    }
-
-    if (!targetUrl) return new Response(JSON.stringify([query, []]), { headers: corsHeaders });
+	    if (!targetUrl) {
+	      return new Response(JSON.stringify([query, []]), {
+	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+	      });
+	    }
 
     const response = await fetch(targetUrl, {
       headers: {

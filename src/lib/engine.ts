@@ -5,6 +5,7 @@ import {
 } from "./bangs";
 import { type AppConfig, type BangEntry, db, SETTING_KEYS } from "./db";
 import { fetchStoreBangs } from "./store-bangs";
+import { getBuiltInSuggestionUrl } from "./suggestion-providers";
 
 let cachedFallback: BangEntry[] | null = null;
 
@@ -74,7 +75,7 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 			}),
 		);
 		// Simpen ke Cookie (tahan 1 tahun)
-		document.cookie = `selected_engine=${updates.selectedEngine};path=/;max-age=31536000;SameSite=Lax`;
+		document.cookie = `selected_engine=${updates.selectedEngine};path=/;max-age=31536000;Secure;SameSite=Lax`;
 	}
 	if (updates.customUrl !== undefined) {
 		promises.push(
@@ -123,7 +124,7 @@ export async function updateConfig(updates: Partial<AppConfig>) {
 				value: updates.customSuggestionUrl,
 			}),
 		);
-		document.cookie = `custom_suggestion_url=${encodeURIComponent(updates.customSuggestionUrl)};path=/;max-age=31536000;SameSite=Lax`;
+		document.cookie = `custom_suggestion_url=${encodeURIComponent(updates.customSuggestionUrl)};path=/;max-age=31536000;Secure;SameSite=Lax`;
 	}
 
 	await Promise.all(promises);
@@ -209,20 +210,10 @@ export async function findBang(trigger: string, useStore = true) {
 	if (!normalizedTrigger) return null;
 
 	let bang = await db.userBangs.where("t").equals(normalizedTrigger).first();
-	if (!bang) {
-		bang = await db.userBangs
-			.filter((entry) => bangHasTrigger(entry, normalizedTrigger))
-			.first();
-	}
 	if (bang) return bang;
 
 	if (useStore) {
 		bang = await db.storeBangs.where("t").equals(normalizedTrigger).first();
-		if (!bang) {
-			bang = await db.storeBangs
-				.filter((entry) => bangHasTrigger(entry, normalizedTrigger))
-				.first();
-		}
 		if (bang) return bang;
 
 		// Last resort: check if DB is empty and fallback to JSON
@@ -310,18 +301,33 @@ export async function getLocalSuggestions(input: string): Promise<BangEntry[]> {
 	if (!query) return [];
 
 	// Search in both layers, but hide store triggers claimed by user bangs.
-	const [userBangs, storeBangs] = await Promise.all([
-		db.userBangs
-			.filter(
-				(b) =>
-					normalizeBangTriggers(b.t).some((t) => t.startsWith(query)) ||
-					b.s.toLowerCase().includes(query),
-			)
-			.toArray(),
-		config.useStoreBangs
-			? db.storeBangs.toArray()
-			: Promise.resolve([] as BangEntry[]),
-	]);
+	const [userTriggerBangs, userNameBangs, storeTriggerBangs, storeNameBangs] =
+		await Promise.all([
+			db.userBangs.where("t").startsWith(query).toArray(),
+			db.userBangs.where("s").startsWithIgnoreCase(query).toArray(),
+			config.useStoreBangs
+				? db.storeBangs.where("t").startsWith(query).toArray()
+				: Promise.resolve([] as BangEntry[]),
+			config.useStoreBangs
+				? db.storeBangs.where("s").startsWithIgnoreCase(query).toArray()
+				: Promise.resolve([] as BangEntry[]),
+		]);
+	const userBangs = [
+		...new Map(
+			[...userTriggerBangs, ...userNameBangs].map((bang) => [
+				bang.id ?? `${bang.s}:${bang.u}`,
+				bang,
+			]),
+		).values(),
+	];
+	const storeBangs = [
+		...new Map(
+			[...storeTriggerBangs, ...storeNameBangs].map((bang) => [
+				bang.id ?? `${bang.s}:${bang.u}`,
+				bang,
+			]),
+		).values(),
+	];
 	const userTriggers = new Set(
 		userBangs.flatMap((bang) => normalizeBangTriggers(bang.t)),
 	);
@@ -366,46 +372,21 @@ export async function getSuggestionUrl(input: string): Promise<string | null> {
 	const { trigger, query, config } = await parseInput(input);
 
 	if (!trigger) {
-		switch (config.selectedEngine) {
-			case "google":
-				return "https://www.google.com/complete/search?client=chrome&q=%s".replace(
-					"%s",
-					encodeURIComponent(query),
-				);
-			case "bing":
-				return "https://api.bing.com/osjson.aspx?query=%s".replace(
-					"%s",
-					encodeURIComponent(query),
-				);
-			case "duckduckgo":
-				return "https://duckduckgo.com/ac/?q=%s&type=list".replace(
-					"%s",
-					encodeURIComponent(query),
-				);
-			case "kagi":
-				return config.useKagiPrivacy
-					? "https://kagisuggest.com/api/autosuggest?q=%s".replace(
-							"%s",
-							encodeURIComponent(query),
-						)
-					: "https://kagi.com/api/autosuggest?q=%s".replace(
-							"%s",
-							encodeURIComponent(query),
-						);
-			case "custom":
-				if (
-					!config.customSuggestionUrl ||
-					config.customSuggestionUrl.trim() === ""
-				) {
-					return null;
-				}
-				return config.customSuggestionUrl.replace(
-					"%s",
-					encodeURIComponent(query),
-				);
-			default:
-				return null;
+		if (config.selectedEngine === "kagi" && config.useKagiPrivacy) {
+			return `https://kagisuggest.com/api/autosuggest?q=${encodeURIComponent(query)}`;
 		}
+		const builtInUrl = getBuiltInSuggestionUrl(config.selectedEngine, query);
+		if (builtInUrl) return builtInUrl;
+		if (
+			config.selectedEngine === "custom" &&
+			config.customSuggestionUrl.trim()
+		) {
+			return config.customSuggestionUrl.replace(
+				"%s",
+				encodeURIComponent(query),
+			);
+		}
+		return null;
 	}
 
 	const { bang } = await findBangRoute(trigger, config.useStoreBangs);

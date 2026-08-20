@@ -100,7 +100,7 @@ export function ConfigsPanel() {
       if (count === 0) {
         await updateConfig(DEFAULT_CONFIG);
         // Set default cookies
-        document.cookie = `selected_engine=${DEFAULT_CONFIG.selectedEngine};path=/;max-age=31536000;SameSite=Lax`;
+        document.cookie = `selected_engine=${DEFAULT_CONFIG.selectedEngine};path=/;max-age=31536000;Secure;SameSite=Lax`;
       }
     };
     initConfig();
@@ -175,9 +175,9 @@ export function ConfigsPanel() {
   const handleResetToDefault = async () => {
     await Promise.all([db.userBangs.clear(), db.settings.clear()]);
     await updateConfig(DEFAULT_CONFIG);
-    document.cookie = `selected_engine=${DEFAULT_CONFIG.selectedEngine};path=/;max-age=31536000;SameSite=Lax`;
+  document.cookie = `selected_engine=${DEFAULT_CONFIG.selectedEngine};path=/;max-age=31536000;Secure;SameSite=Lax`;
     document.cookie =
-      "custom_suggestion_url=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+    "custom_suggestion_url=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; Secure; SameSite=Lax";
   };
 
   const handleNukeCuzbangs = async () => {

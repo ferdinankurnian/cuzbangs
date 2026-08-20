@@ -21,8 +21,7 @@ export const Route = createFileRoute("/go")({
 		syncBangs().catch(console.error);
 
 		const targetUrl = await getRedirectUrl(query);
-		// Using window.location.href for external redirects
-		window.location.href = targetUrl;
+		window.location.replace(targetUrl);
 	},
 	component: () => <div>Redirecting...</div>,
 });

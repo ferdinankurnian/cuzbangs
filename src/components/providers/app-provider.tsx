@@ -37,7 +37,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 			const [rawName] = cookie.split("=");
 			const name = rawName?.trim();
 			if (!name) return;
-			document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+			document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; Secure; SameSite=Lax`;
 		});
 
 		await Promise.all([
@@ -48,7 +48,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 			navigator.serviceWorker
 				.getRegistrations()
 				.then((registrations) =>
-					Promise.all(registrations.map((registration) => registration.unregister())),
+				Promise.all(registrations.map((registration) => registration.unregister())),
 				),
 		]);
 	};

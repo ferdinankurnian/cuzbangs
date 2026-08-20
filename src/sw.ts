@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from "workbox-precaching";
 import { getRedirectUrl, getSuggestionUrl } from "./lib/engine";
+import { isAllowedSuggestionTarget } from "./lib/suggestion-providers";
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -19,7 +20,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 					try {
 						const redirectUrl = await getRedirectUrl(query);
 						return Response.redirect(redirectUrl, 302);
-					} catch (error) {
+					} catch (_error) {
 						return fetch(event.request);
 					}
 				})(),
@@ -47,7 +48,9 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 							self.location.origin,
 						);
 						proxyRequestUrl.searchParams.set("q", query);
-						proxyRequestUrl.searchParams.set("proxy_target", targetUrl);
+						if (isAllowedSuggestionTarget(targetUrl)) {
+							proxyRequestUrl.searchParams.set("proxy_target", targetUrl);
+						}
 						proxyRequestUrl.searchParams.set("sw-internal", "true");
 
 						const cache = await caches.open(SUGGESTION_CACHE);
@@ -70,7 +73,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 						}
 
 						return networkFetch;
-					} catch (error) {
+					} catch (_error) {
 						return new Response(JSON.stringify([query, []]), {
 							headers: { "Content-Type": "application/json" },
 						});

@@ -3,6 +3,7 @@ import {
 	ChevronRight,
 	CircleHelp,
 	LibraryBig,
+	RefreshCw,
 	Search,
 	SlidersHorizontal,
 } from "lucide-react";
@@ -10,10 +11,11 @@ import { AboutPanel } from "@/components/settings/about-panel";
 import { ConfigsPanel } from "@/components/settings/configs-panel";
 import { MyBangsPanel } from "@/components/settings/my-bangs-panel";
 import { SetupPanel } from "@/components/settings/setup-panel";
+import { UpdatePanel } from "@/components/settings/update-panel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
-const tabValues = ["mybangs", "configs", "setup", "about"] as const;
+const tabValues = ["mybangs", "configs", "setup", "update", "about"] as const;
 type SettingsTab = (typeof tabValues)[number];
 
 function isSettingsTab(value: unknown): value is SettingsTab {
@@ -57,6 +59,11 @@ const tabs = [
 		icon: Search,
 	},
 	{
+		value: "update",
+		label: "Update",
+		icon: RefreshCw,
+	},
+	{
 		value: "about",
 		label: "About",
 		icon: CircleHelp,
@@ -97,7 +104,7 @@ function SettingsPage() {
 						onValueChange={handleTabChange}
 						className="w-full"
 					>
-						<TabsList className="grid h-auto w-full grid-cols-4 rounded-2xl bg-muted/80 p-1">
+						<TabsList className="grid h-auto w-full grid-cols-5 rounded-2xl bg-muted/80 p-1">
 							{tabs.map((tab) => (
 								<TabsTrigger
 									key={tab.value}
@@ -151,6 +158,7 @@ function SettingsPage() {
 					)}
 					{currentTab === "configs" && <ConfigsPanel />}
 					{currentTab === "setup" && <SetupPanel />}
+					{currentTab === "update" && <UpdatePanel />}
 					{currentTab === "about" && <AboutPanel />}
 				</div>
 			</div>

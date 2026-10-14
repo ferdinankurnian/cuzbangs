@@ -84,10 +84,24 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 	}
 });
 
-self.addEventListener("install", () => {
-	self.skipWaiting();
+self.addEventListener("activate", (event) => {
+	event.waitUntil(
+		(async () => {
+			const cacheNames = await caches.keys();
+			await Promise.all(
+				cacheNames
+					.filter(
+						(name) =>
+							name.startsWith("workbox-precache") === false &&
+							name !== SUGGESTION_CACHE,
+					)
+					.map((name) => caches.delete(name)),
+			);
+			await self.clients.claim();
+		})(),
+	);
 });
 
-self.addEventListener("activate", (event) => {
-	event.waitUntil(self.clients.claim());
+self.addEventListener("message", (event) => {
+	if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });

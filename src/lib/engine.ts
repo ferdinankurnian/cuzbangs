@@ -25,7 +25,7 @@ export interface RedirectResult {
 	isCustom?: boolean;
 }
 
-export function appendGoogleAiOverviewSuffix(query: string): string {
+export function appendNoAiSuffix(query: string): string {
 	const trimmedQuery = query.trimEnd();
 	return `${trimmedQuery}${/(^|\s)-ai$/i.test(trimmedQuery) ? "" : " -ai"}`;
 }
@@ -177,8 +177,8 @@ export function getEngineUrl(
 			baseUrl = "https://www.google.com/search?q=%s";
 	}
 	const finalQuery =
-		engine === "google" && hideGoogleAiOverview
-			? appendGoogleAiOverviewSuffix(query)
+		(engine === "google" || engine === "bing") && hideGoogleAiOverview
+			? appendNoAiSuffix(query)
 			: query;
 	return baseUrl.replace("%s", encodeURIComponent(finalQuery));
 }

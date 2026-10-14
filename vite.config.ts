@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { defineConfig } from 'vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -5,7 +6,26 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { fileURLToPath, URL } from 'node:url'
 
+function getAppVersion() {
+  const now = new Date()
+  const date = [
+    now.getUTCFullYear(),
+    String(now.getUTCMonth() + 1).padStart(2, '0'),
+    String(now.getUTCDate()).padStart(2, '0'),
+  ].join('.')
+  let sha = 'dev'
+  try {
+    sha = execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    // not a git repo or git missing
+  }
+  return `${date}.${sha}`
+}
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(getAppVersion()),
+  },
   plugins: [
     tanstackRouter({
       target: 'react',
@@ -17,7 +37,7 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: null,
       devOptions: {
         enabled: false,

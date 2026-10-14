@@ -59,6 +59,9 @@ Build for production:
 bun run build
 ```
 
+For the full production deployment workflow, see
+[docs/deployment.md](docs/deployment.md).
+
 ### Store bangs data
 
 The store catalog is sourced from [Kagi](https://github.com/kagisearch/bangs) and merged with custom entries in `public/data/cuzbangs.json`. See [custom-bangs.md](docs/custom-bangs.md) for the format and merge rules.

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/input-group";
 import { db, SETTING_KEYS } from "@/lib/db";
 import {
-	appendGoogleAiOverviewSuffix,
+	appendNoAiSuffix,
 	fetchSuggestions,
 	getSuggestionUrl,
 } from "@/lib/engine";
@@ -109,8 +109,10 @@ function App() {
 			.split(/\s+/)
 			.some((part) => part.startsWith(symbol));
 		const queryToSearch =
-			selectedEngine === "google" && hideGoogleAiOverview && !hasBang
-				? appendGoogleAiOverviewSuffix(finalQuery)
+			(selectedEngine === "google" || selectedEngine === "bing") &&
+			hideGoogleAiOverview &&
+			!hasBang
+				? appendNoAiSuffix(finalQuery)
 				: finalQuery;
 		window.location.href = `/go?q=${encodeURIComponent(queryToSearch)}`;
 	};

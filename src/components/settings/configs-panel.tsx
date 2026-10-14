@@ -299,15 +299,23 @@ export function ConfigsPanel() {
             )}
           </CardContent>
         )}
-        {config.selectedEngine === "google" && (
+        {(config.selectedEngine === "google" ||
+          config.selectedEngine === "bing") && (
           <CardContent className="flex items-center justify-between gap-6 pt-0">
             <div className="space-y-1">
               <Label htmlFor={googleAiOverviewId} className="text-base">
-                Hide Google AI Overviews
+                {config.selectedEngine === "bing"
+                  ? "Hide Bing Copilot Search"
+                  : "Hide Google AI Overviews"}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Add <code className="font-mono text-xs">-ai</code> to Google
-                searches to skip the AI Overview.
+                Add <code className="font-mono text-xs">-ai</code> to{" "}
+                {config.selectedEngine === "bing" ? "Bing" : "Google"} searches
+                to skip{" "}
+                {config.selectedEngine === "bing"
+                  ? "Copilot Search"
+                  : "the AI Overview"}
+                .
               </p>
             </div>
             <Switch

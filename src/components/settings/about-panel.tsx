@@ -52,10 +52,11 @@ export function AboutPanel() {
 	const handleUpdate = async () => {
 		setIsUpdating(true);
 		try {
+			// always ends in a reload (or an early return when nothing is pending)
 			await updateApp();
-			// reached when the page didn't reload (worker still preparing)
-			toast("Preparing update…", {
-				description: "Tap Update now again in a few seconds.",
+		} catch {
+			toast.error("Couldn't apply the update", {
+				description: "Reload the page and try again.",
 			});
 		} finally {
 			setIsUpdating(false);

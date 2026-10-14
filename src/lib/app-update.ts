@@ -37,9 +37,42 @@ export function subscribeAppUpdate(listener: Listener): () => void {
 	return () => listeners.delete(listener);
 }
 
-export async function updateApp(): Promise<void> {
-	if (!state.needRefresh) return;
-	await updateService(true);
+export async function updateApp(waitTimeoutMs = 8000): Promise<void> {
+	const registration = await navigator.serviceWorker.getRegistration();
+	const waiting = registration?.waiting;
+	if (!state.needRefresh && !waiting) return;
+
+	// reload is only triggered by workbox's "controlling" event, which never
+	// fires when the message reaches no waiting worker. so instead: nudge the
+	// worker, wait for the takeover (or time out), then reload ourselves.
+	const controlled = new Promise<void>((resolve) => {
+		const cleanup = () => {
+			navigator.serviceWorker.removeEventListener(
+				"controllerchange",
+				onControllerChange,
+			);
+			clearTimeout(timer);
+		};
+		const onControllerChange = () => {
+			cleanup();
+			resolve();
+		};
+		const timer = setTimeout(() => {
+			cleanup();
+			resolve();
+		}, waitTimeoutMs);
+		navigator.serviceWorker.addEventListener(
+			"controllerchange",
+			onControllerChange,
+		);
+	});
+
+	// nudge directly (belt) and through workbox (suspenders)
+	waiting?.postMessage({ type: "SKIP_WAITING" });
+	await updateService(false).catch(() => undefined);
+
+	await controlled;
+	window.location.reload();
 }
 
 export type CheckPhase = "checking" | "downloading";

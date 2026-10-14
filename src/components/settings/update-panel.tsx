@@ -1,5 +1,5 @@
 import { RefreshCw } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,10 +22,49 @@ function useAppUpdateState() {
 	return useSyncExternalStore(subscribeAppUpdate, getAppUpdateState);
 }
 
+type ChangelogEntry = {
+	sha: string;
+	date: string;
+	subject: string;
+};
+
+function installedSha(): string {
+	const parts = __APP_VERSION__.split(".");
+	return parts[parts.length - 1] ?? "";
+}
+
+function useChangelog() {
+	const [entries, setEntries] = useState<ChangelogEntry[] | null>(null);
+
+	useEffect(() => {
+		let cancelled = false;
+		fetch(`${import.meta.env.BASE_URL}data/changelog.json`)
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => {
+				if (!cancelled && Array.isArray(data?.entries)) {
+					setEntries(data.entries);
+				}
+			})
+			.catch(() => {
+				// offline or old build without notes — hide the section
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	return entries;
+}
+
 export function UpdatePanel() {
 	const updateState = useAppUpdateState();
+	const changelog = useChangelog();
 	const [checkPhase, setCheckPhase] = useState<CheckPhase | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
+
+	const currentSha = installedSha();
+	const freshIndex = changelog?.findIndex((entry) => entry.sha === currentSha) ?? -1;
+	const visibleNotes = changelog?.slice(0, 15) ?? [];
 
 	const handleCheckForUpdates = async () => {
 		setCheckPhase("checking");
@@ -121,6 +160,41 @@ export function UpdatePanel() {
 					) : null}
 				</CardContent>
 			</Card>
+
+			{visibleNotes.length > 0 ? (
+				<Card>
+					<CardHeader>
+						<CardTitle>What's new</CardTitle>
+						<CardDescription>
+							{updateState.needRefresh
+								? "Changes waiting in the new version"
+								: "Recent changes to cuzbangs"}
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<ul className="space-y-3">
+							{visibleNotes.map((entry, index) => (
+								<li key={`${entry.sha}-${index}`} className="flex gap-3 text-sm">
+									<code className="shrink-0 font-mono text-xs text-muted-foreground pt-0.5">
+										{entry.sha}
+									</code>
+									<div className="min-w-0">
+										<p className="leading-snug">
+											{entry.subject}
+											{freshIndex !== -1 && index < freshIndex ? (
+												<span className="ml-2 inline-block rounded-full bg-primary px-2 py-0.5 align-middle text-[11px] font-medium text-primary-foreground">
+													new
+												</span>
+											) : null}
+										</p>
+										<p className="text-xs text-muted-foreground">{entry.date}</p>
+									</div>
+								</li>
+							))}
+						</ul>
+					</CardContent>
+				</Card>
+			) : null}
 		</section>
 	);
 }

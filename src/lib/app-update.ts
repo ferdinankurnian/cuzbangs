@@ -42,16 +42,88 @@ export async function updateApp(): Promise<void> {
 	await updateService(true);
 }
 
-export async function checkForUpdates(): Promise<AppUpdateState> {
+export type CheckPhase = "checking" | "downloading";
+
+function waitForInstalled(
+	worker: ServiceWorker,
+	timeoutMs: number,
+): Promise<boolean> {
+	return new Promise((resolve) => {
+		if (worker.state === "installed") {
+			resolve(true);
+			return;
+		}
+		if (worker.state === "redundant") {
+			resolve(false);
+			return;
+		}
+		const timer = setTimeout(() => {
+			worker.removeEventListener("statechange", onChange);
+			resolve(worker.state === "installed");
+		}, timeoutMs);
+		const onChange = () => {
+			if (worker.state === "installed" || worker.state === "redundant") {
+				clearTimeout(timer);
+				worker.removeEventListener("statechange", onChange);
+				resolve(worker.state === "installed");
+			}
+		};
+		worker.addEventListener("statechange", onChange);
+	});
+}
+
+function waitForInstalling(
+	registration: ServiceWorkerRegistration,
+	timeoutMs: number,
+): Promise<ServiceWorker | null> {
+	if (registration.installing) return Promise.resolve(registration.installing);
+	return new Promise((resolve) => {
+		let done = false;
+		const timer = setTimeout(() => {
+			if (!done) {
+				done = true;
+				resolve(registration.installing);
+			}
+		}, timeoutMs);
+		registration.addEventListener(
+			"updatefound",
+			() => {
+				if (!done) {
+					done = true;
+					clearTimeout(timer);
+					resolve(registration.installing);
+				}
+			},
+			{ once: true },
+		);
+	});
+}
+
+export async function checkForUpdates(
+	onPhase?: (phase: CheckPhase) => void,
+	timeoutMs = 60_000,
+): Promise<AppUpdateState> {
 	const registration = await navigator.serviceWorker.getRegistration();
 	if (!registration) return state;
-
-	await registration.update();
-
-	const deadline = Date.now() + 3000;
-	while (!state.needRefresh && Date.now() < deadline) {
-		await new Promise((resolve) => setTimeout(resolve, 250));
+	if (registration.waiting) {
+		setState({ needRefresh: true });
+		return state;
 	}
 
+	onPhase?.("checking");
+	await registration.update();
+
+	if (state.needRefresh || registration.waiting) {
+		setState({ needRefresh: true });
+		return state;
+	}
+
+	// update() resolved but install may start a tick later — watch for it
+	const installing = await waitForInstalling(registration, 2000);
+	if (!installing) return state;
+
+	onPhase?.("downloading");
+	const installed = await waitForInstalled(installing, timeoutMs);
+	if (installed || registration.waiting) setState({ needRefresh: true });
 	return state;
 }

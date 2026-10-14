@@ -15,6 +15,7 @@ import {
 	getAppUpdateState,
 	subscribeAppUpdate,
 	updateApp,
+	type CheckPhase,
 } from "@/lib/app-update";
 
 function useAppUpdateState() {
@@ -23,12 +24,13 @@ function useAppUpdateState() {
 
 export function AboutPanel() {
 	const updateState = useAppUpdateState();
-	const [isChecking, setIsChecking] = useState(false);
+	const [checkPhase, setCheckPhase] = useState<CheckPhase | null>(null);
+	const [isUpdating, setIsUpdating] = useState(false);
 
 	const handleCheckForUpdates = async () => {
-		setIsChecking(true);
+		setCheckPhase("checking");
 		try {
-			const state = await checkForUpdates();
+			const state = await checkForUpdates((phase) => setCheckPhase(phase));
 			if (state.needRefresh) {
 				toast("Update available", {
 					description: "A new version of cuzbangs is ready to install.",
@@ -43,12 +45,21 @@ export function AboutPanel() {
 				description: "Check your connection and try again.",
 			});
 		} finally {
-			setIsChecking(false);
+			setCheckPhase(null);
 		}
 	};
 
-	const handleUpdate = () => {
-		void updateApp();
+	const handleUpdate = async () => {
+		setIsUpdating(true);
+		try {
+			await updateApp();
+			// reached when the page didn't reload (worker still preparing)
+			toast("Preparing update…", {
+				description: "Tap Update now again in a few seconds.",
+			});
+		} finally {
+			setIsUpdating(false);
+		}
 	};
 
 	return (
@@ -83,20 +94,26 @@ export function AboutPanel() {
 						</div>
 						<div className="flex shrink-0 gap-2">
 							{updateState.needRefresh ? (
-								<Button onClick={handleUpdate}>
-									<RefreshCw />
-									Update now
+								<Button onClick={() => void handleUpdate()} disabled={isUpdating}>
+									<RefreshCw
+										className={isUpdating ? "animate-spin" : undefined}
+									/>
+									{isUpdating ? "Updating" : "Update now"}
 								</Button>
 							) : null}
 							<Button
 								variant="outline"
 								onClick={() => void handleCheckForUpdates()}
-								disabled={isChecking}
+								disabled={checkPhase !== null}
 							>
 								<RefreshCw
-									className={isChecking ? "animate-spin" : undefined}
+									className={checkPhase !== null ? "animate-spin" : undefined}
 								/>
-								{isChecking ? "Checking" : "Check for updates"}
+								{checkPhase === "downloading"
+									? "Downloading update"
+									: checkPhase === "checking"
+										? "Checking"
+										: "Check for updates"}
 							</Button>
 						</div>
 					</div>

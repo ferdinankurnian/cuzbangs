@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000",
-    "prebuild": "bun scripts/gen-changelog.mjs",
+    "prebuild": "bun scripts/gen-release.mjs",
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",

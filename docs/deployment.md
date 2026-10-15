@@ -2,68 +2,67 @@
 
 cuzbangs is deployed as a Cloudflare Worker with static assets. The deployment
 configuration is in [`cloudflare.config.ts`](../cloudflare.config.ts) (managed
-with the `cf` CLI; the legacy [`wrangler.json`](../wrangler.json) is kept for
-reference and still works with `bunx wrangler deploy`). The Worker is named
-`cuzbangs-v2`.
+with the `cf` CLI). The Worker is named `cuzbangs-v2`.
 
-## Prerequisites
+Production deploys only happen from GitHub releases. Merging to `main`
+deploys nothing — it just runs validation (tests + build) on the pull request.
 
-Install dependencies and authenticate cf with the Cloudflare account that
-owns the Worker:
+## Ship a release
+
+1. Write curated release notes for humans (never raw commit messages) and
+   create the release. Tag with calver (`vYYYY.MM.DD`, append `.1` for a
+   second release in a day):
+
+   ```bash
+   gh release create v2026.10.15 --notes "..."
+   ```
+
+2. CI takes over (`.github/workflows/release.yml`): install, test, build,
+   then `cf deploy --tag <tag> --message <release name>`. The build embeds
+   the tag as `__APP_VERSION__` and the release body as the in-app
+   patch notes, so the notes you write are exactly what users see in the
+   Update tab.
+
+3. Verify: open [cuzbangs.iydheko.dev](https://cuzbangs.iydheko.dev),
+   check the Update tab shows the new version + notes (hard refresh if the
+   service worker holds the old one).
+
+## Manual deploy (break glass only)
+
+Normal flow needs no local deploy. If CI is down and you must deploy by hand:
 
 ```bash
-bun install
-cf auth login
-```
-
-`wrangler login` is only needed the first time, or after the session expires.
-
-## Deploy a feature
-
-Run the checks and production build first:
-
-```bash
-bun run check
 bun run test
 bun run build
+bun run deploy
 ```
 
-Review the changes, then commit and push the feature:
+`bun run deploy` is `cf deploy --profile default` — never `--profile avaid`
+(that profile belongs to another project). The deploy uses the existing
+`dist/`, so always build first.
 
-```bash
-git status
-git add <files-to-release>
-git commit -m "feat: describe the feature"
-git push origin main
-```
+## CI authentication
 
-Deploy from the repository root:
+CI authenticates with an API token, not OAuth. Two repository secrets:
 
-```bash
-cf deploy
-```
+- `CLOUDFLARE_API_TOKEN` — token with Workers Scripts Write (scoped to
+  `cuzbangs-v2`) + Account Settings Read (+ Workers Routes Write if deploys
+  ever manage routes). Create/rotate it without the dashboard:
 
-The deploy command uses the existing `dist/` output. Always run
-`bun run build` after the latest source changes so the deployed assets are up
-to date.
+  ```bash
+  cf user tokens create --name "cuzbangs-ci-deploy" \
+    --policies @policies.json \
+    --expires-on "2027-10-15T00:00:00Z"
+  ```
 
-## Verify before deploying
-
-To check what Wrangler would upload without changing the deployed Worker:
-
-```bash
-cf deploy --dry-run
-```
-
-After a real deploy, open [cuzbangs.iydheko.dev](https://cuzbangs.iydheko.dev)
-and test the changed feature, including a hard refresh if the change affects
-the service worker or PWA update flow.
+  The token value prints once — store it straight into the secret.
+- `CLOUDFLARE_ACCOUNT_ID` — selects the account in non-interactive runs.
 
 ## Notes
 
-- A commit is not technically required by Wrangler, but committing before a
-  production deploy keeps the deployed source traceable and makes rollback
-  easier.
-- `dist/` is generated and ignored by Git; do not commit it.
-- Do not use `git add -A` blindly when the working tree contains unrelated
-  changes. Stage only the files intended for the release.
+- `dist/`, `.cloudflare/`, and `public/data/release.json` are generated and
+  ignored by Git; do not commit them.
+- Never deploy or push without an explicit order.
+- After every deploy, report the live version (`__APP_VERSION__` = release
+  tag, or date+sha on dev builds). Verify with:
+  `grep -rhoE '20[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9a-f]{7,}|v[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[0-9]+)?' dist/ | sort | uniq -c`

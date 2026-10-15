@@ -22,57 +22,82 @@ function useAppUpdateState() {
 	return useSyncExternalStore(subscribeAppUpdate, getAppUpdateState);
 }
 
-type ChangelogEntry = {
-	sha: string;
-	date: string;
-	subject: string;
+type ReleaseInfo = {
+	version: string | null;
+	notes: string;
 };
 
-function installedSha(): string {
-	const parts = __APP_VERSION__.split(".");
-	return parts[parts.length - 1] ?? "";
-}
-
-function useChangelog() {
-	const [entries, setEntries] = useState<ChangelogEntry[] | null>(null);
+function useRelease() {
+	const [release, setRelease] = useState<ReleaseInfo | null>(null);
 
 	useEffect(() => {
 		let cancelled = false;
-		fetch(`${import.meta.env.BASE_URL}data/changelog.json`)
+		fetch(`${import.meta.env.BASE_URL}data/release.json`)
 			.then((res) => (res.ok ? res.json() : null))
 			.then((data) => {
-				if (!cancelled && Array.isArray(data?.entries)) {
-					setEntries(data.entries);
+				if (!cancelled && data && typeof data === "object") {
+					setRelease({
+						version: data.version ?? null,
+						notes: typeof data.notes === "string" ? data.notes : "",
+					});
 				}
 			})
 			.catch(() => {
-				// offline or old build without notes — hide the section
+				// offline or build without notes — hide the section
 			});
 		return () => {
 			cancelled = true;
 		};
 	}, []);
 
-	return entries;
+	return release;
+}
+
+async function fetchLatestRelease(): Promise<
+	(ReleaseInfo & { tag: string }) | null
+> {
+	try {
+		const res = await fetch(
+			"https://api.github.com/repos/ferdinankurnian/cuzbangs/releases/latest",
+		);
+		if (!res.ok) return null;
+		const data = await res.json();
+		if (typeof data?.tag_name !== "string") return null;
+		return {
+			tag: data.tag_name,
+			version: data.tag_name,
+			notes: typeof data?.body === "string" ? data.body : "",
+		};
+	} catch {
+		return null;
+	}
 }
 
 export function UpdatePanel() {
 	const updateState = useAppUpdateState();
-	const changelog = useChangelog();
+	const release = useRelease();
 	const [checkPhase, setCheckPhase] = useState<CheckPhase | null>(null);
 	const [isUpdating, setIsUpdating] = useState(false);
-
-	const currentSha = installedSha();
-	const freshIndex = changelog?.findIndex((entry) => entry.sha === currentSha) ?? -1;
-	const visibleNotes = changelog?.slice(0, 15) ?? [];
 
 	const handleCheckForUpdates = async () => {
 		setCheckPhase("checking");
 		try {
-			const state = await checkForUpdates((phase) => setCheckPhase(phase));
+			const [state, latest] = await Promise.all([
+				checkForUpdates((phase) => setCheckPhase(phase)),
+				fetchLatestRelease(),
+			]);
+			const isNewRelease =
+				latest !== null && latest.tag !== __APP_VERSION__;
 			if (state.needRefresh) {
 				toast("Update available", {
-					description: "A new version of cuzbangs is ready to install.",
+					description:
+						isNewRelease && latest
+							? `${latest.tag} is ready to install.`
+							: "A new version of cuzbangs is ready to install.",
+				});
+			} else if (isNewRelease && latest) {
+				toast("Update on the way", {
+					description: `${latest.tag} was just released and is still deploying — try again in a minute.`,
 				});
 			} else {
 				toast("You're up to date", {
@@ -161,37 +186,20 @@ export function UpdatePanel() {
 				</CardContent>
 			</Card>
 
-			{visibleNotes.length > 0 ? (
+			{release && release.notes ? (
 				<Card>
 					<CardHeader>
 						<CardTitle>What's new</CardTitle>
 						<CardDescription>
-							{updateState.needRefresh
-								? "Changes waiting in the new version"
+							{release.version
+								? `Changes in ${release.version}`
 								: "Recent changes to cuzbangs"}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<ul className="space-y-3">
-							{visibleNotes.map((entry, index) => (
-								<li key={`${entry.sha}-${index}`} className="flex gap-3 text-sm">
-									<code className="shrink-0 font-mono text-xs text-muted-foreground pt-0.5">
-										{entry.sha}
-									</code>
-									<div className="min-w-0">
-										<p className="leading-snug">
-											{entry.subject}
-											{freshIndex !== -1 && index < freshIndex ? (
-												<span className="ml-2 inline-block rounded-full bg-primary px-2 py-0.5 align-middle text-[11px] font-medium text-primary-foreground">
-													new
-												</span>
-											) : null}
-										</p>
-										<p className="text-xs text-muted-foreground">{entry.date}</p>
-									</div>
-								</li>
-							))}
-						</ul>
+						<p className="text-sm leading-relaxed whitespace-pre-wrap">
+							{release.notes}
+						</p>
 					</CardContent>
 				</Card>
 			) : null}

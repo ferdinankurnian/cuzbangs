@@ -7,6 +7,10 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { fileURLToPath, URL } from 'node:url'
 
 function getAppVersion() {
+  // release builds carry the tag (e.g. v2026.10.15); dev builds fall back
+  // to a date+sha stamp so every build still has a distinct version
+  const tag = process.env.RELEASE_TAG?.trim();
+  if (tag) return tag;
   const now = new Date()
   const date = [
     now.getUTCFullYear(),

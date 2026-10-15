@@ -2,11 +2,19 @@
 
 ## Deploy
 
-- Deploy with `bun run deploy` (= `cf deploy --profile default`).
-- Never use `--profile avaid` in this repo (that profile is bound to superweb).
-- Flow: `bun run test` → `bun run build` → commit + push to `origin/main` → `bun run deploy`.
-- `bun run check` is red on HEAD too (pre-existing) — don't block deploys on it.
-- `dist/` and `.cloudflare/` are generated, never commit them.
+- Production deploys only happen from GitHub releases (CI: `.github/workflows/release.yml`).
+  Merging to `main` deploys nothing.
+- Ship: `gh release create vYYYY.MM.DD --notes "..."` (curated notes, never
+  raw commits) → CI builds (embeds tag as `__APP_VERSION__` + release body
+  as patch notes) → `cf deploy --tag --message`.
+- Manual `bun run deploy` (= `cf deploy --profile default`) is break-glass
+  only. Never use `--profile avaid` in this repo (bound to superweb).
+- Never deploy or push without an explicit order.
+- Flow when touching code: `bun run test` → `bun run build` → commit + push
+  to `origin/main`.
+- `bun run check` is red on HEAD too (pre-existing) — don't block on it.
+- `dist/`, `.cloudflare/`, and `public/data/release.json` are generated,
+  never commit them.
 - Live site: https://cuzbangs.iydheko.dev (worker `cuzbangs-v2`).
 
 ### After every deploy, always tell the user the live version

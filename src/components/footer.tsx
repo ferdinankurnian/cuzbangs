@@ -52,7 +52,18 @@ export function Footer() {
         </div>
 
         <div className="pt-6 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-sm text-neutral-500">
-          <span>© {year} cuzbangs. Built by iydheko.</span>
+          <span>
+            © {year} cuzbangs. Made with 🐾 by{" "}
+            <a
+              href="https://iydheko.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-300 transition-colors hover:text-white"
+            >
+              iydheko
+            </a>
+            .
+          </span>
         </div>
       </div>
     </footer>

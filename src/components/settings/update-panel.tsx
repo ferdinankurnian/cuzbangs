@@ -130,12 +130,6 @@ export function UpdatePanel() {
 	return (
 		<section className="w-full space-y-6">
 			<Card>
-				<CardHeader>
-					<CardTitle>Update</CardTitle>
-					<CardDescription>
-						cuzbangs works offline and updates through the app itself
-					</CardDescription>
-				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="flex items-center justify-between gap-4">
 						<div className="min-w-0">

@@ -1,6 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
-	ChevronRight,
 	CircleHelp,
 	LibraryBig,
 	RefreshCw,
@@ -129,7 +128,7 @@ function SettingsPage() {
 									type="button"
 									onClick={() => setSearch(tab.value)}
 									className={cn(
-										"group flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors active:scale-[0.98]",
+										"flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors active:scale-[0.98]",
 										currentTab === tab.value
 											? "bg-primary text-primary-foreground shadow-sm"
 											: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
@@ -139,7 +138,6 @@ function SettingsPage() {
 									<span className="min-w-0 flex-1 font-medium">
 										{tab.label}
 									</span>
-									<ChevronRight className="size-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5" />
 								</button>
 							);
 						})}
@@ -148,7 +146,7 @@ function SettingsPage() {
 
 				<div className="min-w-0 flex-1 space-y-6">
 					<header>
-						<h1 className="text-3xl mt-4 font-semibold tracking-tight sm:text-4xl">
+						<h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
 							{currentTabDetails?.label}
 						</h1>
 					</header>

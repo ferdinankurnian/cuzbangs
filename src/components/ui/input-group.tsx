@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const inputGroupVariants = cva(
-	"group/input-group border-input dark:bg-input/30 relative flex w-full items-center rounded-md border shadow-xs transition-[color,box-shadow] outline-none has-[>textarea]:h-auto",
+	"group/input-group border-input/60 dark:bg-input/30 relative flex w-full items-center rounded-md border shadow-xs transition-[color,box-shadow] outline-none has-[>textarea]:h-auto",
 	{
 		variants: {
 			size: {
@@ -38,8 +38,8 @@ function InputGroup({
 				"has-[>[data-align=inline-end]]:[&>input]:pr-2",
 				"has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
 				"has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
-				"active:scale-99 transition-all",
-				// Focus state.
+				// Focus state: bring the border back to its full opacity on click.
+				"focus-within:border-input",
 				// "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot=input-group-control]:focus-visible]:ring-[3px]",
 
 				// Error state.

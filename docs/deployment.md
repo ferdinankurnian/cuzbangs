@@ -35,9 +35,15 @@ never pushes — pushing is always the owner's action.
 
 ## Ship a release
 
-1. Write curated release notes for humans (never raw commit messages) and
-   create the release. Tag with calver (`vYYYY.MM.DD`, append `.1` for a
-   second release in a day):
+1. Write curated release notes for humans (never raw commit messages), then
+   run the **`unslop` skill** on them before creating the release. Patch
+   notes show up verbatim in the Update tab, so they need a human voice:
+   no "streamlined", "seamless", "we're excited to announce", no em dashes,
+   no three-bullet changelog restating the commits.
+
+2. Create the release. Tag with calver (`vYYYY.MM.DD`, append `.1` for a
+   second release in a day — dotted, not `-1`, which reads as a semver
+   prerelease and sorts below the base tag):
 
    > **Notes are frozen at build time.** The release body is embedded into
    > the bundle (`public/data/release.json` via the `prebuild` script) when
@@ -51,13 +57,13 @@ never pushes — pushing is always the owner's action.
    gh release create v2026.10.15 --notes "..."
    ```
 
-2. CI takes over (`.github/workflows/release.yml`): install, test, build,
+3. CI takes over (`.github/workflows/release.yml`): install, test, build,
    then `cf deploy --tag <tag> --message <release name>`. The build embeds
    the tag as `__APP_VERSION__` and the release body as the in-app
    patch notes, so the notes you write are exactly what users see in the
    Update tab.
 
-3. Verify: open [cuzbangs.iydheko.dev](https://cuzbangs.iydheko.dev),
+4. Verify: open [cuzbangs.iydheko.dev](https://cuzbangs.iydheko.dev),
    check the Update tab shows the new version + notes (hard refresh if the
    service worker holds the old one).
 

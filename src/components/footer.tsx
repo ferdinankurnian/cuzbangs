@@ -8,7 +8,7 @@ export function Footer() {
       <div className="relative flex flex-col gap-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <p className="text-4xl font-semibold text-white [letter-spacing:-0.05em]">
+            <p className="font-display text-4xl font-semibold text-white [letter-spacing:-0.05em]">
               cuzbangs. cuz it bangs
             </p>
           </div>
@@ -53,14 +53,6 @@ export function Footer() {
 
         <div className="pt-6 border-t flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-sm text-neutral-500">
           <span>© {year} cuzbangs. Built by iydheko.</span>
-          <a
-            href="https://cuzbangs.iydheko.site"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-neutral-300 transition-colors"
-          >
-            cuzbangs v1
-          </a>
         </div>
       </div>
     </footer>

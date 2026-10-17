@@ -144,7 +144,7 @@ function App() {
 				<div className="absolute inset-x-0 top-0 mx-auto h-56 max-w-3xl bg-primary/10 blur-3xl" />
 				<div className="relative space-y-8">
 					<div className="space-y-5">
-						<h1 className="text-5xl md:text-7xl font-semibold text-white [letter-spacing:-0.05em]">
+						<h1 className="font-display text-5xl md:text-7xl font-semibold text-white [letter-spacing:-0.05em]">
 							cuzbangs. cuz it bangs
 						</h1>
 						<p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed">

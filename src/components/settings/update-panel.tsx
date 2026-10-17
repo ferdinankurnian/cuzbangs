@@ -43,7 +43,7 @@ function useRelease() {
 				}
 			})
 			.catch(() => {
-				// offline or build without notes — hide the section
+				// offline or build without notes - hide the section
 			});
 		return () => {
 			cancelled = true;
@@ -97,7 +97,7 @@ export function UpdatePanel() {
 				});
 			} else if (isNewRelease && latest) {
 				toast("Update on the way", {
-					description: `${latest.tag} was just released and is still deploying — try again in a minute.`,
+					description: `${latest.tag} was just released and is still deploying, try again in a minute.`,
 				});
 			} else {
 				toast("You're up to date", {

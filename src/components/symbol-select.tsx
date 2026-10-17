@@ -48,7 +48,7 @@ export function SymbolSelect() {
 							className={cn(
 								"flex items-center justify-center size-11 rounded-lg border text-sm font-medium transition-colors",
 								SYMBOLS[symbolIndex] === s
-									? "bg-white text-black border-white"
+									? "bg-black/40 text-white border-white/60"
 									: "bg-black/40 text-neutral-400 hover:border-white/25 hover:text-white",
 							)}
 						>
@@ -59,11 +59,11 @@ export function SymbolSelect() {
 			</div>
 
 			<div className="space-y-4 text-center md:text-left">
-				<h2 className="text-3xl md:text-4xl font-semibold text-white [letter-spacing:-0.05em]">
+				<h2 className="text-4xl md:text-5xl font-semibold text-white [letter-spacing:-0.05em]">
 					Choose trigger prefix you like
 				</h2>
 				<p className="text-neutral-400 leading-relaxed">
-					Not everyone likes typing "!" — pick @, #, $, or . instead. Same
+					Not everyone likes typing "!". Pick @, #, $, or . instead. Same
 					bangs, same speed, just triggered your way.
 				</p>
 			</div>

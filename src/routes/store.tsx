@@ -1,11 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Search } from "lucide-react";
+import { ListFilter, Search, Split, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BangDetailsDialogContent } from "@/components/bang-details-dialog";
+import { StoreFilters, type StoreStatus } from "@/components/store-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+	Drawer,
+	DrawerContent,
+	DrawerHeader,
+	DrawerTitle,
+} from "@/components/ui/drawer";
 import {
 	Empty,
 	EmptyDescription,
@@ -27,6 +34,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
 	bangHasTrigger,
 	getPrimaryTrigger,
@@ -111,14 +123,63 @@ function sortBangs(bangs: BangEntry[], query: string) {
 	});
 }
 
+function bangMatchesExtraFilters(
+	bang: BangEntry,
+	filters: {
+		hasSubroutes: boolean;
+		status: StoreStatus;
+		userTriggerSet: Set<string>;
+	},
+) {
+	if (filters.hasSubroutes && (!bang.sr || bang.sr.length === 0)) {
+		return false;
+	}
+
+	if (filters.status !== "all") {
+		const isAdded = normalizeBangTriggers(bang.t).some((trigger) =>
+			filters.userTriggerSet.has(trigger),
+		);
+		if (filters.status === "added" && !isAdded) return false;
+		if (filters.status === "not-added" && isAdded) return false;
+	}
+
+	return true;
+}
+
+async function getBaseList(category: string): Promise<BangEntry[]> {
+	const dbCount = await db.storeBangs.count();
+
+	if (dbCount === 0) {
+		const fallback = await fetchFallbackBangs();
+		return category === "all"
+			? fallback
+			: fallback.filter((b) => b.c === category);
+	}
+
+	if (category === "all") return db.storeBangs.toArray();
+	return db.storeBangs.where("c").equals(category).toArray();
+}
+
 export const Route = createFileRoute("/store")({
 	validateSearch: (
 		search: Record<string, unknown>,
-	): { bang?: string; category?: string; sort?: "name" } => {
+	): {
+		bang?: string;
+		category?: string;
+		status?: StoreStatus;
+		subroutes?: boolean;
+	} => {
 		return {
 			bang: search.bang as string | undefined,
 			category: (search.category as string) || "all",
-			sort: (search.sort as "name") || "name",
+			status:
+				search.status === "added" || search.status === "not-added"
+					? search.status
+					: "all",
+			subroutes:
+				search.subroutes === true || search.subroutes === "true"
+					? true
+					: undefined,
 		};
 	},
 	component: RouteComponent,
@@ -129,7 +190,8 @@ function RouteComponent() {
 	const {
 		bang: openBangTrigger,
 		category: selectedCategory = "all",
-		sort: selectedSort = "name",
+		status: selectedStatus = "all",
+		subroutes: hasSubroutes = false,
 	} = Route.useSearch();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -138,10 +200,23 @@ function RouteComponent() {
 	const [allBangs, setAllBangs] = useState<BangEntry[]>([]);
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
+	const [filtersOpen, setFiltersOpen] = useState(false);
 	const userBangs = useLiveQuery(() => db.userBangs.toArray()) || [];
 	const loadMoreRef = useRef<HTMLDivElement>(null);
 	const isSearching = debouncedQuery.trim().length > 0;
-	const resultsLabel = `"${debouncedQuery.trim()}" Results`;
+
+	const userTriggerSet = useMemo(
+		() => new Set(userBangs.flatMap((bang) => normalizeBangTriggers(bang.t))),
+		[userBangs],
+	);
+
+	const hasActiveFilters =
+		selectedCategory !== "all" || selectedStatus !== "all" || hasSubroutes;
+
+	const activeFilterCount =
+		(selectedCategory !== "all" ? 1 : 0) +
+		(selectedStatus !== "all" ? 1 : 0) +
+		(hasSubroutes ? 1 : 0);
 
 	// Debounce search query
 	useEffect(() => {
@@ -162,6 +237,37 @@ function RouteComponent() {
 				) as string[];
 			}
 			return ["all", ...keys.filter((c) => c && c !== "all")] as string[];
+		},
+	});
+
+	const { data: categoryCounts } = useQuery({
+		queryKey: [
+			"storeCategoryCounts",
+			debouncedQuery,
+			searchMode,
+			selectedStatus,
+			hasSubroutes,
+			userBangs.length,
+		],
+		queryFn: async () => {
+			const query = debouncedQuery.trim().toLowerCase();
+			const extra = {
+				hasSubroutes,
+				status: selectedStatus,
+				userTriggerSet,
+			};
+			const list = await getBaseList("all");
+			const matching = list.filter(
+				(bang) =>
+					bangMatchesSearch(bang, query, searchMode) &&
+					bangMatchesExtraFilters(bang, extra),
+			);
+			const counts = new Map<string, number>();
+			for (const bang of matching) {
+				if (!bang.c) continue;
+				counts.set(bang.c, (counts.get(bang.c) ?? 0) + 1);
+			}
+			return { total: matching.length, counts };
 		},
 	});
 
@@ -242,6 +348,35 @@ function RouteComponent() {
 		});
 	};
 
+	const handleStatusChange = (status: StoreStatus) => {
+		navigate({
+			search: (prev) => ({ ...prev, status }),
+			resetScroll: false,
+		});
+	};
+
+	const handleSubroutesChange = (value: boolean) => {
+		navigate({
+			search: (prev) => ({
+				...prev,
+				subroutes: value ? true : undefined,
+			}),
+			resetScroll: false,
+		});
+	};
+
+	const handleResetFilters = () => {
+		navigate({
+			search: (prev) => ({
+				...prev,
+				category: "all",
+				status: "all",
+				subroutes: undefined,
+			}),
+			resetScroll: false,
+		});
+	};
+
 	const activeOverride = useMemo(() => {
 		if (!activeBang) return null;
 
@@ -274,80 +409,60 @@ function RouteComponent() {
 		});
 	};
 
+	const fetchFilteredSorted = useCallback(async () => {
+		const query = debouncedQuery.trim().toLowerCase();
+		const extra = {
+			hasSubroutes,
+			status: selectedStatus,
+			userTriggerSet,
+		};
+
+		const list = await getBaseList(selectedCategory);
+		const filtered = list.filter(
+			(bang) =>
+				bangMatchesSearch(bang, query, searchMode) &&
+				bangMatchesExtraFilters(bang, extra),
+		);
+		return { query, sorted: sortBangs(filtered, query) };
+	}, [
+		debouncedQuery,
+		searchMode,
+		selectedCategory,
+		selectedStatus,
+		hasSubroutes,
+		userTriggerSet,
+	]);
+
 	const { data: initialBangs, isFetching } = useQuery({
 		queryKey: [
 			"storeBangs",
 			debouncedQuery,
 			searchMode,
 			selectedCategory,
-			selectedSort,
+			selectedStatus,
+			hasSubroutes,
+			userBangs.length,
 			popularBangs.length,
 			"initial",
 		],
 		queryFn: async () => {
 			const query = debouncedQuery.trim().toLowerCase();
-			const dbCount = await db.storeBangs.count();
+			const { sorted } = await fetchFilteredSorted();
 
-			if (dbCount === 0) {
-				const fallback = await fetchFallbackBangs();
-				let filtered = fallback;
-
-				if (selectedCategory !== "all") {
-					filtered = filtered.filter((b) => b.c === selectedCategory);
-				}
-
-				if (query) {
-					filtered = filtered.filter((bang) =>
-						bangMatchesSearch(bang, query, searchMode),
-					);
-				}
-
-				const sorted = sortBangs(filtered, query);
-
-				if (selectedCategory === "all" && !query) {
-					const rest = sorted.filter(
-						(b) =>
-							!normalizeBangTriggers(b.t).some((t) => popularTriggerSet.has(t)),
-					);
-					return [...popularBangs, ...rest.slice(0, BATCH_SIZE)];
-				}
-
-				return sorted.slice(0, BATCH_SIZE);
+			if (
+				selectedCategory === "all" &&
+				!query &&
+				selectedStatus === "all" &&
+				!hasSubroutes
+			) {
+				const rest = sorted.filter(
+					(b) =>
+						!normalizeBangTriggers(b.t).some((t) => popularTriggerSet.has(t)),
+				);
+				return [...popularBangs, ...rest.slice(0, BATCH_SIZE)];
 			}
 
-			if (selectedCategory === "all" && query) {
-				const results = await db.storeBangs
-					.filter((bang) => bangMatchesSearch(bang, query, searchMode))
-					.toArray();
-
-				return sortBangs(results, query).slice(0, BATCH_SIZE);
-			}
-
-			if (selectedCategory === "all") {
-				const rest = await db.storeBangs
-					.orderBy("s")
-					.filter(
-						(bang) =>
-							!normalizeBangTriggers(bang.t).some((t) =>
-								popularTriggerSet.has(t),
-							),
-					)
-					.limit(BATCH_SIZE)
-					.toArray();
-				return [...popularBangs, ...rest];
-			}
-
-			const collection = db.storeBangs.where("c").equals(selectedCategory);
-			if (query) {
-				const results = await collection
-					.filter((bang) => bangMatchesSearch(bang, query, searchMode))
-					.toArray();
-
-				return sortBangs(results, query).slice(0, BATCH_SIZE);
-			}
-
-			const results = await collection.sortBy("s");
-			return results.slice(0, BATCH_SIZE);
+			return sorted.slice(0, BATCH_SIZE);
 		},
 	});
 
@@ -368,73 +483,23 @@ function RouteComponent() {
 
 		setIsLoadingMore(true);
 		try {
-			const query = searchQuery.trim().toLowerCase();
-			const dbCount = await db.storeBangs.count();
+			const query = debouncedQuery.trim().toLowerCase();
+			const { sorted } = await fetchFilteredSorted();
 
-			if (dbCount === 0) {
-				const fallback = await fetchFallbackBangs();
-				let filtered = fallback;
-
-				if (selectedCategory !== "all") {
-					filtered = filtered.filter((b) => b.c === selectedCategory);
-				}
-
-				if (query) {
-					filtered = filtered.filter((bang) =>
-						bangMatchesSearch(bang, query, searchMode),
-					);
-				} else if (selectedCategory === "all") {
-					filtered = filtered.filter(
-						(b) =>
-							!normalizeBangTriggers(b.t).some((t) => popularTriggerSet.has(t)),
-					);
-				}
-
-				filtered = sortBangs(filtered, query);
-
-				const nextBangs = filtered.slice(offset, offset + BATCH_SIZE);
-				if (nextBangs.length < BATCH_SIZE) setHasMore(false);
-				setAllBangs((prev) => [...prev, ...nextBangs]);
-				setOffset((prev) => prev + BATCH_SIZE);
-				return;
+			let rest = sorted;
+			if (
+				selectedCategory === "all" &&
+				!query &&
+				selectedStatus === "all" &&
+				!hasSubroutes
+			) {
+				rest = sorted.filter(
+					(b) =>
+						!normalizeBangTriggers(b.t).some((t) => popularTriggerSet.has(t)),
+				);
 			}
 
-			let newBangs: BangEntry[];
-
-			if (selectedCategory === "all") {
-				if (query) {
-					const results = await db.storeBangs
-						.filter((bang) => bangMatchesSearch(bang, query, searchMode))
-						.toArray();
-
-					newBangs = sortBangs(results, query).slice(
-						offset,
-						offset + BATCH_SIZE,
-					);
-				} else {
-					newBangs = await db.storeBangs
-						.orderBy("s")
-						.filter(
-							(bang) =>
-								!normalizeBangTriggers(bang.t).some((t) =>
-									popularTriggerSet.has(t),
-								),
-						)
-						.offset(offset)
-						.limit(BATCH_SIZE)
-						.toArray();
-				}
-			} else {
-				const collection = db.storeBangs.where("c").equals(selectedCategory);
-				const results = await (query
-					? collection
-							.filter((bang) => bangMatchesSearch(bang, query, searchMode))
-							.toArray()
-					: collection.toArray());
-
-				newBangs = sortBangs(results, query).slice(offset, offset + BATCH_SIZE);
-			}
-
+			const newBangs = rest.slice(offset, offset + BATCH_SIZE);
 			if (newBangs.length < BATCH_SIZE) {
 				setHasMore(false);
 			}
@@ -448,10 +513,12 @@ function RouteComponent() {
 		isLoadingMore,
 		hasMore,
 		isFetching,
-		searchQuery,
-		searchMode,
+		debouncedQuery,
+		fetchFilteredSorted,
 		offset,
 		selectedCategory,
+		selectedStatus,
+		hasSubroutes,
 		popularTriggerSet,
 	]);
 
@@ -477,189 +544,298 @@ function RouteComponent() {
 		return () => observer.disconnect();
 	}, [loadMore, hasMore, isLoadingMore, isFetching]);
 
+	const filters = (
+		<StoreFilters
+			categories={categories ?? ["all"]}
+			counts={categoryCounts?.counts}
+			total={categoryCounts?.total}
+			selectedCategory={selectedCategory}
+			status={selectedStatus}
+			hasSubroutes={hasSubroutes}
+			hasActiveFilters={hasActiveFilters}
+			onCategoryChange={handleCategoryChange}
+			onStatusChange={handleStatusChange}
+			onSubroutesChange={handleSubroutesChange}
+			onReset={handleResetFilters}
+		/>
+	);
+
 	return (
-		<div className="min-h-screen flex flex-col max-w-6xl mx-auto mt-32 space-y-16 px-4 pb-24">
-			<section className="text-center overflow-hidden space-y-8">
-				<div className="flex flex-col items-center gap-8">
-					<div className="flex flex-col items-center gap-2">
-						<h1 className="text-4xl font-semibold text-white">Store</h1>
-						<p className="text-lg text-primary/50">
-							10.000++ ways to skip straight to what you need.
-						</p>
-					</div>
+		<div className="min-h-screen flex flex-col max-w-7xl mx-auto mt-32 px-4 pb-24">
+			<div className="flex flex-col items-center gap-2 text-center">
+				<h1 className="text-4xl font-semibold text-white">Store</h1>
+				<p className="text-lg text-primary/50">
+					10.000++ ways to skip straight to what you need.
+				</p>
+			</div>
 
-					<div className="flex flex-col items-center gap-6 w-full max-w-2xl">
-						<InputGroup size="lg" className="w-full">
-							<InputGroupAddon>
-								<Search className="mb-[1px]" />
-							</InputGroupAddon>
-							<InputGroupInput
-								placeholder="Search for bangs..."
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-							/>
-							<InputGroupAddon align="inline-end" className="pr-1">
-								<Select
-									value={searchMode}
-									onValueChange={(value) => setSearchMode(value as SearchMode)}
-								>
-									<SelectTrigger
-										size="sm"
-										className="h-8 border-0 bg-secondary/70 px-2 text-xs shadow-none hover:bg-secondary"
-									>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent align="end">
-										{searchModes.map((mode) => (
-											<SelectItem key={mode.value} value={mode.value}>
-												{mode.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</InputGroupAddon>
-						</InputGroup>
+			<div className="mt-8 flex items-start gap-8 text-left">
+				<aside className="hidden lg:block w-64 shrink-0 sticky top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto">
+					{filters}
+				</aside>
 
-						<div className="flex flex-wrap items-center justify-center gap-2">
-							{categories?.map((cat) => (
-								<Badge
-									key={cat}
-									variant={selectedCategory === cat ? "default" : "outline"}
-									className={cn(
-										"cursor-default px-4 py-1.5 text-sm transition-all active:scale-95 capitalize",
-										isSearching &&
-											cat === "all" &&
-											"max-w-48 truncate normal-case",
-										selectedCategory !== cat && "hover:bg-secondary/80",
-									)}
-									onClick={() => handleCategoryChange(cat)}
-								>
-									{isSearching && cat === "all" ? resultsLabel : cat}
-								</Badge>
-							))}
-						</div>
-					</div>
-				</div>
-
-				<ItemGroup
-					className={cn(
-						"grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 transition-opacity",
-						(isFetching || searchQuery !== debouncedQuery) &&
-							"opacity-50 pointer-events-none",
-					)}
-				>
-					{allBangs.map((bang) => {
-						const triggers = normalizeBangTriggers(bang.t);
-						const primaryTrigger = getPrimaryTrigger(bang);
-						const visibleTriggers = triggers.slice(0, 3);
-						const hiddenTriggerCount = triggers.length - visibleTriggers.length;
-						const favicon = `https://www.google.com/s2/favicons?sz=128&domain=${bang.d}`;
-
-						return (
-							<Item
-								key={bang.id}
-								variant="outline"
-								className="hover:bg-secondary/50 active:scale-[0.99] transition-[background-color,scale] outline-0 p-3 min-h-20 flex-row flex-nowrap items-start text-left gap-3 rounded-xl overflow-hidden"
-								onClick={() => handleOpenBang(primaryTrigger)}
+				<div className="flex-1 min-w-0 space-y-4">
+					<InputGroup size="lg" className="w-full">
+						<InputGroupAddon>
+							<Search className="mb-[1px]" />
+						</InputGroupAddon>
+						<InputGroupInput
+							placeholder="Search for bangs..."
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+						/>
+						<InputGroupAddon align="inline-end" className="pr-1">
+							<Select
+								value={searchMode}
+								onValueChange={(value) => setSearchMode(value as SearchMode)}
 							>
-								<div className="size-8 shrink-0 overflow-hidden rounded-[3px] flex items-start justify-start">
-									<img
-										src={favicon}
-										alt={bang.s}
-										className="size-8 object-contain rounded-[4px]"
-										onError={(e) => {
-											(e.target as HTMLImageElement).src =
-												`https://ui-avatars.com/api/?name=${encodeURIComponent(bang.s)}&background=random`;
-										}}
-									/>
-								</div>
-								<div className="flex min-w-0 flex-1 flex-col items-start gap-1 overflow-hidden">
-									<div className="min-w-0 w-full">
-										<h1 className="font-medium text-sm leading-tight truncate w-full">
-											{bang.s}
-										</h1>
-										<p className="text-xs text-muted-foreground truncate w-full">
-											{bang.d}
-										</p>
-									</div>
-									<div className="flex max-w-full flex-wrap gap-1">
-										{visibleTriggers.map((trigger) => (
-											<Badge
-												key={trigger}
-												variant="secondary"
-												className="max-w-24 truncate px-1 py-0 font-mono text-[10px] leading-3"
+								<SelectTrigger
+									size="sm"
+									className="h-8 border-0 bg-secondary/70 px-2 text-xs shadow-none hover:bg-secondary"
+								>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent align="end">
+									{searchModes.map((mode) => (
+										<SelectItem key={mode.value} value={mode.value}>
+											{mode.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</InputGroupAddon>
+					</InputGroup>
+
+					<div className="flex items-center gap-2 lg:hidden">
+						<Button
+							variant="outline"
+							size="sm"
+							className="gap-2"
+							onClick={() => setFiltersOpen(true)}
+						>
+							<ListFilter className="size-4" />
+							Filters
+							{activeFilterCount > 0 && (
+								<span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
+									{activeFilterCount}
+								</span>
+							)}
+						</Button>
+					</div>
+
+					{(isSearching || hasActiveFilters) && (
+						<div className="flex flex-wrap items-center gap-2">
+							{isSearching && (
+								<span className="text-sm text-muted-foreground">
+									“{debouncedQuery.trim()}” Results
+								</span>
+							)}
+							{selectedCategory !== "all" && (
+								<Badge
+									variant="secondary"
+									className="cursor-pointer gap-1 py-1 capitalize"
+									onClick={() => handleCategoryChange("all")}
+								>
+									{selectedCategory}
+									<X className="size-3" />
+								</Badge>
+							)}
+							{selectedStatus !== "all" && (
+								<Badge
+									variant="secondary"
+									className="cursor-pointer gap-1 py-1 capitalize"
+									onClick={() => handleStatusChange("all")}
+								>
+									{selectedStatus === "added" ? "Added" : "Not added"}
+									<X className="size-3" />
+								</Badge>
+							)}
+							{hasSubroutes && (
+								<Badge
+									variant="secondary"
+									className="cursor-pointer gap-1 py-1"
+									onClick={() => handleSubroutesChange(false)}
+								>
+									Has subroutes
+									<X className="size-3" />
+								</Badge>
+							)}
+							{hasActiveFilters && (
+								<button
+									type="button"
+									onClick={handleResetFilters}
+									className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+								>
+									Clear all
+								</button>
+							)}
+						</div>
+					)}
+
+					<ItemGroup
+						className={cn(
+							"grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 transition-opacity",
+							(isFetching || searchQuery !== debouncedQuery) &&
+								"opacity-50 pointer-events-none",
+						)}
+					>
+						{allBangs.map((bang) => {
+							const triggers = normalizeBangTriggers(bang.t);
+							const primaryTrigger = getPrimaryTrigger(bang);
+							const visibleTriggers = triggers.slice(0, 3);
+							const hiddenTriggerCount =
+								triggers.length - visibleTriggers.length;
+							const hasSub = !!bang.sr && bang.sr.length > 0;
+							const favicon = `https://www.google.com/s2/favicons?sz=128&domain=${bang.d}`;
+
+							return (
+								<Item
+									key={bang.id}
+									variant="outline"
+									className="relative hover:bg-secondary/50 active:scale-[0.99] transition-[background-color,scale] outline-0 p-3 pr-9 min-h-20 flex-row flex-nowrap items-start text-left gap-3 rounded-xl overflow-hidden"
+									onClick={() => handleOpenBang(primaryTrigger)}
+								>
+									{hasSub && bang.sr && (
+										<Tooltip>
+											<TooltipTrigger
+												asChild
+												onClick={(e) => e.stopPropagation()}
 											>
-												{trigger}
-											</Badge>
-										))}
-										{hiddenTriggerCount > 0 && (
-											<Badge
+												<span
+													className="absolute top-3 right-3 text-muted-foreground"
+													aria-label={`${bang.sr.length} subroutes`}
+												>
+													<Split className="size-4" />
+												</span>
+											</TooltipTrigger>
+											<TooltipContent>
+												This bang has {bang.sr.length} subroutes
+											</TooltipContent>
+										</Tooltip>
+									)}
+									<div className="size-8 shrink-0 overflow-hidden rounded-[3px] flex items-start justify-start">
+										<img
+											src={favicon}
+											alt={bang.s}
+											className="size-8 object-contain rounded-[4px]"
+											onError={(e) => {
+												(e.target as HTMLImageElement).src =
+													`https://ui-avatars.com/api/?name=${encodeURIComponent(bang.s)}&background=random`;
+											}}
+										/>
+									</div>
+									<div className="flex min-w-0 flex-1 flex-col items-start gap-1 overflow-hidden">
+										<div className="min-w-0 w-full">
+											<h1 className="font-medium text-sm leading-tight truncate w-full">
+												{bang.s}
+											</h1>
+											<p className="text-xs text-muted-foreground truncate w-full">
+												{bang.d}
+											</p>
+										</div>
+										<div className="flex max-w-full flex-wrap gap-1">
+											{visibleTriggers.map((trigger) => (
+												<Badge
+													key={trigger}
+													variant="secondary"
+													className="max-w-24 truncate px-1 py-0 font-mono text-[10px] leading-3"
+												>
+													{trigger}
+												</Badge>
+											))}
+											{hiddenTriggerCount > 0 && (
+												<Badge
+													variant="outline"
+													className="px-1 py-0 font-mono text-[10px] leading-3 text-muted-foreground"
+												>
+													+{hiddenTriggerCount}
+												</Badge>
+											)}
+										</div>
+									</div>
+								</Item>
+							);
+						})}
+
+						{allBangs.length === 0 && !isFetching && (
+							<div className="col-span-full">
+								<Empty>
+									<EmptyHeader>
+										<EmptyMedia variant="icon" className="size-12">
+											<Search />
+										</EmptyMedia>
+										<EmptyTitle>No bangs found</EmptyTitle>
+										<EmptyDescription>
+											{searchQuery ? (
+												<>
+													We couldn't find any bangs matching "{searchQuery}"
+													{selectedCategory !== "all" && (
+														<> in the {selectedCategory} category</>
+													)}
+													{hasActiveFilters && <> with the active filters</>}.
+												</>
+											) : (
+												<>No bangs match the active filters.</>
+											)}
+										</EmptyDescription>
+									</EmptyHeader>
+									<div className="flex flex-row gap-2">
+										{searchQuery && (
+											<Button
 												variant="outline"
-												className="px-1 py-0 font-mono text-[10px] leading-3 text-muted-foreground"
+												onClick={() => setSearchQuery("")}
 											>
-												+{hiddenTriggerCount}
-											</Badge>
+												Clear search
+											</Button>
+										)}
+										{hasActiveFilters && (
+											<Button variant="outline" onClick={handleResetFilters}>
+												Reset filters
+											</Button>
 										)}
 									</div>
-								</div>
-							</Item>
-						);
-					})}
+								</Empty>
+							</div>
+						)}
+					</ItemGroup>
 
-					{allBangs.length === 0 && !isFetching && (
-						<div className="col-span-full">
-							<Empty>
-								<EmptyHeader>
-									<EmptyMedia variant="icon" className="size-12">
-										<Search />
-									</EmptyMedia>
-									<EmptyTitle>No bangs found</EmptyTitle>
-									<EmptyDescription>
-										{searchQuery ? (
-											<>
-												We couldn't find any bangs matching "{searchQuery}"
-												{selectedCategory !== "all" && (
-													<> in the {selectedCategory} category</>
-												)}
-												.
-											</>
-										) : (
-											<>No bangs found in the {selectedCategory} category.</>
-										)}
-									</EmptyDescription>
-								</EmptyHeader>
-								<div className="flex flex-row gap-2">
-									{searchQuery && (
-										<Button
-											variant="outline"
-											onClick={() => setSearchQuery("")}
-										>
-											Clear search
-										</Button>
-									)}
-									{selectedCategory !== "all" && (
-										<Button
-											variant="outline"
-											onClick={() => handleCategoryChange("all")}
-										>
-											{isSearching ? "Show results" : "Show all categories"}
-										</Button>
-									)}
-								</div>
-							</Empty>
-						</div>
-					)}
-				</ItemGroup>
-
-				<div ref={loadMoreRef} className="min-h-20">
-					{(isLoadingMore || (!hasMore && allBangs.length > 0)) && (
-						<div className="px-4 py-3 text-center text-xs text-muted-foreground">
-							{isLoadingMore && "Loading more..."}
-							{!hasMore && allBangs.length > 0 && "You've reached the end"}
-						</div>
-					)}
+					<div ref={loadMoreRef} className="min-h-20">
+						{(isLoadingMore || (!hasMore && allBangs.length > 0)) && (
+							<div className="px-4 py-3 text-center text-xs text-muted-foreground">
+								{isLoadingMore && "Loading more..."}
+								{!hasMore && allBangs.length > 0 && "You've reached the end"}
+							</div>
+						)}
+					</div>
 				</div>
-			</section>
+			</div>
+
+			<Drawer direction="left" open={filtersOpen} onOpenChange={setFiltersOpen}>
+				<DrawerContent className="h-full overflow-y-auto p-6">
+					<DrawerHeader className="p-0 pb-4">
+						<DrawerTitle>Filters</DrawerTitle>
+					</DrawerHeader>
+					<StoreFilters
+						categories={categories ?? ["all"]}
+						counts={categoryCounts?.counts}
+						total={categoryCounts?.total}
+						selectedCategory={selectedCategory}
+						status={selectedStatus}
+						hasSubroutes={hasSubroutes}
+						hasActiveFilters={hasActiveFilters}
+						onCategoryChange={(cat) => {
+							handleCategoryChange(cat);
+							setFiltersOpen(false);
+						}}
+						onStatusChange={handleStatusChange}
+						onSubroutesChange={handleSubroutesChange}
+						onReset={handleResetFilters}
+					/>
+					<Button className="mt-6 w-full" onClick={() => setFiltersOpen(false)}>
+						Show results
+					</Button>
+				</DrawerContent>
+			</Drawer>
 
 			<ResponsiveDialog
 				open={!!openBangTrigger}

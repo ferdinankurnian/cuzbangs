@@ -7,6 +7,32 @@ with the `cf` CLI). The Worker is named `cuzbangs-v2`.
 Production deploys only happen from GitHub releases. Merging to `main`
 deploys nothing — it just runs validation (tests + build) on the pull request.
 
+## Branch model
+
+There are two long-lived branches:
+
+- `main` — production truth. It must always match the latest GitHub
+  release. If `main` doesn't equal a release tag, something went wrong.
+  Nothing experimental lands here.
+- `development` — staging. Auto-sync commits (Kagi bangs catalog updates
+  from the hermes cron) land here first, and experimental work merges
+  here before it's ready to ship.
+
+Feature branches (`feat/*`, `fix/*`, `chore/*`) branch off `main` and
+merge into `development` while still experimental. A release promotes
+them:
+
+1. Merge `development` → `main` (this is the "siap-siap" gate — only
+   merge when the content is release-worthy).
+2. Push `main`.
+3. Create the GitHub release (`gh release create vYYYY.MM.DD`, see
+   below) — that, not the merge, is what deploys.
+
+The hermes auto-sync job commits in `~/Projects/cuzbangs` while it is
+checked out on `development`. It verifies the current branch first and
+skips with a report if anything else is checked out. It commits but
+never pushes — pushing is always the owner's action.
+
 ## Ship a release
 
 1. Write curated release notes for humans (never raw commit messages) and

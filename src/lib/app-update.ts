@@ -151,7 +151,7 @@ export async function checkForUpdates(
 		return state;
 	}
 
-	// update() resolved but install may start a tick later — watch for it
+	// update() resolved but install may start a tick later - watch for it
 	const installing = await waitForInstalling(registration, 2000);
 	if (!installing) return state;
 

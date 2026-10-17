@@ -19,7 +19,7 @@ export function HowItWorks() {
 	return (
 		<section className="px-6 py-16 md:py-20 space-y-10">
 			<div className="space-y-3">
-				<h2 className="text-3xl md:text-4xl font-semibold text-white [letter-spacing:-0.05em]">
+				<h2 className="text-4xl md:text-5xl font-semibold text-white [letter-spacing:-0.05em]">
 					What is cuzbangs?
 				</h2>
 				<p className="text-neutral-400 max-w-2xl leading-relaxed text-sm md:text-base">
@@ -30,7 +30,7 @@ export function HowItWorks() {
 			</div>
 
 			<div className="flex flex-col md:flex-row gap-6 md:gap-4 md:items-center">
-				{/* Step 1 — Your request */}
+				{/* Step 1 - Your request */}
 				<StepCard
 					title={steps[0].title}
 					description={steps[0].description}
@@ -44,7 +44,7 @@ export function HowItWorks() {
 
 				<StepArrow />
 
-				{/* Step 2 — Processing */}
+				{/* Step 2 - Processing */}
 				<StepCard
 					title={steps[1].title}
 					description={steps[1].description}
@@ -65,7 +65,7 @@ export function HowItWorks() {
 
 				<StepArrow />
 
-				{/* Step 3 — Redirected */}
+				{/* Step 3 - Redirected */}
 				<StepCard
 					title={steps[2].title}
 					description={steps[2].description}

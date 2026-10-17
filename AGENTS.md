@@ -10,8 +10,20 @@
 - Manual `bun run deploy` (= `cf deploy --profile default`) is break-glass
   only. Never use `--profile avaid` in this repo (bound to superweb).
 - Never deploy or push without an explicit order.
-- Flow when touching code: `bun run test` → `bun run build` → commit + push
-  to `origin/main`.
+- Flow when touching code: `bun run test` → `bun run build` → commit on a
+  feature branch → merge into `development`.
+
+### Branch model
+
+- `main` = production truth, must always match the latest GitHub release.
+  Nothing experimental lands on `main`.
+- `development` = staging. Auto-sync commits (hermes cron updating
+  `public/data/bangs.json` from kagisearch/bangs) and experimental work
+  land here first; feature branches merge into `development`.
+- Ship = merge `development` → `main` → push → `gh release create`.
+- The hermes sync job commits in the main checkout while it's on
+  `development` (skips + reports if another branch is checked out),
+  never pushes. See `docs/deployment.md` → Branch model.
 - `bun run check` is red on HEAD too (pre-existing) — don't block on it.
 - `dist/`, `.cloudflare/`, and `public/data/release.json` are generated,
   never commit them.

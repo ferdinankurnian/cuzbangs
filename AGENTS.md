@@ -7,6 +7,14 @@
 - Ship: `gh release create vYYYY.MM.DD --notes "..."` (curated notes, never
   raw commits) → CI builds (embeds tag as `__APP_VERSION__` + release body
   as patch notes) → `cf deploy --tag --message`.
+- Patch notes are user-facing prose, so run the `unslop` skill on them
+  before `gh release create`. Freeze them at that point: the release body
+  is baked into the bundle at build time, so editing it on GitHub later
+  changes nothing for users.
+- Second release in one day: tag `vYYYY.MM.DD.1` (dotted). A dash
+  (`v2026.10.17-1`) reads as a semver prerelease, which sorts *below*
+  `v2026.10.17`. Tags are unique anyway, so re-running `gh release create`
+  with the same tag just fails.
 - Manual `bun run deploy` (= `cf deploy --profile default`) is break-glass
   only. Never use `--profile avaid` in this repo (bound to superweb).
 - Never deploy or push without an explicit order.
@@ -31,7 +39,10 @@
 
 ### After every deploy, always tell the user the live version
 
-- The version is `__APP_VERSION__` = UTC build date + short sha of HEAD at build time.
+- The version is `__APP_VERSION__`: the release tag on release builds
+  (`vYYYY.MM.DD`, plus `.N` for an extra release that day), or
+  `YYYY.MM.DD.<short-sha>` when `RELEASE_TAG` is unset (dev builds).
 - Verify it with:
-  `grep -rhoE '20[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9a-f]{7,}' dist/ | sort | uniq -c`
-- If the sha doesn't match the deployed commit, rebuild + redeploy so the stamp is correct.
+  `grep -rhoE 'v[0-9]{4}\.[0-9]{2}\.[0-9]{2}(\.[0-9]+)?|20[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9a-f]{7,}' dist/ | sort | uniq -c`
+- If the version doesn't match the tag/commit you just shipped, rebuild +
+  redeploy so the stamp is correct.

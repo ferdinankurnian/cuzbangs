@@ -21,7 +21,7 @@ function RootComponent() {
 			<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 				<Navbar />
 				<Outlet />
-				<Toaster />
+				<Toaster position="top-right" />
 				<AppUpdateListener />
 			</ThemeProvider>
 		</AppProvider>

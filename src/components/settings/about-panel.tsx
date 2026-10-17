@@ -1,6 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { ExternalLink, Github, Heart } from "lucide-react";
-import { useSyncExternalStore } from "react";
+import { ExternalLink, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -10,15 +8,8 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getAppUpdateState, subscribeAppUpdate } from "@/lib/app-update";
-
-function useAppUpdateState() {
-	return useSyncExternalStore(subscribeAppUpdate, getAppUpdateState);
-}
 
 export function AboutPanel() {
-	const updateState = useAppUpdateState();
-
 	return (
 		<section className="w-full space-y-6">
 			{/* What is cuzbangs */}
@@ -27,36 +18,7 @@ export function AboutPanel() {
 					<p className="font-display text-2xl font-semibold text-white [letter-spacing:-0.05em]">
 						cuzbangs. cuz it bangs
 					</p>
-					<p className="text-muted-foreground">A redirect engine.</p>
-				</CardContent>
-			</Card>
-
-			{/* Version */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Version</CardTitle>
-					<CardDescription>
-						The installed version of cuzbangs on this device
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<div className="flex items-center justify-between gap-4">
-						<div className="min-w-0">
-							<p className="font-medium">{__APP_VERSION__}</p>
-							<p className="text-sm text-muted-foreground">
-								{updateState.needRefresh
-									? "A new version is ready to install"
-									: "You're on the latest version"}
-							</p>
-						</div>
-						{updateState.needRefresh ? (
-							<Button variant="outline" asChild>
-								<Link to="/settings" search={{ tab: "update" }}>
-									Open Update tab
-								</Link>
-							</Button>
-						) : null}
-					</div>
+					<p className="text-muted-foreground">{__APP_VERSION__}</p>
 				</CardContent>
 			</Card>
 
@@ -144,7 +106,7 @@ export function AboutPanel() {
 			{/* Footer */}
 			<div className="text-center text-sm text-muted-foreground py-4">
 				<p className="flex items-center justify-center gap-1">
-					Made with <Heart className="size-4 text-red-500 fill-red-500" /> by
+					Made with <span className="text-base leading-none">🐾</span> by
 					iydheko
 				</p>
 				<p className="mt-1">© 2026 cuzbangs. All rights reserved.</p>

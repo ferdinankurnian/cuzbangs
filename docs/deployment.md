@@ -39,6 +39,14 @@ never pushes — pushing is always the owner's action.
    create the release. Tag with calver (`vYYYY.MM.DD`, append `.1` for a
    second release in a day):
 
+   > **Notes are frozen at build time.** The release body is embedded into
+   > the bundle (`public/data/release.json` via the `prebuild` script) when
+   > CI builds. Editing the release body on GitHub afterwards does NOT
+   > change what users see — and re-running the workflow only replays the
+   > original event payload. So make the notes final **before** running
+   > `gh release create`; to fix a typo live you'd need a manual
+   > break-glass deploy or another release.
+
    ```bash
    gh release create v2026.10.15 --notes "..."
    ```

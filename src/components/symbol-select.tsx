@@ -48,7 +48,7 @@ export function SymbolSelect() {
 							className={cn(
 								"flex items-center justify-center size-11 rounded-lg border text-sm font-medium transition-colors",
 								SYMBOLS[symbolIndex] === s
-									? "bg-white text-black border-white"
+									? "bg-black/40 text-white border-white/60"
 									: "bg-black/40 text-neutral-400 hover:border-white/25 hover:text-white",
 							)}
 						>

@@ -28,10 +28,10 @@ them:
 3. Create the GitHub release (`gh release create vYYYY.MM.DD`, see
    below) — that, not the merge, is what deploys.
 
-The hermes auto-sync job works exclusively in the dedicated worktree
-`~/Projects/cuzbangs-sync` (checked out on `development`) so it never
-touches whatever branch the main checkout happens to be on. It commits
-but never pushes — pushing is always the owner's action.
+The hermes auto-sync job commits in `~/Projects/cuzbangs` while it is
+checked out on `development`. It verifies the current branch first and
+skips with a report if anything else is checked out. It commits but
+never pushes — pushing is always the owner's action.
 
 ## Ship a release
 

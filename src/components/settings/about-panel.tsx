@@ -24,7 +24,7 @@ export function AboutPanel() {
 			{/* What is cuzbangs */}
 			<Card>
 				<CardContent className="space-y-1.5">
-					<p className="text-2xl font-semibold text-white [letter-spacing:-0.05em]">
+					<p className="font-display text-2xl font-semibold text-white [letter-spacing:-0.05em]">
 						cuzbangs. cuz it bangs
 					</p>
 					<p className="text-muted-foreground">A redirect engine.</p>

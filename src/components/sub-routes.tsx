@@ -23,11 +23,11 @@ export function SubRoutes() {
 			</div>
 
 			<div className="space-y-4 text-center md:text-left">
-				<h2 className="text-3xl md:text-4xl font-semibold text-white [letter-spacing:-0.05em]">
+				<h2 className="text-4xl md:text-5xl font-semibold text-white [letter-spacing:-0.05em]">
 					Sub-routes
 				</h2>
 				<p className="text-neutral-400 leading-relaxed">
-					Sub-routes bring more pages within reach — redirect and search deeper
+					Sub-routes bring more pages within reach: redirect and search deeper
 					pages of a site, not just the homepage.
 				</p>
 			</div>

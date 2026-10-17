@@ -24,12 +24,12 @@ export function SearchEngineSelect() {
 			</div>
 
 			<div className="space-y-4 text-center md:text-left">
-				<h2 className="text-3xl md:text-4xl font-semibold text-white [letter-spacing:-0.05em]">
+				<h2 className="text-4xl md:text-5xl font-semibold text-white [letter-spacing:-0.05em]">
 					Select your default search engine preference
 				</h2>
 				<p className="text-neutral-400 leading-relaxed">
 					Choose from Google, Bing, Kagi, and DuckDuckGo. You can also bring
-					your own search engine.
+					ur favorite search engine.
 				</p>
 			</div>
 		</section>

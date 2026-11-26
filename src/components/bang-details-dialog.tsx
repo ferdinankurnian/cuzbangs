@@ -140,7 +140,8 @@ function EditableBangCall({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="size-6 hover:bg-green-500/20 hover:text-green-600"
+							aria-label="Save shortcut"
+							className="size-10 hover:bg-green-500/20 hover:text-green-600"
 							onClick={handleSave}
 						>
 							<Check className="size-3.5" />
@@ -148,7 +149,8 @@ function EditableBangCall({
 						<Button
 							size="icon"
 							variant="ghost"
-							className="size-6 hover:bg-red-500/20 hover:text-red-600"
+							aria-label="Cancel editing"
+							className="size-10 hover:bg-red-500/20 hover:text-red-600"
 							onClick={handleCancel}
 						>
 							<X className="size-3.5" />
@@ -227,7 +229,7 @@ function EditableBangCall({
 					animate={{ opacity: 1, scale: 1 }}
 					exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }}
 					transition={{ duration: 0.2, ease: "easeOut" }}
-					className="flex flex-col gap-2 w-full"
+					className="flex w-full flex-col gap-3 rounded-xl border bg-muted/20 p-4"
 				>
 					<div className="flex flex-wrap gap-2 items-start">
 						{(triggers?.length ? triggers : [value]).map((trigger) => (
@@ -267,6 +269,8 @@ function EditableBangCall({
 						<Input
 							type="text"
 							value={url}
+							aria-label="Search URL"
+							className="h-11 font-mono text-sm"
 							readOnly
 							onClick={(e) => e.currentTarget.select()}
 						/>
@@ -327,10 +331,16 @@ export function BangDetailsDialogContent({
 	const { isConsented } = useApp();
 	const isReadOnly = mode === "store";
 	const subroutes = bang.subroutes ?? [];
+	const hasSubroutes = subroutes.length > 0;
 
 	if (isLoading) {
 		return (
-			<ResponsiveDialogContent>
+			<ResponsiveDialogContent
+				className={cn(
+					"sm:rounded-2xl",
+					hasSubroutes ? "sm:max-w-4xl" : "sm:max-w-xl",
+				)}
+			>
 				<div className="flex flex-col gap-4 animate-pulse">
 					<ResponsiveDialogHeader className="flex flex-row gap-4">
 						<div className="size-16 rounded-sm bg-muted" />
@@ -340,7 +350,7 @@ export function BangDetailsDialogContent({
 						</div>
 					</ResponsiveDialogHeader>
 
-					<div className="flex flex-row justify-between items-center">
+					<div className="flex flex-wrap justify-between items-center gap-3">
 						<div className="h-8 w-32 bg-muted rounded" />
 						<div className="h-10 w-40 bg-muted rounded" />
 					</div>
@@ -364,20 +374,30 @@ export function BangDetailsDialogContent({
 			onEscapeKeyDown={(e) => {
 				if (!isReadOnly && editingCount > 0) e.preventDefault();
 			}}
+			className={cn(
+				"max-h-[90dvh] overflow-y-auto sm:rounded-2xl",
+				hasSubroutes ? "sm:max-w-4xl" : "sm:max-w-xl",
+			)}
 			showCloseButton={isReadOnly || editingCount === 0}
 		>
 			<div className="flex flex-col gap-4">
 				<ResponsiveDialogHeader className="flex flex-row gap-4">
-					<img src={bang.image} alt="" className="size-16 rounded-sm" />
-					<div className="flex flex-col justify-center gap-2">
-						<ResponsiveDialogTitle>{bang.name}</ResponsiveDialogTitle>
-						<ResponsiveDialogDescription>
+					<img
+						src={bang.image}
+						alt=""
+						className="size-14 shrink-0 rounded-xl border bg-muted/30 p-2 object-contain"
+					/>
+					<div className="flex min-w-0 flex-col justify-center gap-1 pr-6">
+						<ResponsiveDialogTitle className="break-words text-xl leading-tight">
+							{bang.name}
+						</ResponsiveDialogTitle>
+						<ResponsiveDialogDescription className="break-all text-sm leading-6">
 							{bang.domain ?? bang.url}
 						</ResponsiveDialogDescription>
 					</div>
 				</ResponsiveDialogHeader>
 
-				<div className="flex flex-row justify-between items-center">
+				<div className="flex flex-wrap justify-between items-center gap-3">
 					<div className="h-full flex flex-row gap-2 items-center">
 						{isModified ? (
 							<div className="border rounded-md px-3 py-1.5 flex items-center">
@@ -397,7 +417,7 @@ export function BangDetailsDialogContent({
 							</div>
 						)}
 					</div>
-					<div className="flex flex-row gap-2">
+					<div className="flex flex-wrap gap-2">
 						{mode === "my-bangs" ? (
 							<Popover>
 								<PopoverTrigger asChild>
@@ -437,9 +457,16 @@ export function BangDetailsDialogContent({
 
 				<Separator />
 
-				<div className="flex flex-col gap-4 mb-2">
-					<div className="flex flex-col gap-2">
-						<h1 className="text-xl font-semibold">Main Route</h1>
+				<div
+					className={cn(
+						"mb-2",
+						hasSubroutes
+							? "grid gap-6 md:grid-cols-[minmax(0,18rem)_1fr] md:items-start"
+							: "flex flex-col gap-4",
+					)}
+				>
+					<div className="flex flex-col gap-2 md:sticky md:top-0 md:z-10 md:-mt-2 md:bg-background md:pt-2 md:pb-2">
+						<h1 className="text-base font-semibold">Main shortcut</h1>
 						<div className="flex flex-col gap-2">
 							<EditableBangCall
 								value={bang.trigger}
@@ -457,14 +484,19 @@ export function BangDetailsDialogContent({
 						</div>
 					</div>
 
-					{subroutes.length > 0 && (
-						<div className="flex flex-col gap-3">
-							<h1 className="text-xl font-semibold">Sub Routes</h1>
-							<div className="flex flex-col gap-5">
+					{hasSubroutes && (
+						<div className="flex flex-col gap-3 md:border-l md:pl-6">
+							<h1 className="text-base font-semibold">
+								Subroutes
+								<span className="ml-2 text-sm font-normal text-muted-foreground">
+									{subroutes.length}
+								</span>
+							</h1>
+							<div className="flex flex-col gap-4">
 								{subroutes.map((subroute) => (
 									<div
 										key={`${subroute.name}-${subroute.triggers.join("-")}`}
-										className="flex flex-col gap-2"
+										className="flex flex-col gap-3 rounded-xl border p-4"
 									>
 										<h2 className="text-sm font-medium text-muted-foreground">
 											{subroute.name}
@@ -482,7 +514,8 @@ export function BangDetailsDialogContent({
 											value={subroute.baseUrl}
 											readOnly
 											onClick={(e) => e.currentTarget.select()}
-											className="text-muted-foreground"
+											aria-label="Base URL"
+											className="h-11 font-mono text-sm text-muted-foreground"
 										/>
 									</div>
 								))}

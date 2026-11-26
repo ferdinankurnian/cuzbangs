@@ -381,7 +381,7 @@ export function ConfigsPanel() {
           <div className="space-y-1.5">
             <CardTitle>Grab latest bangs</CardTitle>
             <CardDescription>
-              Refresh local store data from Kagi and cuzbangs.json.
+              Refresh local store data from Kagi and cuzbangs.jsonc.
             </CardDescription>
             {grabStatus !== "idle" && (
               <p

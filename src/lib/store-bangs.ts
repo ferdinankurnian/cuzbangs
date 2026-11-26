@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { parse, printParseErrorCode } from "jsonc-parser";
 import { normalizeBangEntryTriggers, normalizeBangTriggers } from "./bangs";
 import { type BangEntry, BangEntrySchema } from "./db";
 
 const KAGI_DATA_URL = "/data/bangs.json";
-const CUSTOM_DATA_URL = "/data/cuzbangs.json";
+const CUSTOM_DATA_URL = "/data/cuzbangs.jsonc";
 
 let cachedStoreBangs: BangEntry[] | null = null;
 
@@ -18,7 +19,15 @@ async function fetchBangFile(
 		return [];
 	}
 
-	const rawData = await response.json();
+	const text = await response.text();
+	const parseErrors: Parameters<typeof parse>[1] = [];
+	const rawData = parse(text, parseErrors, { allowTrailingComma: true });
+	if (parseErrors.length > 0) {
+		const details = parseErrors
+			.map((error) => printParseErrorCode(error.error))
+			.join(", ");
+		throw new Error(`Failed to parse ${url}: ${details}`);
+	}
 	return z
 		.array(BangEntrySchema)
 		.parse(rawData)

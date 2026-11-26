@@ -1,6 +1,6 @@
 # Custom Bangs
 
-Use `public/data/cuzbangs.json` to add or override store bangs without editing the Kagi dataset in `public/data/bangs.json`.
+Use `public/data/cuzbangs.jsonc` to add or override store bangs without editing the Kagi dataset in `public/data/bangs.json`.
 
 ## Format
 
@@ -36,10 +36,10 @@ Use `sr` when a bang has scoped child destinations.
 	{
 		"t": ["cloudflare", "cf"],
 		"s": "Cloudflare",
-		"d": "developers.cloudflare.com",
-		"u": "https://developers.cloudflare.com/search/?q={{{s}}}",
+		"d": "dash.cloudflare.com",
+		"u": "https://dash.cloudflare.com/",
 		"c": "Tech",
-		"sc": "Docs",
+		"sc": "Panel",
 		"sr": [
 			{
 				"t": ["workers", "w"],
@@ -55,8 +55,8 @@ Use `sr` when a bang has scoped child destinations.
 Usage:
 
 ```txt
-!cf search term              -> Cloudflare parent bang
-!cf                          -> https://developers.cloudflare.com
+!cf search term              -> Cloudflare dashboard
+!cf                          -> https://dash.cloudflare.com/
 !cf/workers search term      -> Cloudflare Workers subroute
 !cf/workers                  -> Cloudflare Workers base URL, if set
 !cloudflare/w search term    -> parent alias + subroute alias
@@ -77,7 +77,7 @@ At runtime, cuzbangs loads both files:
 
 ```txt
 /data/bangs.json
-/data/cuzbangs.json
+/data/cuzbangs.jsonc
 ```
 
 Then it merges them into the local store cache.
@@ -111,7 +111,7 @@ bun run validate-bangs
 This checks:
 
 - JSON shape.
-- Duplicate triggers inside `cuzbangs.json`.
+- Duplicate triggers inside `cuzbangs.jsonc`.
 - Duplicate subroute triggers inside the same parent bang.
 - Trigger collisions with Kagi.
 - Same-bang merges by matching `s` and `d`.
@@ -120,7 +120,7 @@ Warnings do not block the app. They exist so you know what your custom bangs ove
 
 ## Apply Changes In The App
 
-After editing `public/data/cuzbangs.json`, refresh the local store cache:
+After editing `public/data/cuzbangs.jsonc`, refresh the local store cache:
 
 ```txt
 Settings -> Configs -> Store & Privacy -> Grab Bangs

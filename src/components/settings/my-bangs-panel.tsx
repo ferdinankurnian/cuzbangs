@@ -248,7 +248,7 @@ function CreateBangDialog({
     <DialogContent
       showCloseButton={!isDirty}
       disableClose={isDirty}
-      className="max-w-[410px] overflow-hidden rounded-xl border bg-background p-5 shadow-2xl sm:rounded-xl"
+      className="w-[calc(100%-2rem)] max-w-[560px] overflow-hidden rounded-2xl border bg-background p-6 shadow-2xl sm:rounded-2xl"
     >
       <div className="flex flex-col gap-4">
         <DialogHeader className="flex flex-row gap-4 space-y-0 text-left">
@@ -270,7 +270,7 @@ function CreateBangDialog({
               {previewTitle}
             </DialogTitle>
             <DialogDescription className="truncate text-sm">
-              {domain || "Add a URL to finish setup"}
+              {domain || "Create a shortcut to any search engine"}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -315,10 +315,11 @@ function CreateBangDialog({
 
         <div className="h-px bg-border" />
 
-        <div className="flex max-h-[58vh] flex-col gap-5 overflow-y-auto pr-1">
+        <div className="flex max-h-[58vh] flex-col gap-6 overflow-y-auto pr-2">
           <div className="flex flex-col gap-3">
-            <h2 className="text-xl font-semibold">Shortcut</h2>
-            <div className="placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 flex-wrap items-center gap-2 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+            <h2 className="text-base font-semibold">Shortcut</h2>
+            <p className="text-sm leading-6 text-muted-foreground">Add a trigger, then a search URL. Use %s where your search query should go.</p>
+            <div className="placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex min-h-11 w-full min-w-0 flex-wrap items-center gap-2 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
               {triggers.map((trigger) => (
                 <Badge
                   key={trigger}
@@ -362,7 +363,7 @@ function CreateBangDialog({
                   setUrl(e.target.value);
                 }}
                 placeholder="https://example.com/search?q=%s"
-                className="h-9 rounded-md pl-9 text-sm"
+                className="h-11 rounded-lg pl-9 text-sm"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleSave();
                 }}
@@ -372,7 +373,7 @@ function CreateBangDialog({
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold">Sub Routes</h2>
+              <h2 className="text-base font-semibold">Subroutes <span className="ml-1 text-sm font-normal text-muted-foreground">Optional</span></h2>
               <Button
                 type="button"
                 variant="outline"
@@ -386,6 +387,8 @@ function CreateBangDialog({
               </Button>
             </div>
 
+            <p className="text-sm leading-6 text-muted-foreground">Add shortcuts for specific sections of the same site, like /images or /videos.</p>
+
             {subrouteDraftError && subrouteDrafts.length > 0 && (
               <p className="text-xs text-destructive">{subrouteDraftError}</p>
             )}
@@ -393,7 +396,7 @@ function CreateBangDialog({
             {subrouteDrafts.map((subroute) => (
               <div
                 key={subroute.id}
-                className="flex flex-col gap-2 rounded-lg border bg-muted/10 p-3"
+                className="flex flex-col gap-3 rounded-xl border bg-muted/20 p-4"
               >
                 <div className="flex items-center justify-between gap-2">
                   <Input
@@ -405,7 +408,7 @@ function CreateBangDialog({
                       }))
                     }
                     placeholder="Sub-route name"
-                    className="h-7 px-2 text-xs font-medium text-muted-foreground shadow-none focus-visible:ring-0"
+                    className="h-10 px-3 text-sm font-medium"
                   />
                   <Button
                     type="button"
@@ -472,7 +475,7 @@ function CreateBangDialog({
                       }))
                     }
                     placeholder="Search URL, e.g. https://example.com/search?q=%s"
-                    className="h-9 rounded-md pl-9 text-sm"
+                    className="h-11 rounded-lg pl-9 text-sm"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSave();
                     }}
@@ -490,7 +493,7 @@ function CreateBangDialog({
                       }))
                     }
                     placeholder="Base URL without query"
-                    className="h-9 rounded-md pl-9 text-sm"
+                    className="h-11 rounded-lg pl-9 text-sm"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSave();
                     }}

@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
+import { parse, printParseErrorCode } from "jsonc-parser";
 
 const kagiPath = "public/data/bangs.json";
-const customPath = "public/data/cuzbangs.json";
+const customPath = "public/data/cuzbangs.jsonc";
 
 function normalizeTrigger(trigger) {
 	return String(trigger).trim().toLowerCase();
@@ -23,6 +24,16 @@ function normalizeTriggers(triggers) {
 
 async function readJson(filePath) {
 	const json = await readFile(filePath, "utf8");
+	if (filePath === customPath) {
+		const errors = [];
+		const data = parse(json, errors, { allowTrailingComma: true });
+		if (errors.length > 0) {
+			throw new Error(
+				`Invalid JSONC in ${filePath}: ${errors.map((error) => printParseErrorCode(error.error)).join(", ")}`,
+			);
+		}
+		return data;
+	}
 	return JSON.parse(json);
 }
 

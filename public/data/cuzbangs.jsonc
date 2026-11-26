@@ -86,10 +86,10 @@
 	{
 		"t": ["cloudflare", "cf"],
 		"s": "Cloudflare",
-		"d": "developers.cloudflare.com",
-		"u": "https://developers.cloudflare.com/search/?q={{{s}}}",
+		"d": "dash.cloudflare.com",
+		"u": "https://dash.cloudflare.com/",
 		"c": "Tech",
-		"sc": "Docs",
+		"sc": "Panel",
 		"sr": [
 			{
 				"t": ["workers", "w", "pages", "p"],
@@ -118,5 +118,127 @@
 		"u": "https://e621.net/posts?tags={{{s}}}",
 		"c": "Multimedia",
 		"sc": "Images"
+	},
+	{
+		"t": ["kagi", "k"],
+		"s": "Kagi",
+		"d": "kagi.com",
+		"u": "https://kagi.com/search?q={{{s}}}",
+		"c": "Online Services",
+		"sc": "Search",
+		"sr": [
+			{
+				"t": ["news"],
+				"s": "Kagi News",
+				"b": "https://kagi.com/news",
+				"u": "https://kagi.com/news?q={{{s}}}"
+			},
+			{
+				"t": ["videos"],
+				"s": "Kagi Videos",
+				"b": "https://kagi.com/videos",
+				"u": "https://kagi.com/videos?q={{{s}}}"
+			},
+			{
+				"t": ["maps"],
+				"s": "Kagi Maps",
+				"b": "https://kagi.com/maps",
+				"u": "https://kagi.com/maps?q={{{s}}}"
+			},
+			{
+				"t": ["images"],
+				"s": "Kagi Images",
+				"b": "https://kagi.com/images",
+				"u": "https://kagi.com/images?q={{{s}}}"
+			},
+			{
+				"t": ["podcasts"],
+				"s": "Kagi Podcasts",
+				"b": "https://kagi.com/podcasts",
+				"u": "https://kagi.com/podcasts?q={{{s}}}"
+			},
+			{
+				"t": ["translate"],
+				"s": "Kagi Translate",
+				"b": "https://translate.kagi.com",
+				"u": "https://translate.kagi.com/?text={{{s}}}"
+			},
+			{
+				"t": ["assistant"],
+				"s": "Kagi Assistant",
+				"b": "https://assistant.kagi.com",
+				"u": "https://assistant.kagi.com?q={{{s}}}"
+			},
+			{
+				"t": ["fastgpt"],
+				"s": "Kagi FastGPT",
+				"b": "https://kagi.com/fastgpt",
+				"u": "https://kagi.com/fastgpt?query={{{s}}}"
+			}
+		]
+	},
+	{
+		"t": ["kn", "kaginews"],
+		"s": "Kagi News",
+		"d": "kagi.com",
+		"u": "https://kagi.com/news?q={{{s}}}",
+		"c": "News",
+		"sc": "General"
+	},
+	{
+		"t": ["kv", "kagivideos"],
+		"s": "Kagi Videos",
+		"d": "kagi.com",
+		"u": "https://kagi.com/videos?q={{{s}}}",
+		"c": "Multimedia",
+		"sc": "Videos"
+	},
+	{
+		"t": ["km", "kagimaps"],
+		"s": "Kagi Maps",
+		"d": "kagi.com",
+		"u": "https://kagi.com/maps?q={{{s}}}",
+		"c": "Online Services",
+		"sc": "Maps"
+	},
+	{
+		"t": ["ki", "kagiimages"],
+		"s": "Kagi Images",
+		"d": "kagi.com",
+		"u": "https://kagi.com/images?q={{{s}}}",
+		"c": "Multimedia",
+		"sc": "Images"
+	},
+	{
+		"t": ["kp", "kagipodcasts"],
+		"s": "Kagi Podcasts",
+		"d": "kagi.com",
+		"u": "https://kagi.com/podcasts?q={{{s}}}",
+		"c": "Multimedia",
+		"sc": "Podcasts"
+	},
+	{
+		"t": ["kt", "kagitranslate"],
+		"s": "Kagi Translate",
+		"d": "translate.kagi.com",
+		"u": "https://translate.kagi.com/?text={{{s}}}",
+		"c": "Translation",
+		"sc": "General"
+	},
+	{
+		"t": ["ka", "kagiassistant"],
+		"s": "Kagi Assistant",
+		"d": "assistant.kagi.com",
+		"u": "https://assistant.kagi.com?q={{{s}}}",
+		"c": "Tech",
+		"sc": "AI"
+	},
+	{
+		"t": ["kf", "kagifastgpt"],
+		"s": "Kagi FastGPT",
+		"d": "kagi.com",
+		"u": "https://kagi.com/fastgpt?query={{{s}}}",
+		"c": "Tech",
+		"sc": "AI"
 	}
 ]

@@ -1,0 +1,65 @@
+name: Suggest a bang
+description: Suggest a new shared bang for cuzbangs.
+title: "bang: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        cuzbangs includes the Kagi bang catalog. For a bang useful to lots of people, please send a pull request to [Kagi's bangs repository](https://github.com/kagisearch/bangs) first. Use this form for cuzbangs-specific entries or to discuss a case that does not fit there.
+  - type: input
+    id: site
+    attributes:
+      label: Site name and URL
+      placeholder: Example Site, https://example.com
+    validations:
+      required: true
+  - type: input
+    id: triggers
+    attributes:
+      label: Suggested trigger or triggers
+      description: Separate aliases with commas.
+      placeholder: example, ex
+    validations:
+      required: true
+  - type: input
+    id: search_url
+    attributes:
+      label: Search URL
+      description: Include `{{{s}}}` where the search query should go.
+      placeholder: https://example.com/search?q={{{s}}}
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: What does this bang search, and who would use it?
+      description: Tell us why it belongs in the shared cuzbangs catalog rather than only in a personal setup.
+      placeholder: Describe the search and why it is useful to cuzbangs users.
+    validations:
+      required: true
+  - type: dropdown
+    id: kagi_status
+    attributes:
+      label: Kagi catalog status
+      description: For a widely useful bang, Kagi is the preferred home for the shared entry.
+      options:
+        - I have not checked yet
+        - It is already in Kagi's catalog
+        - I proposed it to Kagi (link below)
+        - It is specific to cuzbangs; Kagi is not a fit
+    validations:
+      required: true
+  - type: input
+    id: upstream_link
+    attributes:
+      label: Kagi link, if applicable
+      description: Link the existing bang or your Kagi issue/pull request.
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Extra context
+      description: Anything else that would help us review this suggestion?
+    validations:
+      required: false

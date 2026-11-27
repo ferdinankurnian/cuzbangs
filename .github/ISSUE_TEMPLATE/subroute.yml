@@ -1,0 +1,62 @@
+name: Suggest a sub-route
+description: Suggest a scoped destination under an existing bang.
+title: "sub-route: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sub-routes are maintained by cuzbangs. If you can edit JSON, you can send a pull request directly; an issue is not required first.
+  - type: input
+    id: parent
+    attributes:
+      label: Parent bang
+      description: Name or trigger of the existing bang.
+      placeholder: GitHub (`gh`)
+    validations:
+      required: true
+  - type: input
+    id: route_name
+    attributes:
+      label: Sub-route name
+      placeholder: Issues
+    validations:
+      required: true
+  - type: input
+    id: triggers
+    attributes:
+      label: Suggested trigger or triggers
+      description: Separate aliases with commas. These are scoped to the parent bang.
+      placeholder: issues, is
+    validations:
+      required: true
+  - type: input
+    id: base_url
+    attributes:
+      label: Destination URL without a search query
+      description: This is the `b` URL used when the bang has no query.
+      placeholder: https://github.com/issues
+    validations:
+      required: true
+  - type: input
+    id: search_url
+    attributes:
+      label: Search URL
+      description: Include `{{{s}}}` where the search query should go.
+      placeholder: https://github.com/search?q={{{s}}}&type=issues
+    validations:
+      required: true
+  - type: input
+    id: example
+    attributes:
+      label: Example
+      description: Show the bang and the page it should open.
+      placeholder: "!gh/issues login bug → GitHub issue search for 'login bug'"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything else that would help us review this suggestion?
+    validations:
+      required: false

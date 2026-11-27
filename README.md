@@ -38,6 +38,10 @@ Access over 10,000 bangs from the [Kagi](https://kagi.com) bang catalog ([source
 
 Need something niche? Create your own bangs to hit any site. Your custom definitions always take priority over the store list when a clash happens.
 
+## Contributing
+
+Have an idea for a sub-route or a bang? See [Contributing](CONTRIBUTING.md) for where to submit it and how to prepare a pull request.
+
 ## Tech Stack
 
 - **React 19** + **TanStack Router**

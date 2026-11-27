@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Suggest a widely useful bang to Kagi
+    url: https://github.com/kagisearch/bangs
+    about: Kagi maintains the shared bang catalog that cuzbangs includes.
